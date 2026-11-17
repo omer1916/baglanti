@@ -933,3 +933,18 @@ body[data-route="akis"] .top-create { display: none !important; }
 @media (min-width: 1081px) { .sidebar .side-footer { display: none; } }
 @media (max-width: 720px) { body[data-route="akis"] .composer { display: none; } }
 @media (max-width: 720px) { .feed-filter .chips { -webkit-mask-image: linear-gradient(90deg, #000 82%, transparent); mask-image: linear-gradient(90deg, #000 82%, transparent); padding-right: 24px; } }
+
+/* hesap menüsü ve üst çubuk */
+.top-actions .icon-btn[aria-current="page"] { color: var(--brand); background: var(--brand-soft); }
+.avatar-btn[data-active] .av { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--brand); }
+.popover[data-popover="account"] { width: 280px; max-height: calc(100dvh - var(--topbar-h) - 24px); overflow-y: auto; overscroll-behavior: contain; }
+.popover .pop-me { gap: 12px; padding: 10px 12px; }
+.popover .pop-me b { display: block; color: var(--text); font-size: 15px; }
+.popover .pop-me .grow > span { display: block; font-size: 12px; font-weight: 500; color: var(--muted); }
+.popover a[aria-current="page"] { color: var(--text); background: var(--brand-soft); }
+.popover a[aria-current="page"] .ico { color: var(--brand); }
+.popover .count { margin-left: auto; font-size: 12px; background: #D6336F; color: #fff; border-radius: 999px; padding: 1px 8px; }
+.sidebar { padding-top: 4px; }
+@media (max-width: 720px) {
+  .popover[data-popover="account"] { position: fixed; top: calc(var(--topbar-h) + env(safe-area-inset-top, 0px) + 6px); right: 8px; width: min(300px, calc(100vw - 16px)); max-height: calc(100dvh - var(--topbar-h) - var(--bottom-h) - 32px); }
+}

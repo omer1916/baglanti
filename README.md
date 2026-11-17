@@ -16,7 +16,7 @@ Telefonda, tablette ve bilgisayarda çalışır. Kurulum ya da derleme adımı g
 
 İlk açılışta tanıtım sayfası gelir. Platforma iki yoldan girilir:
 
-- **Hesapsız demo:** “Hesapsız dene” ile rol kartlarına inip “Bu rolle dene”yi seçin. Rol, sonradan sağ üstteki avatar menüsünden değiştirilebilir.
+- **Hesapsız demo:** “Hesapsız dene” ile rol kartlarına inip “Bu rolle dene”yi seçin. Rol, sonradan sağ üstteki profil fotoğrafı menüsünden değiştirilebilir (mobilde de aynı yerde).
 - **Hesapla giriş:** “Kayıt ol” ile hesap açın ya da “Giriş yap” ekranındaki **“Örnek hesabın bilgilerini doldur”** düğmesiyle hazır örnek hesaba girin.
 
 Hesap ve demo verileri birbirinden ayrı saklanır. **Ayarlar › Hesabım** bölümünde saklanan kayıt görüntülenebilir, şifre değiştirilebilir ve hesap kalıcı olarak silinebilir.
@@ -40,7 +40,7 @@ Arka uç olmadığı için sistem tek hesaplıdır ve tüm veriler yalnızca tar
 |---|---|---|
 | 1, 3 | Vizyon ve değer önerisi | Tanıtım sayfası (`#/hosgeldin`) |
 | 4 | Hedef kullanıcılar (üye, moderatör, yönetici, marka) | Rol seçimi; her rolün menüsü ve yetkileri farklı |
-| 5 | Site haritası | Sol menü grupları: Keşfet, Topluluklar, Bağlantılar, İletişim, Hesabım |
+| 5 | Site haritası | Sol menü: akış, keşfet, topluluklar, etkinlikler, sponsorlar, medya, üyeler. Mesajlar ve bildirimler üst çubukta; hesapla ilgili her şey profil fotoğrafı menüsünde |
 | 6 | Haber akışı (3 kolon) | Ana sayfa: sol menü, ortada akış, sağda “Senin için” |
 | 7 | Gönderi kartı | Beğen, yorum, paylaş, kaydet, gizle, bildir; kendi gönderinde düzenle ve sil |
 | 8 | Gönderi oluşturma | “Oluştur” penceresi: karakter sınırı, medya önizleme, konum, duygu, görünürlük, taslak |
@@ -56,7 +56,7 @@ Arka uç olmadığı için sistem tek hesaplıdır ve tüm veriler yalnızca tar
 | 18 | Güvenlik ve moderasyon | `#/yonetim` › Moderasyon: kuyruk, öncelik, uyar/kaldır/itiraz, denetim kayıtları |
 | 19 | Mobil uyum ve erişilebilirlik | Mobilde alt menü, tablette ikon menü, klavye ile gezinme, kontrast, alt metin |
 | 21 | KPI'lar | Yönetim paneli › Genel bakış |
-| — | Sponsor ihtiyaçları, ortak etkinlik, medya arşivi, SSS | `#/sponsorlar`, `#/etkinlikler?tab=ortak`, `#/medya`, `#/sss` |
+| — | Sponsor ihtiyaçları, ortak etkinlik, medya arşivi, SSS | `#/sponsorlar`, `#/etkinlikler?tab=ortak`, `#/medya`, tanıtım sayfasındaki SSS bölümü (`#/sss`) |
 
 ## Dosyalar
 

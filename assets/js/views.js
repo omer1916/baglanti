@@ -146,6 +146,17 @@
   /* =============== EKRANLAR =============== */
   const V = {};
 
+  const FAQS = [
+    ['Bağlantı nedir?', 'Toplulukların etkinlik duyurularını, sosyal içeriklerini ve sponsor ihtiyaçlarını paylaştığı; üyelerin keşfettiği ve katıldığı bir topluluk platformudur.'],
+    ['Bir gruba nasıl katılırım?', 'Herkese açık gruplara “Katıl” ile hemen üye olursun. Özel gruplar yönetici onayı ister; gizli gruplar yalnızca davetle görünür.'],
+    ['Ortak etkinlik nedir?', 'Birden fazla topluluğun birlikte düzenlediği etkinliklerdir. Her iki topluluğun üyeleri de etkinliği akışında görür ve katılabilir.'],
+    ['Sponsor ihtiyacı nasıl yayınlanır?', 'Topluluk yöneticileri gönderi oluştururken “Sponsor ihtiyacı” türünü seçer; hedef miktar ve son tarih belirtir. Markalar “Destek ol” ile katkı sunar.'],
+    ['Gönderimi kimler görebilir?', 'Her gönderide görünürlüğü sen seçersin: Herkese açık, Topluluk üyeleri, Arkadaşlar veya Sadece ben. Yayınladıktan sonra düzenleyebilir ya da silebilirsin.'],
+    ['Uygunsuz bir içeriği nasıl bildiririm?', 'Gönderinin ⋯ menüsünden “Bildir”i seç. Bildirimler öncelik ve risk sınıfına göre moderatör kuyruğuna düşer; sonuç sana bildirilir.'],
+    ['Bildirimleri nasıl azaltırım?', 'Bildirimler sayfasından tür bazında kapatabilir, sıklığı günlük/haftalık özete çevirebilir ve sessiz saatleri açabilirsin.'],
+    ['Verilerimi indirebilir miyim?', 'Evet. Ayarlar › Veri kontrolleri bölümünden tüm verilerini indirebilir veya hesabını kapatabilirsin.']
+  ];
+
   /* ---------- açılış ---------- */
   V.hosgeldin = () => {
     const roleCards = [
@@ -214,6 +225,11 @@
           </div>
         </section>
 
+        <section class="l-section" id="sss" aria-labelledby="l-sss">
+          <h2 id="l-sss">Sık sorulan sorular</h2>
+          <div class="card faq">${FAQS.map(([q, a], i) => `<details ${i === 0 ? 'open' : ''}><summary>${q}${icon('chevronDown')}</summary><div class="answer">${a}</div></details>`).join('')}</div>
+        </section>
+
         <footer class="l-footer">Bağlantı · Sosyal içerik ve topluluk platformu — konsept prototip. Tüm kişi, kurum ve içerikler örnektir.</footer>
       </div>`
     };
@@ -280,7 +296,7 @@
           ${pwField('rg-pass', 'password', 'Şifre', 'new-password', ' minlength="8"')}
           <div class="strength" id="rg-strength" aria-live="polite"><div class="strength-bar"><i></i><i></i><i></i><i></i><i></i></div><span>En az 8 karakter; harf ve rakam içermeli.</span></div>
           ${pwField('rg-confirm', 'confirm', 'Şifre (tekrar)', 'new-password')}
-          <div class="field"><label class="check" style="align-items:flex-start"><input type="checkbox" name="consent" id="rg-consent" aria-describedby="rg-consent-err"><span><a class="link" href="#/sss">Kullanım koşullarını</a> ve kişisel verilerin işlenmesine ilişkin aydınlatma metnini okudum, onaylıyorum.</span></label><span class="field-error" id="rg-consent-err" role="alert"></span></div>
+          <div class="field"><label class="check" style="align-items:flex-start"><input type="checkbox" name="consent" id="rg-consent" aria-describedby="rg-consent-err"><span><b>Kullanım koşullarını</b> ve kişisel verilerin işlenmesine ilişkin aydınlatma metnini okudum, onaylıyorum.</span></label><span class="field-error" id="rg-consent-err" role="alert"></span></div>
           <button class="btn btn-primary btn-lg btn-block">Hesabı oluştur</button>
         </form>
         <p class="xs muted">${icon('lock', 'ico-sm')} Şifren düz metin olarak saklanmaz; tuzlu PBKDF2-SHA256 özeti (210.000 tur) tutulur.</p>`, authSideDefault())
@@ -943,27 +959,8 @@
   };
 
   /* ---------- SSS ---------- */
-  V.sss = () => {
-    const faqs = [
-      ['Bağlantı nedir?', 'Toplulukların etkinlik duyurularını, sosyal içeriklerini ve sponsor ihtiyaçlarını paylaştığı; üyelerin keşfettiği ve katıldığı bir topluluk platformudur.'],
-      ['Bir gruba nasıl katılırım?', 'Herkese açık gruplara “Katıl” ile hemen üye olursun. Özel gruplar yönetici onayı ister; gizli gruplar yalnızca davetle görünür.'],
-      ['Ortak etkinlik nedir?', 'Birden fazla topluluğun birlikte düzenlediği etkinliklerdir. Her iki topluluğun üyeleri de etkinliği akışında görür ve katılabilir.'],
-      ['Sponsor ihtiyacı nasıl yayınlanır?', 'Topluluk yöneticileri gönderi oluştururken “Sponsor ihtiyacı” türünü seçer; hedef miktar ve son tarih belirtir. Markalar “Destek ol” ile katkı sunar.'],
-      ['Gönderimi kimler görebilir?', 'Her gönderide görünürlüğü sen seçersin: Herkese açık, Topluluk üyeleri, Arkadaşlar veya Sadece ben. Yayınladıktan sonra düzenleyebilir ya da silebilirsin.'],
-      ['Uygunsuz bir içeriği nasıl bildiririm?', 'Gönderinin ⋯ menüsünden “Bildir”i seç. Bildirimler öncelik ve risk sınıfına göre moderatör kuyruğuna düşer; sonuç sana bildirilir.'],
-      ['Bildirimleri nasıl azaltırım?', 'Bildirimler sayfasından tür bazında kapatabilir, sıklığı günlük/haftalık özete çevirebilir ve sessiz saatleri açabilirsin.'],
-      ['Verilerimi indirebilir miyim?', 'Evet. Ayarlar › Veri kontrolleri bölümünden tüm verilerini indirebilir veya hesabını kapatabilirsin.']
-    ];
-    return {
-      title: 'SSS',
-      html: `<div class="page-head"><div><h1>Sık sorulan sorular</h1><p>Aradığını bulamazsan bize yaz.</p></div></div>
-        <section class="card faq">${faqs.map(([q, a], i) => `<details ${i === 0 ? 'open' : ''}><summary>${q}${icon('chevronDown')}</summary><div class="answer">${a}</div></details>`).join('')}</section>
-        <section class="card card-pad stack"><h2 style="font-size:16px">İletişim ve öneriler</h2>
-          <form class="stack" data-form="contact"><div class="field"><label for="ct-topic">Konu</label><select class="select" id="ct-topic" name="topic"><option>Öneri</option><option>Hata bildirimi</option><option>Sponsorluk</option><option>Diğer</option></select></div>
-          <div class="field"><label for="ct-msg">Mesajın</label><textarea class="textarea" id="ct-msg" name="msg" required maxlength="1000" placeholder="Bize ne söylemek istersin?"></textarea></div>
-          <button class="btn btn-primary" style="justify-self:start">Gönder</button></form></section>`
-    };
-  };
+  // SSS artık tanıtım sayfasında; eski #/sss bağlantısı oradaki bölüme götürür
+  V.sss = () => ({ ...V.hosgeldin(), title: 'Sık sorulan sorular', after: () => document.getElementById('sss')?.scrollIntoView() });
 
   V.notfound = () => ({ title: 'Bulunamadı', html: `<div class="card">${empty('compass', 'Sayfa bulunamadı', 'Aradığın içerik kaldırılmış ya da taşınmış olabilir.', '<a class="btn btn-primary" href="#/akis">Ana sayfaya dön</a>')}</div>` });
 

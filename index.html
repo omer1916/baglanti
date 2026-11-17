@@ -30,9 +30,9 @@
       </form>
       <div class="top-actions">
         <button class="btn btn-primary hide-mobile top-create" data-action="compose"><span data-icon="plus"></span><span>Oluştur</span></button>
-        <a class="icon-btn only-mobile" href="#/mesajlar" aria-label="Mesajlar" data-badge="messages"><span data-icon="message"></span></a>
-        <button class="icon-btn hide-mobile" data-action="toggle-theme" aria-label="Temayı değiştir"><span data-icon="sun"></span></button>
-        <div class="account-menu hide-mobile">
+        <a class="icon-btn" href="#/mesajlar" aria-label="Mesajlar" data-badge="messages" data-top="mesajlar"><span data-icon="message"></span></a>
+        <a class="icon-btn hide-mobile" href="#/bildirimler" aria-label="Bildirimler" data-badge="notifications" data-top="bildirimler"><span data-icon="bell"></span></a>
+        <div class="account-menu">
           <button class="avatar-btn" data-action="toggle-menu" data-menu="account" aria-haspopup="true" aria-expanded="false" aria-label="Hesap menüsü" id="account-btn"></button>
           <div class="popover" data-popover="account" hidden></div>
         </div>
@@ -51,7 +51,7 @@
     <a href="#/kesfet" data-nav="kesfet"><span data-icon="compass"></span><span>Keşfet</span></a>
     <button class="bn-create" data-action="compose" aria-label="Gönderi oluştur"><span data-icon="plus"></span></button>
     <a href="#/bildirimler" data-nav="bildirimler" data-badge="notifications"><span data-icon="bell"></span><span>Bildirim</span></a>
-    <button data-action="toggle-drawer" data-nav="menu"><span data-icon="user"></span><span>Hesabım</span></button>
+    <button data-action="toggle-drawer" data-nav="menu" aria-label="Menüyü aç"><span data-icon="menu"></span><span>Menü</span></button>
   </nav>
 
   <div class="drawer-backdrop" data-action="close-drawer" hidden></div>

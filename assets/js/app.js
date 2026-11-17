@@ -51,50 +51,51 @@
 
   /* =============== kabuk =============== */
   function navItems() {
-    const groups = [
-      [null, [['akis', '#/akis', 'home', 'Ana sayfa']]],
-      ['Keşfet', [['kesfet', '#/kesfet', 'compass', 'Keşfet ve ara']]],
-      ['Topluluklar', [['topluluklar', '#/topluluklar', 'users', 'Topluluklar & gruplar'], ['etkinlikler', '#/etkinlikler', 'calendar', 'Etkinlikler'], ['sponsorlar', '#/sponsorlar', 'gift', 'Sponsorlar & sayfalar'], ['medya', '#/medya', 'image', 'Medya arşivi']]],
-      ['Bağlantılar', [['uyeler', '#/uyeler', 'userPlus', 'Üyeler & bağlantılar', state.connections.incoming.length]]],
-      ['İletişim', [['mesajlar', '#/mesajlar', 'message', 'Mesajlar', unreadMsgs()], ['bildirimler', '#/bildirimler', 'bell', 'Bildirimler', unreadNotifs()], ['sss', '#/sss', 'help', 'Sık sorulan sorular']]],
-      ['Hesabım', [['kaydedilenler', '#/kaydedilenler', 'bookmark', 'Kaydedilenler'], ['ayarlar', '#/ayarlar', 'settings', 'Ayarlar & gizlilik']]]
+    return [
+      ['akis', '#/akis', 'home', 'Ana sayfa'],
+      ['kesfet', '#/kesfet', 'compass', 'Keşfet ve ara'],
+      ['topluluklar', '#/topluluklar', 'users', 'Topluluklar & gruplar'],
+      ['etkinlikler', '#/etkinlikler', 'calendar', 'Etkinlikler'],
+      ['sponsorlar', '#/sponsorlar', 'gift', 'Sponsorlar & sayfalar'],
+      ['medya', '#/medya', 'image', 'Medya arşivi'],
+      ['uyeler', '#/uyeler', 'userPlus', 'Üyeler & bağlantılar', state.connections.incoming.length]
     ];
-    if (K.isManager()) groups[5][1].unshift(['yonetim', '#/yonetim', 'shield', 'Yönetim paneli', state.reports.filter((r) => r.status === 'Bekliyor').length]);
-    if (K.isBrand()) groups[5][1].unshift(['sayfa:kuzey', '#/sayfa/kuzey', 'chart', 'Sayfam & istatistik']);
-    return groups;
   }
   function renderShell(r) {
-    const key = r.name === 'sayfa' && r.id === K.BRAND_PAGE && K.isBrand() ? 'sayfa:kuzey' : r.name === 'kisi' && r.id === state.me ? 'profil' : r.name === 'topluluk' ? 'topluluklar' : r.name === 'etkinlik' ? 'etkinlikler' : r.name === 'sayfa' ? 'sponsorlar' : r.name;
+    const key = r.name === 'topluluk' ? 'topluluklar' : r.name === 'etkinlik' ? 'etkinlikler' : r.name === 'sayfa' && !(r.id === K.BRAND_PAGE && K.isBrand()) ? 'sponsorlar' : r.name;
     const m = me();
-    els.sidebar.innerHTML = `
-      <a class="side-me" href="#/profil" ${key === 'profil' ? 'aria-current="page"' : ''} title="Profilim">${avatar({ ...m, kind: 'user' }, 'md')}<span class="grow"><b>${esc(m.name)}</b><span>${K.mode === 'account' ? '@' + esc(m.handle) : 'Demo modu'} · ${esc(K.ROLES[state.role].short)}</span></span></a>
-      ${navItems().map(([g, items]) => `${g ? `<div class="nav-group">${g}</div>` : ''}${items.map(([k, href, ic, label, count]) => `<a class="nav-link" href="${href}" ${k === key ? 'aria-current="page"' : ''} title="${label}">${icon(ic)}<span>${label}</span>${count ? `<span class="count">${count}</span>` : ''}</a>`).join('')}`).join('')}
-      <div class="side-footer">
-        <label class="label" for="role-select" style="display:block;margin-bottom:6px">Demo rolü</label>
-        <select class="select" id="role-select" data-change="role" style="font-size:14px;min-height:40px">${Object.entries(K.ROLES).map(([k, v]) => `<option value="${k}" ${state.role === k ? 'selected' : ''}>${v.label}</option>`).join('')}</select>
-        <button class="btn btn-sm btn-block" style="margin-top:12px" data-action="logout">${icon('logout', 'ico-sm')}${K.mode === 'account' ? 'Çıkış yap' : 'Demodan çık'}</button>
-        <p style="margin-top:12px"><a href="#/hosgeldin">Tanıtım sayfası</a><br>Bağlantı · konsept prototip</p>
-      </div>`;
+    els.sidebar.innerHTML = navItems().map(([k, href, ic, label, count]) => `<a class="nav-link" href="${href}" ${k === key ? 'aria-current="page"' : ''} title="${label}">${icon(ic)}<span>${label}</span>${count ? `<span class="count">${count}</span>` : ''}</a>`).join('');
 
-    // hesap menüsü
+    // hesap menüsü (profil fotoğrafı): hesapla ilgili her şey burada
+    const pending = state.reports.filter((x) => x.status === 'Bekliyor').length;
+    const acc = [];
+    if (K.isBrand()) acc.push(['sayfa:kuzey', '#/sayfa/kuzey', 'chart', 'Sayfam & istatistik']);
+    if (K.isManager()) acc.push(['yonetim', '#/yonetim', 'shield', 'Yönetim paneli', pending]);
+    acc.push(['kaydedilenler', '#/kaydedilenler', 'bookmark', 'Kaydedilenler'], ['ayarlar', '#/ayarlar', 'settings', 'Ayarlar & gizlilik']);
+    const accKey = r.name === 'sayfa' && r.id === K.BRAND_PAGE && K.isBrand() ? 'sayfa:kuzey' : r.name;
     $('#account-btn').innerHTML = avatar({ ...m, kind: 'user' }, 'sm');
+    $('#account-btn').toggleAttribute('data-active', ['profil', 'kaydedilenler', 'ayarlar', 'yonetim'].includes(accKey) || accKey === 'sayfa:kuzey' || (r.name === 'kisi' && r.id === state.me));
     $('[data-popover="account"]').innerHTML = `
-      <a href="#/profil">${avatar({ ...m, kind: 'user' }, 'sm')}<span><b style="display:block;color:var(--text)">${esc(m.name)}</b><span class="xs muted">${K.mode === 'account' ? esc(window.Auth.account()?.email || '') : 'Demo modu · hesapsız'}</span></span></a>
+      <a class="pop-me" href="#/profil">${avatar({ ...m, kind: 'user' }, 'md')}<span class="grow"><b>${esc(m.name)}</b><span>${K.mode === 'account' ? esc(window.Auth.account()?.email || '') : 'Demo modu · hesapsız'}</span><span>${esc(K.ROLES[state.role].label)} · Profilini gör</span></span></a>
+      <hr>
+      ${acc.map(([k, href, ic, label, count]) => `<a href="${href}" ${k === accKey ? 'aria-current="page"' : ''}>${icon(ic)}<span class="grow">${label}</span>${count ? `<span class="count">${count}</span>` : ''}</a>`).join('')}
+      <button data-action="toggle-theme">${icon(state.theme === 'dark' ? 'sun' : 'moon')}${state.theme === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç'}</button>
       <hr><div class="menu-label">Demo rolü</div>
       ${Object.entries(K.ROLES).map(([k, v]) => `<button role="menuitemradio" aria-checked="${state.role === k}" data-action="set-role" data-role="${k}">${v.label}</button>`).join('')}
       <hr>
-      <a href="#/hosgeldin">${icon('sparkle')}Tanıtım sayfası</a>
+      <a href="#/hosgeldin">${icon('sparkle')}Tanıtım ve SSS</a>
       <button data-action="reset-demo">${icon('refresh')}${K.mode === 'account' ? 'Hesap verilerini sıfırla' : 'Demoyu sıfırla'}</button>
       <hr>
       ${K.mode === 'account' ? `<button data-action="logout">${icon('logout')}Çıkış yap</button>` : `<a href="#/kayit">${icon('userPlus')}Kayıt ol</a><button data-action="logout">${icon('logout')}Demodan çık</button>`}`;
+
+    // üst çubuk: etkin sayfa
+    $$('.topbar [data-top]').forEach((el) => { if (el.dataset.top === r.name) el.setAttribute('aria-current', 'page'); else el.removeAttribute('aria-current'); });
 
     // rozetler
     const counts = { messages: unreadMsgs(), notifications: unreadNotifs() };
     $$('[data-badge]').forEach((el) => { const n = counts[el.dataset.badge]; if (n) el.setAttribute('data-badge-count', n > 9 ? '9+' : n); else el.removeAttribute('data-badge-count'); });
     // alt gezinme
     $$('.bottom-nav [data-nav]').forEach((el) => { if (el.dataset.nav === r.name) el.setAttribute('aria-current', 'page'); else el.removeAttribute('aria-current'); });
-    const themeBtn = $('.topbar [data-action="toggle-theme"]');
-    if (themeBtn) themeBtn.innerHTML = icon(state.theme === 'dark' ? 'sun' : 'moon');
   }
 
   function applyTheme() {
@@ -104,7 +105,7 @@
   }
 
   /* =============== yönlendirme =============== */
-  const PUBLIC_ROUTES = ['hosgeldin', 'giris', 'kayit'];
+  const PUBLIC_ROUTES = ['hosgeldin', 'giris', 'kayit', 'sss'];
   function render(opts = {}) {
     const r = parseHash();
     if (!window.Auth.isAuthed() && !PUBLIC_ROUTES.includes(r.name)) { location.replace(K.mode === 'account' ? '#/giris' : '#/hosgeldin'); return; }
@@ -589,7 +590,6 @@
     state.communities[id] = { id, name, kind: 'grup', type: f.type.value, members: 1, city: me().city, category: f.cat.value, scene, hue: 1, joined: true, requested: false, desc: f.desc.value.trim() || 'Yeni grup.', rules: ['Saygılı dil kullanın.'], tags: [lower(f.cat.value)], pinned: '', moderators: [state.me], admins: [state.me], departments: [], sponsors: [], created: String(new Date().getFullYear()) };
     closeModal(); save(); location.hash = '#/topluluk/' + id; toast('Grup oluşturuldu');
   };
-  F.contact = (f) => { f.reset(); toast('Mesajın iletildi, teşekkürler!'); };
   F['block-add'] = (f) => { const n = f.name.value.trim(); if (!n) return; state.privacy.blocked.push(n); refresh(); toast('Kullanıcı engellendi'); };
   F['assign-mod'] = (f) => { const c = C(UI.adminComm); const id = f.user.value; if (!c.moderators.includes(id)) c.moderators.push(id); state.audit.push({ ts: Date.now(), who: state.me, text: `${U(id).name} moderatör olarak atandı (${c.name})` }); refresh(); toast(`${U(id).name} moderatör olarak atandı`); };
   F['add-topic'] = (f) => { const t = f.t.value.trim(); if (!t) return; C(UI.adminComm).departments[+f.dataset.d].topics.push({ t, open: true }); refresh(); toast('Konu açıldı'); };
@@ -630,7 +630,6 @@
 
   /* =============== değişiklik olayları =============== */
   const CH = {};
-  CH.role = (el) => { state.role = el.value; refresh(); toast(`Rol: ${K.ROLES[state.role].label}`); };
   CH['feed-sort'] = (el) => { UI.feedSort = el.value; render({ keepScroll: true }); };
   CH['discover-filter'] = (el) => { UI.discover[el.dataset.key] = el.value; const box = $('#discover-results'); if (box) box.innerHTML = V.discoverResults(box.dataset.tab); };
   CH['media-comm'] = (el) => { UI.mediaComm = el.value; render({ keepScroll: true }); };
@@ -696,7 +695,7 @@
   });
   // Başka sekmede çıkış / hesap silme / şifre değişikliği olursa bu sekme de güncellensin
   window.addEventListener('storage', (e) => {
-    if ([K.KEYS.auth, K.KEYS.session, K.KEYS.active].includes(e.key) && !window.Auth.isAuthed() && !['hosgeldin', 'giris', 'kayit'].includes(parseHash().name)) { history.replaceState(null, '', K.mode === 'account' ? '#/giris' : '#/hosgeldin'); location.reload(); }
+    if ([K.KEYS.auth, K.KEYS.session, K.KEYS.active].includes(e.key) && !window.Auth.isAuthed() && !PUBLIC_ROUTES.includes(parseHash().name)) { history.replaceState(null, '', K.mode === 'account' ? '#/giris' : '#/hosgeldin'); location.reload(); }
   });
   // popover içindeki bağlantılar menüyü kapatsın
   document.addEventListener('click', (e) => { if (e.target.closest('.popover a')) closePopovers(); });
