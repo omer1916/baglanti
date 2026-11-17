@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="tr" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Bağlantı · Etkinlik Portalı</title>
+  <meta name="description" content="Toplulukların etkinlik, duyuru ve sponsor ihtiyaçlarını paylaştığı sosyal içerik ve topluluk platformu.">
+  <meta name="theme-color" content="#0D1220">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23437EF5'/%3E%3Ccircle cx='11' cy='16' r='5' fill='none' stroke='white' stroke-width='3'/%3E%3Ccircle cx='21' cy='16' r='5' fill='none' stroke='%2340CDDC' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main" data-action="skip">İçeriğe geç</a>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-inner">
+      <button class="icon-btn only-tablet" data-action="toggle-drawer" aria-label="Menüyü aç"><span data-icon="menu"></span></button>
+      <a class="brand" href="#/akis" aria-label="Bağlantı ana sayfa">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-text">Bağlantı<small>Etkinlik Portalı</small></span>
+      </a>
+      <form class="top-search" role="search" data-form="top-search">
+        <span data-icon="search" aria-hidden="true"></span>
+        <input type="search" name="q" placeholder="Ara: kişiler, topluluklar, etkinlikler" aria-label="Platformda ara" autocomplete="off">
+      </form>
+      <div class="top-actions">
+        <button class="btn btn-primary hide-mobile" data-action="compose"><span data-icon="plus"></span><span>Oluştur</span></button>
+        <a class="icon-btn only-mobile" href="#/kesfet" aria-label="Ara"><span data-icon="search"></span></a>
+        <a class="icon-btn" href="#/mesajlar" aria-label="Mesajlar" data-badge="messages"><span data-icon="message"></span></a>
+        <a class="icon-btn hide-mobile" href="#/bildirimler" aria-label="Bildirimler" data-badge="notifications"><span data-icon="bell"></span></a>
+        <button class="icon-btn hide-mobile" data-action="toggle-theme" aria-label="Temayı değiştir"><span data-icon="sun"></span></button>
+        <div class="account-menu hide-mobile">
+          <button class="avatar-btn" data-action="toggle-menu" data-menu="account" aria-haspopup="true" aria-expanded="false" aria-label="Hesap menüsü" id="account-btn"></button>
+          <div class="popover" data-popover="account" hidden></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="shell" id="shell">
+    <nav class="sidebar" id="sidebar" aria-label="Ana gezinme"></nav>
+    <main id="main" class="main" tabindex="-1"></main>
+    <aside class="rail" id="rail" aria-label="Senin için"></aside>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Mobil gezinme">
+    <a href="#/akis" data-nav="akis"><span data-icon="home"></span><span>Ana sayfa</span></a>
+    <a href="#/kesfet" data-nav="kesfet"><span data-icon="compass"></span><span>Keşfet</span></a>
+    <button class="bn-create" data-action="compose" aria-label="Gönderi oluştur"><span data-icon="plus"></span></button>
+    <a href="#/bildirimler" data-nav="bildirimler" data-badge="notifications"><span data-icon="bell"></span><span>Bildirim</span></a>
+    <button data-action="toggle-drawer" data-nav="menu"><span data-icon="user"></span><span>Hesabım</span></button>
+  </nav>
+
+  <div class="drawer-backdrop" data-action="close-drawer" hidden></div>
+
+  <dialog class="modal" id="modal" aria-labelledby="modal-title"></dialog>
+  <dialog class="story-viewer" id="story" aria-label="Hikâye görüntüleyici"></dialog>
+  <div class="toast-wrap" aria-live="polite" id="toasts"></div>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/core.js"></script>
+  <script src="assets/js/views.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
