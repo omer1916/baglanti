@@ -29,7 +29,7 @@ Arka uç olmadığı için sistem tek hesaplıdır ve tüm veriler yalnızca tar
 - 5 hatalı denemede giriş kilitlenir; her yeni kilitte süre ikiye katlanır (30 sn → en fazla 15 dk). Hata mesajı hangi alanın yanlış olduğunu söylemez.
 - Oturumlar rastgele bir belirteçle tutulur ve süresi dolar (sekme oturumu 12 saat, “Beni hatırla” 30 gün; varsayılan kapalı). Çıkış ya da şifre değişikliği diğer sekmelerdeki oturumları da kapatır.
 - Bağlantıdan (URL) gelen değerler beyaz listeyle sınırlanır, ekrana yazılan tüm içerik kaçışlanır (XSS koruması).
-- DOM'a giren tüm HTML tek bir yardımcıdan (`core.js › setHTML`) geçer: etkisiz bir `<template>` içinde ayrıştırılır, `script`/`iframe` gibi etiketler, `on*` öznitelikleri ve `javascript:` adresleri silinir. **Trusted Types** zorunludur; bu yardımcı dışındaki her `innerHTML` yazımı tarayıcı tarafından engellenir.
+- DOM'a giren tüm HTML tek bir yardımcıdan (`core.js › setHTML`) geçer: betik çalıştırmayan ayrı bir belgede (`DOMParser`) ayrıştırılıp sayfaya taşınmadan önce temizlenir: `script`/`iframe` gibi etiketler, `on*` öznitelikleri ve `javascript:` adresleri silinir; kodda hiç `innerHTML` kullanılmaz. **Trusted Types** zorunludur; bu yardımcı dışındaki her HTML yazımı tarayıcı tarafından engellenir.
 - İçerik Güvenliği Politikası (CSP) yalnızca sitenin kendi betiklerine izin verir; satır içi betik, `eval`, dış ağ isteği, çerçeve, eklenti ve form gönderimi kapalıdır. `'unsafe-inline'` yalnızca `style=""` özniteliklerine açıktır.
 - Örnek hesabın kaynak kodda şifresi yoktur (her tarayıcıda rastgele, eşleşmeyen bir özetle oluşturulur).
 - Yüklenen fotoğraflar yeniden çizilerek **EXIF/GPS konum bilgisi silinir**; yalnızca izinli görsel ve video türleri kabul edilir.

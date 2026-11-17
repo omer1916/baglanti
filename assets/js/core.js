@@ -59,8 +59,8 @@
      Şablonlardaki her değişken esc() ile kaçışlanır. Ek bir savunma katmanı olarak, DOM'a giren
      tüm işaretleme yalnızca bu yardımcılardan geçer:
        1) Trusted Types: CSP "require-trusted-types-for 'script'" ile zorunlu; "baglanti" politikası dışında
-          hiçbir innerHTML / outerHTML / insertAdjacentHTML çalışmaz (destekleyen tarayıcılarda).
-       2) Ayrıştırma etkisiz (inert) bir <template> içinde yapılır, ardından temizlenir:
+          hiçbir HTML yazma işlemi çalışmaz (destekleyen tarayıcılarda).
+       2) Ayrıştırma betik çalıştırmayan ayrı bir belgede (DOMParser) yapılır, ardından temizlenir:
           tehlikeli etiketler, on* olay öznitelikleri ve javascript:/vbscript:/izinsiz data: adresleri silinir. */
   const ttPolicy = (() => {
     try { return window.trustedTypes ? window.trustedTypes.createPolicy('baglanti', { createHTML: (s) => s }) : null; } catch (e) { return null; }
@@ -70,7 +70,7 @@
   const SAFE_DATA = /^data:(image\/(png|jpe?g|gif|webp|avif)|video\/(mp4|webm|quicktime));base64,/;
   function sanitize(root) {
     const kill = [];
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+    const walker = (root.ownerDocument || document).createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
     for (let n = walker.nextNode(); n; n = walker.nextNode()) {
       if (BAD_TAGS.has(n.localName.toLowerCase())) { kill.push(n); continue; }
       for (const a of Array.from(n.attributes)) {
@@ -86,10 +86,15 @@
     kill.forEach((n) => n.remove());
     return root;
   }
+  // HTML, sayfadan ayrı ve betik çalıştırmayan bir belgede (DOMParser) ayrıştırılır; burada <script> çalışmaz,
+  // görsel yüklenmez, olay işleyici tetiklenmez. Temizlenen düğümler sonra sayfaya taşınır. innerHTML kullanılmaz.
+  const parser = new DOMParser();
   function fragment(html) {
-    const t = document.createElement('template');
-    t.innerHTML = ttPolicy ? ttPolicy.createHTML(String(html)) : String(html);   // tek izinli ayrıştırma noktası
-    return sanitize(t.content);
+    const doc = parser.parseFromString(ttPolicy ? ttPolicy.createHTML(String(html)) : String(html), 'text/html');
+    sanitize(doc.body);   // önce etkisiz belgede temizle; sayfaya taşınan düğüm (örn. <img>) hemen yüklenmeye başlar
+    const frag = document.createDocumentFragment();
+    frag.append(...doc.body.childNodes);
+    return frag;
   }
   const setHTML = (el, html) => { el.replaceChildren(fragment(html)); return el; };
   const replaceHTML = (el, html) => { el.replaceWith(fragment(html)); };
