@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://omer1916.github.io/baglanti/sitemap.xml

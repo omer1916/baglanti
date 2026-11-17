@@ -54,6 +54,46 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  /* ---------------- güvenli HTML yazma ----------------
+     Şablonlardaki her değişken esc() ile kaçışlanır. Ek bir savunma katmanı olarak, DOM'a giren
+     tüm işaretleme yalnızca bu yardımcılardan geçer:
+       1) Trusted Types: CSP "require-trusted-types-for 'script'" ile zorunlu; "baglanti" politikası dışında
+          hiçbir innerHTML / outerHTML / insertAdjacentHTML çalışmaz (destekleyen tarayıcılarda).
+       2) Ayrıştırma etkisiz (inert) bir <template> içinde yapılır, ardından temizlenir:
+          tehlikeli etiketler, on* olay öznitelikleri ve javascript:/vbscript:/izinsiz data: adresleri silinir. */
+  const ttPolicy = (() => {
+    try { return window.trustedTypes ? window.trustedTypes.createPolicy('baglanti', { createHTML: (s) => s }) : null; } catch (e) { return null; }
+  })();
+  const BAD_TAGS = new Set(['script', 'iframe', 'frame', 'frameset', 'object', 'embed', 'applet', 'base', 'meta', 'link', 'style', 'noscript', 'foreignobject', 'template']);
+  const URL_ATTRS = new Set(['href', 'src', 'xlink:href', 'action', 'formaction', 'poster', 'background', 'cite', 'srcset']);
+  const SAFE_DATA = /^data:(image\/(png|jpe?g|gif|webp|avif)|video\/(mp4|webm|quicktime));base64,/;
+  function sanitize(root) {
+    const kill = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      if (BAD_TAGS.has(n.localName.toLowerCase())) { kill.push(n); continue; }
+      for (const a of Array.from(n.attributes)) {
+        const name = a.name.toLowerCase();
+        if (name.startsWith('on') || name === 'srcdoc' || name === 'formaction') { n.removeAttribute(a.name); continue; }
+        if (URL_ATTRS.has(name)) {
+          const v = a.value.replace(/[\u0000- ]/g, '').toLowerCase();
+          const bad = /^(javascript|vbscript):/.test(v) || (v.startsWith('data:') && (name === 'href' || name === 'xlink:href' || name === 'action' || !SAFE_DATA.test(v)));
+          if (bad) n.removeAttribute(a.name);
+        }
+      }
+    }
+    kill.forEach((n) => n.remove());
+    return root;
+  }
+  function fragment(html) {
+    const t = document.createElement('template');
+    t.innerHTML = ttPolicy ? ttPolicy.createHTML(String(html)) : String(html);   // tek izinli ayrıştırma noktası
+    return sanitize(t.content);
+  }
+  const setHTML = (el, html) => { el.replaceChildren(fragment(html)); return el; };
+  const replaceHTML = (el, html) => { el.replaceWith(fragment(html)); };
+  const appendHTML = (el, html) => { el.append(fragment(html)); };
   const lower = (s) => String(s || '').toLocaleLowerCase('tr');
   const nf = new Intl.NumberFormat('tr-TR');
   const num = (n) => nf.format(n);
@@ -254,7 +294,7 @@
 
   /* ---------------- dışa aktar ---------------- */
   window.Core = {
-    state, save, reset, mode, KEYS, buildWorkspace, $, $$, esc, lower, num, uid, initials, timeAgo, fmt, daysLeft,
+    state, save, reset, mode, KEYS, buildWorkspace, $, $$, esc, setHTML, replaceHTML, appendHTML, lower, num, uid, initials, timeAgo, fmt, daysLeft,
     ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand,
     U, C, P, E, N, me, entity, avatar, verified, icon, sceneSVG, media
   };

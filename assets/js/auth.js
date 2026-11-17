@@ -8,8 +8,10 @@
   const K = window.Core;
   const { KEYS, mode, buildWorkspace } = K;
 
-  /* Hazır örnek hesap: giriş ekranındaki “Örnek hesabı doldur” düğmesi bu bilgileri kullanır. */
-  const DEMO_ACCOUNT = { name: 'Selin Koç', email: 'selin@baglanti.demo', username: 'selinkoc', city: 'Bursa', role: 'uye', password: 'Baglanti2026' };
+  /* Hazır örnek hesap. Kaynak kodda şifresi YOKTUR: her tarayıcıda rastgele, hiçbir şifreyle eşleşmeyen
+     bir özetle oluşturulur ve yalnızca giriş ekranındaki “Örnek hesapla giriş yap” düğmesiyle açılır.
+     Kullanıcı Ayarlar'dan kendi şifresini belirlerse tek tıkla giriş kapanır. */
+  const SAMPLE_PROFILE = { name: 'Selin Koç', email: 'selin@baglanti.demo', username: 'selinkoc', city: 'Bursa', role: 'uye' };
   const KDF = { name: 'PBKDF2-SHA256', iter: 210000 };     // OWASP 2023 önerisi düzeyi
   const LEGACY = { name: 'SHA256-iter', iter: 1000 };       // WebCrypto yoksa (eski tarayıcı) yedek
   const LOCK_AFTER = 5, LOCK_MS = 30000, LOCK_MAX = 15 * 60000;
@@ -79,10 +81,9 @@
     return { name: d.name.trim().slice(0, 40), email: d.email.trim().toLowerCase().slice(0, 254), username: d.username.trim().toLowerCase(), city: (d.city || '').trim().slice(0, 30), role: K.ROLES[d.role] ? d.role : 'uye', seeded: !!seeded, created: seeded ? Date.now() - 400 * 86400000 : Date.now(), lastLogin: null, failed: 0, locks: 0, lockUntil: 0, sessionToken: newSalt() };
   }
   // İlk açılışta örnek hesabı oluştur (hesap silinirse geri gelmez).
-  // Senkron çalışması için yedek yöntemle özetlenir; ilk başarılı girişte PBKDF2'ye yükseltilir.
   if (!auth) {
-    const a = makeAccount(DEMO_ACCOUNT, true);
-    a.salt = newSalt(); a.kdf = { ...LEGACY }; a.algo = kdfLabel(a.kdf); a.hash = legacyHash(DEMO_ACCOUNT.password, a.salt);
+    const a = makeAccount(SAMPLE_PROFILE, true);
+    a.salt = newSalt(); a.kdf = bestKdf(); a.algo = kdfLabel(a.kdf) + ' · şifre belirlenmedi'; a.hash = newSalt() + newSalt();   // eşleşen şifre yok
     auth = { account: a }; writeAuth();
   }
 
@@ -206,12 +207,26 @@
     flash('Hesap verileri ilk haline döndürüldü.');
     go('#/akis');
   }
+  // Örnek hesap, kullanıcı kendi şifresini belirleyene kadar şifresizdir
+  const sampleOpen = () => !!(auth.account && auth.account.seeded && !auth.account.pwChanged);
+  function loginSample(remember) {
+    if (!sampleOpen()) return { ok: false, error: 'Örnek hesap için tek tıkla giriş kapalı; şifrenle giriş yap.' };
+    const a = auth.account;
+    a.failed = 0; a.locks = 0; a.lockUntil = 0; a.prevLogin = a.lastLogin; a.lastLogin = Date.now();
+    startSession(remember);
+    writeAuth();
+    if (!ls.get(KEYS.account)) ls.set(KEYS.account, JSON.stringify(buildWorkspace(a)));
+    ls.set(KEYS.active, 'account');
+    flash(`Örnek hesapla giriş yapıldı. Hoş geldin, ${a.name.split(' ')[0]}!`);
+    go('#/akis');
+    return { ok: true };
+  }
   async function changePassword(oldPw, newPw) {
     const a = auth.account;
     if (!a) return 'Oturum bulunamadı.';
-    if (!safeEqual(await derive(oldPw, a.salt, a.kdf || LEGACY), a.hash)) return 'Mevcut şifre hatalı.';
+    if (!sampleOpen() && !safeEqual(await derive(oldPw, a.salt, a.kdf || LEGACY), a.hash)) return 'Mevcut şifre hatalı.';
     const pe = passwordError(newPw); if (pe) return pe;
-    if (oldPw === newPw) return 'Yeni şifre mevcut şifreden farklı olmalı.';
+    if (!sampleOpen() && oldPw === newPw) return 'Yeni şifre mevcut şifreden farklı olmalı.';
     const s = session();
     await setPassword(a, newPw); a.pwChanged = Date.now();
     rotateToken(); startSession(!!(s && s.remember));   // diğer oturumlar kapanır, bu sekme açık kalır
@@ -231,7 +246,7 @@
   }
 
   window.Auth = {
-    DEMO: { email: DEMO_ACCOUNT.email, password: DEMO_ACCOUNT.password },
+    sampleOpen, loginSample,
     mode, strength, validateRegister,
     account: () => auth.account,
     session,

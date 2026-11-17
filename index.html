@@ -3,17 +3,35 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Bağlantı · Etkinlik Portalı</title>
+  <title>Bağlantı · Topluluk ve Etkinlik Portalı</title>
   <meta name="description" content="Toplulukların etkinlik, duyuru ve sponsor ihtiyaçlarını paylaştığı sosyal içerik ve topluluk platformu.">
+  <link rel="canonical" href="https://omer1916.github.io/baglanti/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="tr_TR">
+  <meta property="og:site_name" content="Bağlantı">
+  <meta property="og:title" content="Bağlantı · Topluluk ve Etkinlik Portalı">
+  <meta property="og:description" content="Toplulukların etkinlik, duyuru ve sponsor ihtiyaçlarını paylaştığı sosyal içerik ve topluluk platformu.">
+  <meta property="og:url" content="https://omer1916.github.io/baglanti/">
+  <meta property="og:image" content="https://omer1916.github.io/baglanti/assets/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Bağlantı: Topluluklarının etkinlikleri tek yerde.">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#0D1220">
-  <!-- Güvenlik: yalnızca kendi betiklerimiz çalışır; dış bağlantı, eklenti, form gönderimi ve <base> değişikliği kapalı -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <!-- Güvenlik (CSP): yalnızca kendi betiklerimiz çalışır; satır içi betik/olay işleyici, eval, dış bağlantı, eklenti,
+       çerçeve, form gönderimi ve <base> değişikliği kapalı. 'unsafe-inline' yalnızca style="" özniteliklerine izinlidir.
+       Trusted Types: HTML yalnızca "baglanti" politikasından (core.js › setHTML) geçerek DOM'a yazılabilir.
+       GitHub Pages HTTP başlığı ayarlamaya izin vermediği için frame-ancestors ve diğer başlıklar _headers dosyasındadır. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types baglanti">
   <meta name="referrer" content="no-referrer">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23437EF5'/%3E%3Ccircle cx='11' cy='16' r='5' fill='none' stroke='white' stroke-width='3'/%3E%3Ccircle cx='21' cy='16' r='5' fill='none' stroke='%2340CDDC' stroke-width='3'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20261117c">
+  <script type="application/ld+json">
+  {"@context": "https://schema.org", "@type": "WebSite", "name": "Bağlantı", "alternateName": "Bağlantı · Topluluk ve Etkinlik Portalı", "url": "https://omer1916.github.io/baglanti/", "description": "Toplulukların etkinlik, duyuru ve sponsor ihtiyaçlarını paylaştığı sosyal içerik ve topluluk platformu.", "inLanguage": "tr-TR", "image": "https://omer1916.github.io/baglanti/assets/og.png"}
+  </script>
 </head>
 <body>
   <a class="skip-link" href="#main" data-action="skip">İçeriğe geç</a>
@@ -30,8 +48,8 @@
       </form>
       <div class="top-actions">
         <button class="btn btn-primary hide-mobile top-create" data-action="compose"><span data-icon="plus"></span><span>Oluştur</span></button>
-        <a class="icon-btn" href="#/mesajlar" aria-label="Mesajlar" data-badge="messages" data-top="mesajlar"><span data-icon="message"></span></a>
-        <a class="icon-btn hide-mobile" href="#/bildirimler" aria-label="Bildirimler" data-badge="notifications" data-top="bildirimler"><span data-icon="bell"></span></a>
+        <a class="icon-btn" href="#/mesajlar" title="Mesajlar" data-badge="messages" data-top="mesajlar"><span data-icon="message"></span><span class="sr-only">Mesajlar</span></a>
+        <a class="icon-btn hide-mobile" href="#/bildirimler" title="Bildirimler" data-badge="notifications" data-top="bildirimler"><span data-icon="bell"></span><span class="sr-only">Bildirimler</span></a>
         <div class="account-menu">
           <button class="avatar-btn" data-action="toggle-menu" data-menu="account" aria-haspopup="true" aria-expanded="false" aria-label="Hesap menüsü" id="account-btn"></button>
           <div class="popover" data-popover="account" hidden></div>
@@ -42,7 +60,13 @@
 
   <div class="shell" id="shell">
     <nav class="sidebar" id="sidebar" aria-label="Ana gezinme"></nav>
-    <main id="main" class="main" tabindex="-1"></main>
+    <main id="main" class="main" tabindex="-1">
+      <!-- Uygulama yüklenince bu içerik ekranla değişir; arama motorları ve JavaScript'siz ziyaretçiler için özet -->
+      <h1>Bağlantı · Topluluk ve Etkinlik Portalı</h1>
+      <p>Bağlantı, toplulukların etkinlik duyurularını, sosyal içeriklerini ve sponsor ihtiyaçlarını tek yerde paylaştığı bir topluluk platformudur. Üyeler ilgi alanlarına göre topluluk ve grup keşfeder, etkinliklere katılımını bildirir, takvimine ekler ve topluluklar arası ortak etkinliklerde buluşur.</p>
+      <p>Topluluk yöneticileri duyuru yayınlar, moderatörler içerikleri güvenli tutar, markalar ise toplulukların sponsor ihtiyaçlarına destek olur. Gizlilik ayarları her kullanıcının kontrolündedir.</p>
+      <noscript><p><b>Bu uygulama JavaScript gerektirir.</b> Lütfen tarayıcınızda JavaScript'i etkinleştirin.</p></noscript>
+    </main>
     <aside class="rail" id="rail" aria-label="Senin için"></aside>
   </div>
 
@@ -60,10 +84,10 @@
   <dialog class="story-viewer" id="story" aria-label="Hikâye görüntüleyici"></dialog>
   <div class="toast-wrap" aria-live="polite" id="toasts"></div>
 
-  <script src="assets/js/data.js"></script>
-  <script src="assets/js/core.js"></script>
-  <script src="assets/js/auth.js"></script>
-  <script src="assets/js/views.js"></script>
-  <script src="assets/js/app.js"></script>
+  <script src="assets/js/data.js?v=20261117c"></script>
+  <script src="assets/js/core.js?v=20261117c"></script>
+  <script src="assets/js/auth.js?v=20261117c"></script>
+  <script src="assets/js/views.js?v=20261117c"></script>
+  <script src="assets/js/app.js?v=20261117c"></script>
 </body>
 </html>

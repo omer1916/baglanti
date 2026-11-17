@@ -17,7 +17,7 @@ Telefonda, tablette ve bilgisayarda çalışır. Kurulum ya da derleme adımı g
 İlk açılışta tanıtım sayfası gelir. Platforma iki yoldan girilir:
 
 - **Hesapsız demo:** “Hesapsız dene” ile rol kartlarına inip “Bu rolle dene”yi seçin. Rol, sonradan sağ üstteki profil fotoğrafı menüsünden değiştirilebilir (mobilde de aynı yerde).
-- **Hesapla giriş:** “Kayıt ol” ile hesap açın ya da “Giriş yap” ekranındaki **“Örnek hesabın bilgilerini doldur”** düğmesiyle hazır örnek hesaba girin.
+- **Hesapla giriş:** “Kayıt ol” ile hesap açın ya da “Giriş yap” ekranındaki **“Örnek hesapla giriş yap”** düğmesiyle hazır örnek hesaba tek tıkla girin. Örnek hesabın kaynak kodda şifresi yoktur; Ayarlar'dan şifre belirlenirse tek tıkla giriş kapanır.
 
 Hesap ve demo verileri birbirinden ayrı saklanır. **Ayarlar › Hesabım** bölümünde saklanan kayıt görüntülenebilir, şifre değiştirilebilir ve hesap kalıcı olarak silinebilir.
 
@@ -29,8 +29,16 @@ Arka uç olmadığı için sistem tek hesaplıdır ve tüm veriler yalnızca tar
 - 5 hatalı denemede giriş kilitlenir; her yeni kilitte süre ikiye katlanır (30 sn → en fazla 15 dk). Hata mesajı hangi alanın yanlış olduğunu söylemez.
 - Oturumlar rastgele bir belirteçle tutulur ve süresi dolar (sekme oturumu 12 saat, “Beni hatırla” 30 gün; varsayılan kapalı). Çıkış ya da şifre değişikliği diğer sekmelerdeki oturumları da kapatır.
 - Bağlantıdan (URL) gelen değerler beyaz listeyle sınırlanır, ekrana yazılan tüm içerik kaçışlanır (XSS koruması).
-- İçerik Güvenliği Politikası (CSP) yalnızca sitenin kendi betiklerine izin verir; dış ağ isteği, eklenti ve form gönderimi kapalıdır.
+- DOM'a giren tüm HTML tek bir yardımcıdan (`core.js › setHTML`) geçer: etkisiz bir `<template>` içinde ayrıştırılır, `script`/`iframe` gibi etiketler, `on*` öznitelikleri ve `javascript:` adresleri silinir. **Trusted Types** zorunludur; bu yardımcı dışındaki her `innerHTML` yazımı tarayıcı tarafından engellenir.
+- İçerik Güvenliği Politikası (CSP) yalnızca sitenin kendi betiklerine izin verir; satır içi betik, `eval`, dış ağ isteği, çerçeve, eklenti ve form gönderimi kapalıdır. `'unsafe-inline'` yalnızca `style=""` özniteliklerine açıktır.
+- Örnek hesabın kaynak kodda şifresi yoktur (her tarayıcıda rastgele, eşleşmeyen bir özetle oluşturulur).
 - Yüklenen fotoğraflar yeniden çizilerek **EXIF/GPS konum bilgisi silinir**; yalnızca izinli görsel ve video türleri kabul edilir.
+
+GitHub Pages özel HTTP başlığı ayarlamaya izin vermez. `frame-ancestors`, `X-Content-Type-Options`, `Permissions-Policy`, HSTS gibi başlıklar `_headers` dosyasında hazırdır; site Netlify veya Cloudflare Pages'e taşınırsa otomatik uygulanır.
+
+## Arama motoru
+
+`robots.txt`, `sitemap.xml`, canonical bağlantısı, Open Graph / Twitter kartı (`assets/og.png`, 1200×630) ve `WebSite` yapısal verisi (JSON-LD) eklidir. Uygulama `#/` ile başlayan adresler kullandığı için yalnızca ana sayfa dizine eklenir.
 
 > Bu bir istemci tarafı prototiptir. Tarayıcı deposuna erişebilen biri kayıtları değiştirebilir. Gerçek üründe kimlik doğrulama, kilitleme ve oturum yönetimi sunucuda yapılmalı; site HTTPS ve güvenlik başlıklarıyla (CSP, `frame-ancestors`, HSTS) sunulmalıdır.
 
@@ -61,7 +69,10 @@ Arka uç olmadığı için sistem tek hesaplıdır ve tüm veriler yalnızca tar
 ## Dosyalar
 
 ```
-index.html              uygulama kabuğu
+index.html              uygulama kabuğu, CSP ve SEO etiketleri
+robots.txt, sitemap.xml arama motoru dosyaları
+_headers                güvenlik başlıkları (Netlify / Cloudflare Pages için)
+assets/og.png           paylaşım önizleme görseli
 assets/css/styles.css   tasarım sistemi (koyu ve açık tema, duyarlı yerleşim)
 assets/js/data.js       örnek veri
 assets/js/core.js       durum, ikonlar, çizimler, yardımcılar

@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const K = window.Core;
-  const { state, save, $, $$, esc, lower, num, uid, icon, avatar, media, timeAgo, entity, U, C, P, E, N, me } = K;
+  const { state, save, $, $$, esc, setHTML, replaceHTML, appendHTML, lower, num, uid, icon, avatar, media, timeAgo, entity, U, C, P, E, N, me } = K;
   const { V, UI, postCard, rail } = window.Views;
 
   const els = { shell: $('#shell'), main: $('#main'), rail: $('#rail'), sidebar: $('#sidebar'), modal: $('#modal'), story: $('#story'), toasts: $('#toasts') };
@@ -26,7 +26,7 @@
   function toast(msg, kind = 'ok') {
     const t = document.createElement('div');
     t.className = 'toast';
-    t.innerHTML = icon(kind === 'ok' ? 'check' : 'info') + `<span>${esc(msg)}</span>`;
+    setHTML(t, icon(kind === 'ok' ? 'check' : 'info') + `<span>${esc(msg)}</span>`);
     els.toasts.appendChild(t);
     setTimeout(() => { t.style.transition = 'opacity .3s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2800);
   }
@@ -64,7 +64,7 @@
   function renderShell(r) {
     const key = r.name === 'topluluk' ? 'topluluklar' : r.name === 'etkinlik' ? 'etkinlikler' : r.name === 'sayfa' && !(r.id === K.BRAND_PAGE && K.isBrand()) ? 'sponsorlar' : r.name;
     const m = me();
-    els.sidebar.innerHTML = navItems().map(([k, href, ic, label, count]) => `<a class="nav-link" href="${href}" ${k === key ? 'aria-current="page"' : ''} title="${label}">${icon(ic)}<span>${label}</span>${count ? `<span class="count">${count}</span>` : ''}</a>`).join('');
+    setHTML(els.sidebar, navItems().map(([k, href, ic, label, count]) => `<a class="nav-link" href="${href}" ${k === key ? 'aria-current="page"' : ''} title="${label}">${icon(ic)}<span>${label}</span>${count ? `<span class="count">${count}</span>` : ''}</a>`).join(''));
 
     // hesap menüsü (profil fotoğrafı): hesapla ilgili her şey burada
     const pending = state.reports.filter((x) => x.status === 'Bekliyor').length;
@@ -73,9 +73,9 @@
     if (K.isManager()) acc.push(['yonetim', '#/yonetim', 'shield', 'Yönetim paneli', pending]);
     acc.push(['kaydedilenler', '#/kaydedilenler', 'bookmark', 'Kaydedilenler'], ['ayarlar', '#/ayarlar', 'settings', 'Ayarlar & gizlilik']);
     const accKey = r.name === 'sayfa' && r.id === K.BRAND_PAGE && K.isBrand() ? 'sayfa:kuzey' : r.name;
-    $('#account-btn').innerHTML = avatar({ ...m, kind: 'user' }, 'sm');
+    setHTML($('#account-btn'), avatar({ ...m, kind: 'user' }, 'sm'));
     $('#account-btn').toggleAttribute('data-active', ['profil', 'kaydedilenler', 'ayarlar', 'yonetim'].includes(accKey) || accKey === 'sayfa:kuzey' || (r.name === 'kisi' && r.id === state.me));
-    $('[data-popover="account"]').innerHTML = `
+    setHTML($('[data-popover="account"]'), `
       <a class="pop-me" href="#/profil">${avatar({ ...m, kind: 'user' }, 'md')}<span class="grow"><b>${esc(m.name)}</b><span>${K.mode === 'account' ? esc(window.Auth.account()?.email || '') : 'Demo modu · hesapsız'}</span><span>${esc(K.ROLES[state.role].label)} · Profilini gör</span></span></a>
       <hr>
       ${acc.map(([k, href, ic, label, count]) => `<a href="${href}" ${k === accKey ? 'aria-current="page"' : ''}>${icon(ic)}<span class="grow">${label}</span>${count ? `<span class="count">${count}</span>` : ''}</a>`).join('')}
@@ -86,7 +86,7 @@
       <a href="#/hosgeldin">${icon('sparkle')}Tanıtım ve SSS</a>
       <button data-action="reset-demo">${icon('refresh')}${K.mode === 'account' ? 'Hesap verilerini sıfırla' : 'Demoyu sıfırla'}</button>
       <hr>
-      ${K.mode === 'account' ? `<button data-action="logout">${icon('logout')}Çıkış yap</button>` : `<a href="#/kayit">${icon('userPlus')}Kayıt ol</a><button data-action="logout">${icon('logout')}Demodan çık</button>`}`;
+      ${K.mode === 'account' ? `<button data-action="logout">${icon('logout')}Çıkış yap</button>` : `<a href="#/kayit">${icon('userPlus')}Kayıt ol</a><button data-action="logout">${icon('logout')}Demodan çık</button>`}`);
 
     // üst çubuk: etkin sayfa
     $$('.topbar [data-top]').forEach((el) => { if (el.dataset.top === r.name) el.setAttribute('aria-current', 'page'); else el.removeAttribute('aria-current'); });
@@ -115,8 +115,8 @@
     els.shell.className = 'shell ' + layout;
     document.body.classList.toggle('landing', layout === 'bare');
     document.body.dataset.route = r.name;
-    els.main.innerHTML = view.html;
-    els.rail.innerHTML = layout ? '' : (view.rail || rail());
+    setHTML(els.main, view.html);
+    setHTML(els.rail, layout ? '' : (view.rail || rail()));
     renderShell(r);
     document.title = `${view.title} · Bağlantı`;
     const routeKey = r.path;
@@ -133,7 +133,7 @@
     const p = state.posts.find((x) => x.id === id);
     const el = document.getElementById('post-' + id);
     save();
-    if (p && el) el.outerHTML = postCard(p); else render({ keepScroll: true });
+    if (p && el) replaceHTML(el, postCard(p)); else render({ keepScroll: true });
     renderShell(parseHash());
   }
 
@@ -158,7 +158,7 @@
     const m = els.modal;
     m.className = 'modal ' + cls;
     const inner = `<div class="modal-head"><h2 id="modal-title">${title}</h2><button type="button" class="icon-btn" data-action="close-modal" aria-label="Kapat">${icon('x')}</button></div><div class="modal-body">${body}</div>${foot ? `<div class="modal-foot">${foot}</div>` : ''}`;
-    m.innerHTML = form ? `<form class="modal-form" data-form="${form}" ${formAttrs} novalidate>${inner}</form>` : inner;
+    setHTML(m, form ? `<form class="modal-form" data-form="${form}" ${formAttrs} novalidate>${inner}</form>` : inner);
     if (!m.open) m.showModal();
   }
   function closeModal() { if (els.modal.open) els.modal.close(); }
@@ -301,7 +301,7 @@
     const s = sv.list[sv.si], it = s.items[sv.ii], c = C(s.community);
     const manage = K.isManager() && K.MANAGED.includes(c.id);
     els.story.classList.toggle('paused', sv.paused);
-    els.story.innerHTML = `<div class="story-frame">
+    setHTML(els.story, `<div class="story-frame">
       ${media({ scene: it.scene, alt: it.caption })}
       <button class="story-nav prev" data-action="story-prev" aria-label="Önceki"></button>
       <button class="story-nav next" data-action="story-next" aria-label="Sonraki"></button>
@@ -316,7 +316,7 @@
         <div class="row"><span class="row" style="gap:6px">${manage ? `${icon('eye', 'ico-sm')} ${num(it.views)} görüntülenme` : 'Dikey video · altyazılı'}</span>
           <span class="btn-row"><button class="btn btn-sm" data-action="story-mute" data-id="${s.id}">${icon(s.muted ? 'volume' : 'volumeOff', 'ico-sm')}${s.muted ? 'Sesi aç' : 'Sessize al'}</button><button class="btn btn-sm" data-action="story-hide" data-id="${s.id}">${icon('eyeOff', 'ico-sm')}Gizle</button></span></div>
       </div>
-    </div>`;
+    </div>`);
     sv.remaining = STORY_MS;
     if (!sv.paused) { sv.started = Date.now(); sv.timer = setTimeout(storyNext, STORY_MS); }
   }
@@ -338,7 +338,7 @@
     else { sv.started = Date.now(); sv.timer = setTimeout(storyNext, Math.max(200, sv.remaining)); }
     els.story.classList.toggle('paused', sv.paused);
     const b = els.story.querySelector('[data-action="story-pause"]');
-    if (b) { b.innerHTML = icon(sv.paused ? 'play' : 'pause'); b.setAttribute('aria-label', sv.paused ? 'Oynat' : 'Duraklat'); }
+    if (b) { setHTML(b, icon(sv.paused ? 'play' : 'pause')); b.setAttribute('aria-label', sv.paused ? 'Oynat' : 'Duraklat'); }
   }
   function closeStory() {
     if (sv) { clearTimeout(sv.timer); sv.list[sv.si].seen = true; sv = null; }
@@ -387,11 +387,10 @@
 
   /* ---------- hesap ---------- */
   A.logout = () => window.Auth.logout();
-  A['fill-demo'] = () => {
-    const f = $('[data-form="login"]'); if (!f) return;
-    f.id.value = window.Auth.DEMO.email; f.password.value = window.Auth.DEMO.password;
-    toast('Örnek hesap bilgileri dolduruldu');
-    f.querySelector('button.btn-primary').focus();
+  A['sample-login'] = () => {
+    const f = $('[data-form="login"]');
+    const res = window.Auth.loginSample(!!(f && f.remember.checked));
+    if (!res.ok) toast(res.error, 'info');
   };
   A['toggle-pw'] = (el) => {
     const inp = document.getElementById(el.dataset.for); if (!inp) return;
@@ -399,9 +398,9 @@
     inp.type = show ? 'text' : 'password';
     el.setAttribute('aria-pressed', String(show));
     el.setAttribute('aria-label', show ? 'Şifreyi gizle' : 'Şifreyi göster');
-    el.innerHTML = icon(show ? 'eyeOff' : 'eye', 'ico-sm');
+    setHTML(el, icon(show ? 'eyeOff' : 'eye', 'ico-sm'));
   };
-  A['forgot-password'] = () => openModal({ title: 'Şifremi unuttum', body: `<p>Gerçek bir sistemde e-posta adresine sıfırlama bağlantısı gönderilir. Bu göstermelik sürümde e-posta gönderilmez.</p><div class="callout">${icon('info')}<span>Şifreni hatırlamıyorsan <a class="link" href="#/kayit">yeni hesap oluşturabilirsin</a>; bu, tarayıcıdaki mevcut hesabın yerine geçer.${window.Auth.account()?.seeded ? ' Örnek hesap için giriş ekranındaki “Örnek hesabın bilgilerini doldur” düğmesini kullan.' : ''}</span></div>`, foot: '<button class="btn btn-primary" data-action="close-modal">Tamam</button>' });
+  A['forgot-password'] = () => openModal({ title: 'Şifremi unuttum', body: `<p>Gerçek bir sistemde e-posta adresine sıfırlama bağlantısı gönderilir. Bu göstermelik sürümde e-posta gönderilmez.</p><div class="callout">${icon('info')}<span>Şifreni hatırlamıyorsan <a class="link" href="#/kayit">yeni hesap oluşturabilirsin</a>; bu, tarayıcıdaki mevcut hesabın yerine geçer.${window.Auth.account()?.seeded ? ' Örnek hesaba giriş ekranındaki “Örnek hesapla giriş yap” düğmesiyle girebilirsin.' : ''}</span></div>`, foot: '<button class="btn btn-primary" data-action="close-modal">Tamam</button>' });
   A['show-record'] = () => openModal({ title: 'Saklanan hesap kaydı', body: `<p class="small muted">Tarayıcının yerel deposunda (localStorage) tutulan kayıt. Tuz ve özet kısaltılarak gösteriliyor; şifrenin kendisi hiçbir yerde saklanmaz.</p><div class="table-wrap"><pre class="code">${esc(JSON.stringify(window.Auth.record(), (k, v) => (['created', 'lastLogin', 'prevLogin', 'lockUntil', 'pwChanged'].includes(k) && v ? new Date(v).toLocaleString('tr-TR') : v), 2))}</pre></div>`, foot: '<button class="btn btn-primary" data-action="close-modal">Kapat</button>' });
 
   A.compose = (el) => openComposer({ type: el.dataset.type, community: el.dataset.community, pick: !!el.dataset.pick, feeling: !!el.dataset.feeling });
@@ -499,7 +498,7 @@
   A['close-account'] = () => (K.mode === 'account' && window.Auth.account()
     ? confirmModal({ title: 'Hesabını sil', text: `<b>${esc(window.Auth.account().email)}</b> hesabı, gönderilerin, mesajların ve ayarların bu tarayıcıdan kalıcı olarak silinecek. Bu işlem geri alınamaz.`, ok: 'Hesabı kalıcı olarak sil', danger: true, onOk: () => window.Auth.deleteAccount() })
     : openModal({ title: 'Hesabını kapat', body: `<p>Demo modunda kapatılacak bir hesap yok. Hesap kapatma akışını denemek için önce kayıt ol.</p>`, foot: '<button class="btn" data-action="close-modal">Vazgeç</button><a class="btn btn-primary" href="#/kayit">Kayıt ol</a>' }));
-  A['change-password'] = () => openModal({ title: 'Şifre değiştir', form: 'password', body: `<div class="field"><label for="pw-old">Mevcut şifre</label><input class="input" type="password" id="pw-old" name="old" autocomplete="current-password" required></div><div class="field"><label for="pw-new">Yeni şifre</label><input class="input" type="password" id="pw-new" name="new" autocomplete="new-password" minlength="8" required><span class="xs muted">En az 8 karakter; harf ve rakam içermeli.</span></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Güncelle</button>` });
+  A['change-password'] = () => openModal({ title: window.Auth.sampleOpen() ? 'Şifre belirle' : 'Şifre değiştir', form: 'password', body: `${window.Auth.sampleOpen() ? `<div class="callout">${icon('info')}<span>Örnek hesabın henüz şifresi yok. Şifre belirlersen tek tıkla giriş kapanır; sonraki girişlerde bu şifreyi kullanırsın.</span></div><input type="hidden" name="old" value="">` : `<div class="field"><label for="pw-old">Mevcut şifre</label><input class="input" type="password" id="pw-old" name="old" autocomplete="current-password" required></div>`}<div class="field"><label for="pw-new">Yeni şifre</label><input class="input" type="password" id="pw-new" name="new" autocomplete="new-password" minlength="8" required><span class="xs muted">En az 8 karakter; harf ve rakam içermeli.</span></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Güncelle</button>` });
   A['edit-profile'] = () => { const m = me(); openModal({ title: 'Profili düzenle', form: 'profile', body: `<div class="field"><label for="pf-name">Ad soyad</label><input class="input" id="pf-name" name="name" value="${esc(m.name)}" required maxlength="40"></div><div class="field"><label for="pf-city">Şehir</label><input class="input" id="pf-city" name="city" value="${esc(m.city)}" maxlength="30"></div><div class="field"><label for="pf-bio">Kısa biyografi</label><textarea class="textarea" id="pf-bio" name="bio" maxlength="160" style="min-height:90px">${esc(m.bio)}</textarea></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Kaydet</button>` }); };
   A['new-group'] = () => openModal({ title: 'Yeni grup oluştur', form: 'new-group', body: `<div class="field"><label for="ng-name">Grup adı</label><input class="input" id="ng-name" name="name" required maxlength="50"></div><div class="form-grid"><div class="field"><label for="ng-type">Grup türü</label><select class="select" id="ng-type" name="type"><option>Herkese açık</option><option>Özel</option><option>Gizli</option></select></div><div class="field"><label for="ng-cat">Kategori</label><select class="select" id="ng-cat" name="cat"><option>Kamp</option><option>Teknoloji</option><option>Müzik</option><option>Spor</option><option>Sanat</option><option>Gönüllülük</option></select></div></div><div class="field"><label for="ng-desc">Açıklama</label><textarea class="textarea" id="ng-desc" name="desc" maxlength="300" style="min-height:90px"></textarea></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Oluştur</button>` });
   A.dm = (el) => { const id = el.dataset.id; let c = state.conversations.find((x) => x.kind === 'user' && x.with === id); if (!c) { c = { id: uid('c'), kind: 'user', with: id, title: U(id).name, subtitle: U(id).city, online: Math.random() > 0.5, unread: 0, messages: [] }; state.conversations.unshift(c); save(); } location.hash = '#/mesajlar/' + c.id; };
@@ -606,7 +605,7 @@
   function appendMessage(conv, m) {
     const body = $('#chat-body');
     if (!body) return;
-    body.insertAdjacentHTML('beforeend', window.Views.msgBubble(m, conv));
+    appendHTML(body, window.Views.msgBubble(m, conv));
     body.scrollTop = body.scrollHeight;
     const li = $(`#chat-items a[href="#/mesajlar/${conv.id}"] .grow span`);
     if (li) li.textContent = (m.from === 'me' ? 'Sen: ' : '') + (m.img ? '📷 Fotoğraf' : m.file ? '📎 ' + m.file : m.text);
@@ -631,7 +630,7 @@
   /* =============== değişiklik olayları =============== */
   const CH = {};
   CH['feed-sort'] = (el) => { UI.feedSort = el.value; render({ keepScroll: true }); };
-  CH['discover-filter'] = (el) => { UI.discover[el.dataset.key] = el.value; const box = $('#discover-results'); if (box) box.innerHTML = V.discoverResults(box.dataset.tab); };
+  CH['discover-filter'] = (el) => { UI.discover[el.dataset.key] = el.value; const box = $('#discover-results'); if (box) setHTML(box, V.discoverResults(box.dataset.tab)); };
   CH['media-comm'] = (el) => { UI.mediaComm = el.value; render({ keepScroll: true }); };
   CH['admin-comm'] = (el) => { UI.adminComm = el.value; render({ keepScroll: true }); };
   CH['notif-setting'] = (el) => { state.notifSettings[el.dataset.key] = el.checked; save(); toast(el.checked ? 'Bildirim türü açıldı' : 'Bildirim türü sessize alındı'); };
@@ -730,7 +729,7 @@
     if (t.id === 'discover-q') {
       UI.discover.q = t.value;
       const box = $('#discover-results');
-      if (box) box.innerHTML = V.discoverResults(box.dataset.tab);
+      if (box) setHTML(box, V.discoverResults(box.dataset.tab));
       const params = new URLSearchParams(); if (box && box.dataset.tab !== 'tumu') params.set('tab', box.dataset.tab); if (t.value) params.set('q', t.value);
       history.replaceState(null, '', '#/kesfet' + (params.toString() ? '?' + params : ''));
     }
@@ -775,7 +774,7 @@
   });
 
   els.modal.addEventListener('click', (e) => { if (e.target === els.modal) closeModal(); });
-  els.modal.addEventListener('close', () => { cs = null; lb = null; els.modal.innerHTML = ''; });
+  els.modal.addEventListener('close', () => { cs = null; lb = null; els.modal.replaceChildren(); });
   els.story.addEventListener('close', () => { if (sv) closeStory(); });
   els.story.addEventListener('click', (e) => { if (e.target === els.story) closeStory(); });
 
@@ -783,7 +782,7 @@
   matchMedia('(max-width: 720px)').addEventListener('change', () => { if (parseHash().name === 'mesajlar') render({ keepScroll: true }); });
 
   /* =============== başlat =============== */
-  function hydrateIcons() { $$('[data-icon]').forEach((el) => { el.outerHTML = icon(el.dataset.icon); }); }
+  function hydrateIcons() { $$('[data-icon]').forEach((el) => { replaceHTML(el, icon(el.dataset.icon)); }); }
   window.App = { toast, render };
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   applyTheme();

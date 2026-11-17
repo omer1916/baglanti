@@ -166,7 +166,7 @@
       ['marka', 'building', 'var(--danger-soft)', 'var(--danger)']
     ];
     return {
-      title: 'Hoş geldin', layout: 'bare',
+      title: 'Topluluk ve etkinlik portalı', layout: 'bare',
       html: `<div class="landing-wrap">
         <nav class="l-nav" aria-label="Tanıtım">
           <a class="brand" href="#/hosgeldin"><span class="brand-mark" aria-hidden="true"></span><span class="brand-text">Bağlantı<small>Etkinlik Portalı</small></span></a>
@@ -272,7 +272,7 @@
         </form>
         <div class="or"><span>veya</span></div>
         <div class="stack">
-          ${a && a.seeded ? `<button type="button" class="btn btn-block" data-action="fill-demo">${icon('user', 'ico-sm')}Örnek hesabın bilgilerini doldur</button>` : ''}
+          ${window.Auth.sampleOpen() ? `<button type="button" class="btn btn-block" data-action="sample-login">${icon('user', 'ico-sm')}Örnek hesapla giriş yap</button>` : ''}
           <button type="button" class="btn btn-ghost btn-block" data-action="enter-demo" data-role="uye">Hesapsız demoya göz at</button>
         </div>`, authSideDefault())
     };
