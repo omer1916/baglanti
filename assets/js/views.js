@@ -105,7 +105,7 @@
         </div></div>` : ''}
       ${m.length ? `<div class="post-media n${Math.min(m.length, 3)}">${m.slice(0, 3).map((x, i) => mediaBtn(x, `data-action="lightbox" data-post="${p.id}" data-i="${i}"`, 'Görseli büyüt')).join('')}</div>` : ''}
       <div class="post-stats">
-        <span class="likes">${p.likes ? `<span class="like-dot">${icon('heart')}</span>${num(p.likes)}` : ''}</span>
+        <span class="likes">${p.likes ? `<button type="button" class="likes-btn" data-action="show-likes" data-id="${p.id}" aria-label="${num(p.likes)} beğeni · beğenenleri gör"><span class="like-dot">${icon('heart')}</span>${num(p.likes)}</button>` : ''}</span>
         <span>${p.comments.length} yorum · ${p.shares} paylaşım</span>
       </div>
       <div class="post-actions">

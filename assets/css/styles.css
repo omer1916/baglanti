@@ -948,3 +948,29 @@ body[data-route="akis"] .top-create { display: none !important; }
 @media (max-width: 720px) {
   .popover[data-popover="account"] { position: fixed; top: calc(var(--topbar-h) + env(safe-area-inset-top, 0px) + 6px); right: 8px; width: min(300px, calc(100vw - 16px)); max-height: calc(100dvh - var(--topbar-h) - var(--bottom-h) - 32px); }
 }
+
+/* beğenenler */
+.likes-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 8px 0 2px; margin-left: -2px; border-radius: 999px; color: var(--muted); font-size: 13px; font-weight: 600; }
+.likes-btn:hover { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.likers { list-style: none; margin: -6px 0 0; padding: 0; display: grid; }
+.liker { display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-radius: 12px; }
+.liker:hover { background: var(--surface-2); }
+.liker b { display: block; font-size: 15px; color: var(--text); }
+.liker .grow > span { display: block; font-size: 13px; color: var(--muted); }
+.liker .like-dot { flex: none; }
+.likers-more { padding: 10px 4px 0; border-top: 1px solid var(--border); margin-top: 6px; }
+
+/* sekme kartı ile filtre çipleri arasında boşluk (çiplerin kendi -2px kenar boşluğu sayfa aralığını eziyordu) */
+.main > * + .chips { margin-top: 14px; }
+@media (max-width: 720px) { .main > * + .chips { margin-top: 12px; } }
+
+/* topluluk kartı: avatar kapak görselinin üstünde kalsın */
+.ccard-body .av { position: relative; z-index: 1; }
+
+/* görsel büyütme: görsel pencereyi tam doldurur, taşma ve kaydırma çubuğu olmaz */
+.modal.lightbox { max-width: calc(100vw - 32px); overflow: hidden; }
+.lightbox .modal-body { overflow: hidden; padding: 0; background: #05080f; }
+.lightbox .scene { width: 100%; aspect-ratio: auto; height: min(64dvh, 620px); max-height: none; }
+.lightbox .scene img, .lightbox .scene video { object-fit: contain; background: #05080f; }
+.lightbox .modal-head h2 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 720px) { .lightbox .scene { height: min(56dvh, 70vw); } }

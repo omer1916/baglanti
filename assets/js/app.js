@@ -412,6 +412,22 @@
   A['cs-draft'] = () => { if (!cs.text.trim() && !cs.media.length) return toast('Boş taslak kaydedilemez.', 'info'); const d = { ...cs }; delete d.draftIndex; state.drafts.unshift(JSON.parse(JSON.stringify(d))); save(); closeModal(); toast('Taslak kaydedildi'); };
   A['cs-load-draft'] = () => { cs = { ...JSON.parse(JSON.stringify(state.drafts[0])), draftIndex: 0 }; if (!ALLOWED[state.role].includes(cs.type)) cs.type = 'post'; renderComposer(); };
 
+  // Beğenenler: örnek veride beğenen listesi tutulmadığı için gönderiye göre sabit bir sırayla üyelerden seçilir
+  A['show-likes'] = (el) => {
+    const p = post(el.dataset.id); if (!p) return;
+    const seed = [...p.id].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
+    const others = Object.values(state.users).filter((u) => u.id !== state.me)
+      .map((u, i) => ({ u, k: (seed * (i + 3) * 2654435761) >>> 0 })).sort((a, b) => a.k - b.k).map((x) => x.u);
+    const shown = (p.liked ? [me()] : []).concat(others.slice(0, Math.max(0, Math.min(p.likes - (p.liked ? 1 : 0), others.length))));
+    const rest = p.likes - shown.length;
+    const isFriend = (id) => state.connections.friends.includes(id);
+    openModal({
+      title: `Beğenenler <span class="muted small">${num(p.likes)}</span>`,
+      body: `<ul class="likers">${shown.map((u) => `<li><a class="liker" href="#/kisi/${u.id}" data-action="close-modal">${avatar({ ...u, kind: 'user' }, 'md')}<span class="grow"><b>${u.id === state.me ? 'Sen' : esc(u.name)}</b><span>@${esc(u.handle)} · ${esc(u.city || '')}${u.id !== state.me && isFriend(u.id) ? ' · Bağlantın' : ''}</span></span><span class="like-dot" aria-hidden="true">${icon('heart')}</span></a></li>`).join('')}</ul>
+        ${rest > 0 ? `<p class="small muted likers-more">ve ${num(rest)} kişi daha beğendi</p>` : ''}`,
+      foot: '<button class="btn btn-primary" data-action="close-modal">Kapat</button>'
+    });
+  };
   A.like = (el) => { const p = post(el.dataset.id); p.liked = !p.liked; p.likes += p.liked ? 1 : -1; rerenderPost(p.id); };
   A.save = (el) => { const p = post(el.dataset.id); p.saved = !p.saved; rerenderPost(p.id); toast(p.saved ? 'Kaydedilenlere eklendi' : 'Kaydedilenlerden çıkarıldı'); };
   A.share = (el) => { const p = post(el.dataset.id); p.shares++; copy(location.href.split('#')[0] + '#/akis'); rerenderPost(p.id); toast('Gönderi bağlantısı kopyalandı'); };
