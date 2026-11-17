@@ -1,7 +1,27 @@
 /* Bağlantı · çekirdek: durum, yardımcılar, ikonlar, illüstrasyonlar, ortak bileşenler */
 (function () {
   'use strict';
-  const KEY = 'baglanti-demo-v1';
+  /* İki ayrı çalışma alanı var:
+     - demo:    hesapsız göz atma (rol seçerek)
+     - account: kayıtlı tek hesabın verileri
+     Hangisinin açık olduğu `baglanti-active` anahtarında tutulur. */
+  const KEYS = { active: 'baglanti-active', auth: 'baglanti-auth-v1', session: 'baglanti-session', flash: 'baglanti-flash', demo: 'baglanti-demo-v1', account: 'baglanti-account-v1' };
+  const mode = (() => { try { return localStorage.getItem(KEYS.active) === 'account' ? 'account' : 'demo'; } catch (e) { return 'demo'; } })();
+  const KEY = KEYS[mode];
+
+  /* Bir hesap için başlangıç verisi: örnek dünya + hesabın kendi profili */
+  function buildWorkspace(acc) {
+    const s = window.SEED();
+    s.onboarded = true;
+    s.role = (acc && acc.role) || 'uye';
+    if (acc && !acc.seeded) {
+      Object.assign(s.users.u0, { name: acc.name, handle: acc.username, city: acc.city || 'Bursa', bio: 'Bağlantı’ya yeni katıldım.', joined: String(new Date(acc.created).getFullYear()) });
+      s.posts = s.posts.filter((p) => !(p.author.kind === 'user' && p.author.id === 'u0'));
+      s.posts.forEach((p) => { p.comments = p.comments.filter((c) => c.user !== 'u0'); });
+      s.notifications.unshift({ id: 'nt-welcome', type: 'community', text: '<b>Bağlantı</b>’ya hoş geldin! Profilini tamamla ve ilk topluluğuna katıl.', ts: Date.now(), read: false, link: '#/profil' });
+    }
+    return s;
+  }
 
   /* ---------------- durum ---------------- */
   function load() {
@@ -9,6 +29,9 @@
       const raw = localStorage.getItem(KEY);
       if (raw) { const s = JSON.parse(raw); if (s && s.version === 1) return s; }
     } catch (e) { /* depolama kapalı olabilir */ }
+    if (mode === 'account') {
+      try { const a = JSON.parse(localStorage.getItem(KEYS.auth)); if (a && a.account) return buildWorkspace(a.account); } catch (e) { /* yok */ }
+    }
     return window.SEED();
   }
   const state = load();
@@ -21,7 +44,11 @@
       if (!warnedQuota) { warnedQuota = true; App.toast('Yüklenen medya büyük; yalnızca bu oturumda saklanacak.', 'info'); }
     }
   }
-  function reset() { try { localStorage.removeItem(KEY); } catch (e) { /* yok */ } location.hash = '#/hosgeldin'; location.reload(); }
+  function reset() {
+    if (mode === 'account' && window.Auth && window.Auth.account()) return window.Auth.resetWorkspace();
+    try { localStorage.removeItem(KEY); } catch (e) { /* yok */ }
+    history.replaceState(null, '', '#/hosgeldin'); location.reload();
+  }
 
   /* ---------------- yardımcılar ---------------- */
   const $ = (s, r = document) => r.querySelector(s);
@@ -72,9 +99,11 @@
   const isBrand = () => state.role === 'marka';
 
   /* ---------------- varlıklar ---------------- */
-  const U = (id) => state.users[id];
-  const C = (id) => state.communities[id];
-  const P = (id) => state.pages[id];
+  // Yalnızca nesnenin kendi anahtarları: "__proto__", "constructor" gibi URL değerleri prototipe ulaşmasın
+  const own = (obj, id) => (typeof id === 'string' && Object.prototype.hasOwnProperty.call(obj, id) ? obj[id] : undefined);
+  const U = (id) => own(state.users, id);
+  const C = (id) => own(state.communities, id);
+  const P = (id) => own(state.pages, id);
   const E = (id) => state.events.find((e) => e.id === id);
   const N = (id) => state.needs.find((n) => n.id === id);
   const me = () => U(state.me);
@@ -225,7 +254,7 @@
 
   /* ---------------- dışa aktar ---------------- */
   window.Core = {
-    state, save, reset, $, $$, esc, lower, num, uid, initials, timeAgo, fmt, daysLeft,
+    state, save, reset, mode, KEYS, buildWorkspace, $, $$, esc, lower, num, uid, initials, timeAgo, fmt, daysLeft,
     ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand,
     U, C, P, E, N, me, entity, avatar, verified, icon, sceneSVG, media
   };

@@ -14,9 +14,25 @@ Telefonda, tablette ve bilgisayarda çalışır. Kurulum ya da derleme adımı g
   ```
   Ardından `http://localhost:5173` adresine gidin. Telefondan açmak için `http://<bilgisayarın-IP-adresi>:5173` adresini kullanın; bunun için sunucuyu `--bind 0.0.0.0` ile başlatın.
 
-İlk açılışta tanıtım sayfası gelir. “Demoya gir” ya da bir rol kartındaki “Bu rolle dene” ile platforma geçilir.
-Rol, sonradan hesap menüsünden (sağ üstteki avatar) ya da sol menünün altındaki “Demo rolü” seçiminden değiştirilebilir.
-Yapılan her değişiklik tarayıcıda saklanır. **Ayarlar › Demo verisini sıfırla** ile demo ilk haline döner.
+İlk açılışta tanıtım sayfası gelir. Platforma iki yoldan girilir:
+
+- **Hesapsız demo:** “Hesapsız dene” ile rol kartlarına inip “Bu rolle dene”yi seçin. Rol, sonradan sağ üstteki avatar menüsünden değiştirilebilir.
+- **Hesapla giriş:** “Kayıt ol” ile hesap açın ya da “Giriş yap” ekranındaki **“Örnek hesabın bilgilerini doldur”** düğmesiyle hazır örnek hesaba girin.
+
+Hesap ve demo verileri birbirinden ayrı saklanır. **Ayarlar › Hesabım** bölümünde saklanan kayıt görüntülenebilir, şifre değiştirilebilir ve hesap kalıcı olarak silinebilir.
+
+## Hesap sistemi ve güvenlik
+
+Arka uç olmadığı için sistem tek hesaplıdır ve tüm veriler yalnızca tarayıcının yerel deposunda (localStorage) tutulur; hiçbir sunucuya gönderilmez.
+
+- Şifre düz metin saklanmaz: WebCrypto **PBKDF2-SHA256, 210.000 tur**, 16 baytlık rastgele tuz. Karşılaştırma sabit sürelidir.
+- 5 hatalı denemede giriş kilitlenir; her yeni kilitte süre ikiye katlanır (30 sn → en fazla 15 dk). Hata mesajı hangi alanın yanlış olduğunu söylemez.
+- Oturumlar rastgele bir belirteçle tutulur ve süresi dolar (sekme oturumu 12 saat, “Beni hatırla” 30 gün; varsayılan kapalı). Çıkış ya da şifre değişikliği diğer sekmelerdeki oturumları da kapatır.
+- Bağlantıdan (URL) gelen değerler beyaz listeyle sınırlanır, ekrana yazılan tüm içerik kaçışlanır (XSS koruması).
+- İçerik Güvenliği Politikası (CSP) yalnızca sitenin kendi betiklerine izin verir; dış ağ isteği, eklenti ve form gönderimi kapalıdır.
+- Yüklenen fotoğraflar yeniden çizilerek **EXIF/GPS konum bilgisi silinir**; yalnızca izinli görsel ve video türleri kabul edilir.
+
+> Bu bir istemci tarafı prototiptir. Tarayıcı deposuna erişebilen biri kayıtları değiştirebilir. Gerçek üründe kimlik doğrulama, kilitleme ve oturum yönetimi sunucuda yapılmalı; site HTTPS ve güvenlik başlıklarıyla (CSP, `frame-ancestors`, HSTS) sunulmalıdır.
 
 ## Sunumdaki başlıklar ve sitedeki karşılıkları
 
@@ -49,6 +65,7 @@ index.html              uygulama kabuğu
 assets/css/styles.css   tasarım sistemi (koyu ve açık tema, duyarlı yerleşim)
 assets/js/data.js       örnek veri
 assets/js/core.js       durum, ikonlar, çizimler, yardımcılar
+assets/js/auth.js       hesap, kayıt, giriş ve oturum (göstermelik)
 assets/js/views.js      ekranlar
 assets/js/app.js        yönlendirme ve etkileşimler
 ```

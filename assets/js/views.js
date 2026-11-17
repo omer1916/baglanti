@@ -16,7 +16,7 @@
   const TYPE_BADGE = { event: '<span class="badge blue">Etkinlik</span>', announcement: '<span class="badge amber">Duyuru</span>', sponsor: '<span class="badge pink">Sponsor ihtiyacı</span>' };
 
   function tabs(items, active, base) {
-    return `<div class="tabs" role="tablist">${items.map(([k, label]) => `<a class="tab" role="tab" href="${base}?tab=${k}" aria-selected="${k === active}">${label}</a>`).join('')}</div>`;
+    return `<div class="tabs" role="tablist">${items.map(([k, label]) => `<a class="tab" role="tab" href="${base}?tab=${esc(k)}" aria-selected="${k === active}">${label}</a>`).join('')}</div>`;
   }
   function chips(items, active, action, key) {
     return `<div class="chips" role="group">${items.map(([v, label]) => `<button class="chip" data-action="${action}" data-key="${key || ''}" data-value="${esc(v)}" aria-pressed="${String(v) === String(active)}">${label}</button>`).join('')}</div>`;
@@ -101,12 +101,12 @@
           <div class="row-between"><h3>${esc(need.title)}</h3><span class="badge">${esc(need.category)}</span></div>
           <div class="progress" role="progressbar" aria-valuenow="${need.progress}" aria-valuemin="0" aria-valuemax="${need.goal}" aria-label="Karşılanma oranı"><span style="width:${Math.min(100, need.progress / need.goal * 100)}%"></span></div>
           <div class="row-between small muted"><span>${num(need.progress)} / ${num(need.goal)} karşılandı</span><span>${daysLeft(need.deadline)}</span></div>
-          <div class="btn-row">${K.isBrand() ? `<button class="btn btn-sm btn-primary" data-action="support" data-id="${need.id}">${icon('gift', 'ico-sm')}Destek ol</button>` : ''}<a class="btn btn-sm" href="#/sponsorlar">Sponsor ihtiyaçları</a></div>
+          ${K.isBrand() ? `<div class="btn-row"><button class="btn btn-sm btn-primary" data-action="support" data-id="${need.id}">${icon('gift', 'ico-sm')}Destek ol</button></div>` : ''}
         </div></div>` : ''}
       ${m.length ? `<div class="post-media n${Math.min(m.length, 3)}">${m.slice(0, 3).map((x, i) => mediaBtn(x, `data-action="lightbox" data-post="${p.id}" data-i="${i}"`, 'Görseli büyüt')).join('')}</div>` : ''}
       <div class="post-stats">
         <span class="likes">${p.likes ? `<span class="like-dot">${icon('heart')}</span>${num(p.likes)}` : ''}</span>
-        <span><button data-action="toggle-comments" data-id="${p.id}">${p.comments.length} yorum</button> · ${p.shares} paylaşım</span>
+        <span>${p.comments.length} yorum · ${p.shares} paylaşım</span>
       </div>
       <div class="post-actions">
         <button data-action="like" data-id="${p.id}" aria-pressed="${p.liked}">${icon('heart')}<span>Beğen</span></button>
@@ -125,17 +125,15 @@
     const groups = Object.values(state.communities).filter((c) => !c.joined && c.type !== 'Gizli').slice(0, 3);
     const events = state.events.filter((e) => e.start > Date.now()).sort((a, b) => a.start - b.start).slice(0, 3);
     const people = state.connections.suggestions.slice(0, 3);
-    const need = state.needs.find((n) => n.progress < n.goal);
     return `
       <section class="card"><div class="card-head"><h2 class="card-title">Senin için · Önerilen gruplar</h2></div>
         <div class="rail-list">${groups.map((c) => `<div class="rail-item">${avatar({ ...c, kind: 'community' }, 'md')}<a class="grow" href="#/topluluk/${c.id}"><b class="ellipsis">${esc(c.name)}</b><span>${num(c.members)} üye · ${esc(c.type)}</span></a>${joinButton(c, true)}</div>`).join('')}</div>
         <div style="padding:0 16px 14px"><a class="link small" href="#/topluluklar?tab=kesfet">Tümünü gör</a></div></section>
-      <section class="card"><div class="card-head"><h2 class="card-title">Yaklaşan etkinlikler</h2><a class="link small" href="#/etkinlikler">Takvim</a></div>
+      <section class="card"><div class="card-head"><h2 class="card-title">Yaklaşan etkinlikler</h2></div>
         <div class="rail-list">${events.map((e) => `<a class="rail-item" href="#/etkinlik/${e.id}">${dateBlock(e.start)}<span class="grow"><b class="ellipsis">${esc(e.title)}</b><span>${fmt.time(e.start)} · ${num(e.going)} katılımcı</span></span></a>`).join('')}</div></section>
       <section class="card"><div class="card-head"><h2 class="card-title">Tanıyor olabileceğin kişiler</h2></div>
         <div class="rail-list">${people.map((s) => { const u = U(s.id); return `<div class="rail-item">${avatar({ ...u, kind: 'user' }, 'md')}<a class="grow" href="#/kisi/${u.id}"><b>${esc(u.name)}</b><span>${s.mutual} ortak bağlantı</span></a><button class="icon-btn" data-action="conn-add" data-id="${u.id}" aria-label="${esc(u.name)} ile bağlantı kur">${icon('userPlus')}</button></div>`; }).join('')}</div></section>
-      ${need ? `<section class="card card-pad stack"><span class="card-title">Sponsor ihtiyacı</span><b>${esc(need.title)}</b><span class="small muted">${esc(C(need.community).name)} · ${daysLeft(need.deadline)}</span><div class="progress"><span style="width:${need.progress / need.goal * 100}%"></span></div><a class="btn btn-sm" href="#/sponsorlar">İhtiyaçları gör</a></section>` : ''}
-      <p class="rail-foot">Gizlilik · Topluluk kuralları · <a href="#/sss">SSS</a> · Bağlantı © 2026<br>Konsept prototip — veriler örnektir.</p>`;
+      <p class="rail-foot">Bağlantı © 2026<br>Konsept prototip — veriler örnektir.</p>`;
   }
 
   function joinButton(c, small) {
@@ -161,7 +159,7 @@
       html: `<div class="landing-wrap">
         <nav class="l-nav" aria-label="Tanıtım">
           <a class="brand" href="#/hosgeldin"><span class="brand-mark" aria-hidden="true"></span><span class="brand-text">Bağlantı<small>Etkinlik Portalı</small></span></a>
-          <div class="row"><button class="icon-btn" data-action="toggle-theme" aria-label="Temayı değiştir">${icon(state.theme === 'dark' ? 'sun' : 'moon')}</button><button class="btn btn-primary" data-action="enter-demo" data-role="uye">Giriş yap</button></div>
+          <div class="row" style="gap:8px"><button class="icon-btn" data-action="toggle-theme" aria-label="Temayı değiştir">${icon(state.theme === 'dark' ? 'sun' : 'moon')}</button>${window.Auth.isAuthed() ? `<a class="btn btn-primary" href="#/akis">Platforma dön ${icon('arrowRight', 'ico-sm')}</a>` : `<a class="btn btn-ghost" href="#/giris">Giriş yap</a>`}</div>
         </nav>
         <section class="l-hero">
           <div>
@@ -169,8 +167,8 @@
             <h1>Topluluklarının etkinliklerini <em>tek yerde</em> keşfet, paylaş, buluş.</h1>
             <p class="lead">Grupların etkinlik duyurularını, sosyal içeriklerini ve sponsor ihtiyaçlarını bir araya getiren platform. Kullanıcıya kontrol, topluluğa görünürlük, içeriğe kolay erişim.</p>
             <div class="l-cta">
-              <button class="btn btn-primary" data-action="enter-demo" data-role="uye">Demoya gir ${icon('arrowRight', 'ico-sm')}</button>
-              <button class="btn" data-action="scroll-to" data-target="roller">Rolleri incele</button>
+              <a class="btn btn-primary" href="#/kayit">Ücretsiz kayıt ol ${icon('arrowRight', 'ico-sm')}</a>
+              <button class="btn" data-action="scroll-to" data-target="roller">Hesapsız dene</button>
             </div>
             <div class="l-pills" aria-label="Platformun temel alanları"><span>İNSAN</span><span>İÇERİK</span><span>TOPLULUK</span><span>ETKİNLİK</span><span>DUYURULAR</span><span>SPONSORLAR</span></div>
           </div>
@@ -201,7 +199,7 @@
 
         <section class="l-section" id="roller" aria-labelledby="l-roller">
           <h2 id="l-roller">Her rol için tek ve tutarlı deneyim</h2>
-          <p>Demoyu dört farklı kullanıcı rolüyle deneyebilirsin. Rolü daha sonra hesap menüsünden de değiştirebilirsin.</p>
+          <p>Kayıt olmadan, dört farklı kullanıcı rolüyle deneyebilirsin. Rolü daha sonra hesap menüsünden değiştirebilirsin.</p>
           <div class="l-grid four">
             ${roleCards.map(([r, ic, bg, fg]) => `<div class="card l-card"><span class="l-ico" style="background:${bg};color:${fg}">${icon(ic, 'ico-lg')}</span><h3>${K.ROLES[r].label}</h3><p>${K.ROLES[r].desc}</p><button class="btn btn-sm" data-action="enter-demo" data-role="${r}">Bu rolle dene ${icon('arrowRight', 'ico-sm')}</button></div>`).join('')}
           </div>
@@ -216,9 +214,76 @@
           </div>
         </section>
 
-        <div class="l-band"><div class="card"><div><h2>Önce basit bir etkinlikle başla.</h2><p class="muted">Gerçek kullanıcı geri bildirimiyle büyüyen bir topluluk platformu.</p></div><button class="btn btn-primary" data-action="enter-demo" data-role="uye">Platformu aç ${icon('arrowRight', 'ico-sm')}</button></div></div>
         <footer class="l-footer">Bağlantı · Sosyal içerik ve topluluk platformu — konsept prototip. Tüm kişi, kurum ve içerikler örnektir.</footer>
       </div>`
+    };
+  };
+
+  /* ---------- giriş & kayıt ---------- */
+  function authShell(inner, side) {
+    return `<div class="auth-wrap">
+      <aside class="auth-side">
+        <a class="brand" href="#/hosgeldin"><span class="brand-mark" aria-hidden="true"></span><span class="brand-text">Bağlantı<small>Etkinlik Portalı</small></span></a>
+        <div class="auth-side-body">${side}</div>
+        <p class="auth-side-foot">Göstermelik hesap sistemi · bilgiler yalnızca bu tarayıcıda saklanır, hiçbir sunucuya gönderilmez.</p>
+      </aside>
+      <div class="auth-main"><div class="auth-card">${inner}</div></div>
+    </div>`;
+  }
+  const authSideDefault = () => `
+    <h2>Topluluğunun etkinlikleri, tek hesapta.</h2>
+    <ul class="auth-points">
+      <li>${icon('calendar')}<span><b>Etkinliklere katıl</b>Katılımını bildir, hatırlatma al, takvimine ekle.</span></li>
+      <li>${icon('users')}<span><b>Gruplarınla senkron kal</b>Üye olduğun toplulukların duyuruları akışında.</span></li>
+      <li>${icon('shield')}<span><b>Gizliliğin senin elinde</b>Kim neyi görür, sen seçersin.</span></li>
+    </ul>
+    <div class="auth-mini">${dateBlock(state.events[0].start)}<div><b>${esc(state.events[0].title)}</b><span>${num(state.events[0].going)} katılımcı · ortak etkinlik</span></div></div>`;
+  const pwField = (id, name, label, ac, extra = '') => `<div class="field"><label for="${id}">${label}</label><div class="pw-wrap"><input class="input" type="password" id="${id}" name="${name}" autocomplete="${ac}" required maxlength="128" aria-describedby="${id}-err"${extra}><button type="button" class="pw-toggle" data-action="toggle-pw" data-for="${id}" aria-label="Şifreyi göster" aria-pressed="false">${icon('eye', 'ico-sm')}</button></div><span class="field-error" id="${id}-err" role="alert"></span></div>`;
+
+  V.giris = () => {
+    const a = window.Auth.account();
+    return {
+      title: 'Giriş yap', layout: 'bare',
+      html: authShell(`
+        <div class="stack" style="gap:6px"><h1>Giriş yap</h1><p class="muted">Hesabın yok mu? <a class="link" href="#/kayit">Kayıt ol</a></p></div>
+        ${a ? '' : `<div class="callout">${icon('info')}<span>Bu tarayıcıda kayıtlı hesap yok. <a class="link" href="#/kayit">Yeni hesap oluştur</a>.</span></div>`}
+        <form class="stack-lg" data-form="login" novalidate>
+          <div class="field"><label for="lg-id">E-posta veya kullanıcı adı</label><input class="input" id="lg-id" name="id" autocomplete="username" required autocapitalize="none" spellcheck="false" aria-describedby="lg-id-err"><span class="field-error" id="lg-id-err" role="alert"></span></div>
+          ${pwField('lg-pass', 'password', 'Şifre', 'current-password')}
+          <div class="row-between" style="flex-wrap:wrap"><label class="check"><input type="checkbox" name="remember" id="lg-remember"> Beni hatırla <span class="xs muted">(30 gün)</span></label><button type="button" class="link small" data-action="forgot-password">Şifremi unuttum</button></div>
+          <div class="form-alert" id="lg-alert" role="alert" hidden></div>
+          <button class="btn btn-primary btn-lg btn-block">Giriş yap</button>
+        </form>
+        <div class="or"><span>veya</span></div>
+        <div class="stack">
+          ${a && a.seeded ? `<button type="button" class="btn btn-block" data-action="fill-demo">${icon('user', 'ico-sm')}Örnek hesabın bilgilerini doldur</button>` : ''}
+          <button type="button" class="btn btn-ghost btn-block" data-action="enter-demo" data-role="uye">Hesapsız demoya göz at</button>
+        </div>`, authSideDefault())
+    };
+  };
+
+  V.kayit = () => {
+    const a = window.Auth.account();
+    return {
+      title: 'Kayıt ol', layout: 'bare',
+      html: authShell(`
+        <div class="stack" style="gap:6px"><h1>Hesap oluştur</h1><p class="muted">Zaten hesabın var mı? <a class="link" href="#/giris">Giriş yap</a></p></div>
+        ${a ? `<div class="callout warn">${icon('alert')}<span>Bu tarayıcıda kayıtlı bir hesap var: <b>${esc(a.email)}</b>. Platform tek hesapla çalışır; yeni kayıt mevcut hesabı ve verilerini siler.</span></div>` : ''}
+        <form class="stack-lg" data-form="register" novalidate>
+          <div class="form-grid">
+            <div class="field"><label for="rg-name">Ad soyad</label><input class="input" id="rg-name" name="name" autocomplete="name" required maxlength="40" aria-describedby="rg-name-err"><span class="field-error" id="rg-name-err" role="alert"></span></div>
+            <div class="field"><label for="rg-username">Kullanıcı adı</label><input class="input" id="rg-username" name="username" autocomplete="username" required maxlength="20" autocapitalize="none" spellcheck="false" placeholder="ornek_ad" aria-describedby="rg-username-err"><span class="field-error" id="rg-username-err" role="alert"></span></div>
+            <div class="field full"><label for="rg-email">E-posta</label><input class="input" type="email" id="rg-email" name="email" autocomplete="email" required maxlength="254" inputmode="email" aria-describedby="rg-email-err"><span class="field-error" id="rg-email-err" role="alert"></span></div>
+            <div class="field"><label for="rg-city">Şehir</label><input class="input" id="rg-city" name="city" autocomplete="address-level2" maxlength="30" placeholder="Bursa"></div>
+            <div class="field"><label for="rg-role">Hesap türü</label><select class="select" id="rg-role" name="role">${Object.entries(K.ROLES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('')}</select></div>
+          </div>
+          ${pwField('rg-pass', 'password', 'Şifre', 'new-password', ' minlength="8"')}
+          <div class="strength" id="rg-strength" aria-live="polite"><div class="strength-bar"><i></i><i></i><i></i><i></i><i></i></div><span>En az 8 karakter; harf ve rakam içermeli.</span></div>
+          ${pwField('rg-confirm', 'confirm', 'Şifre (tekrar)', 'new-password')}
+          <div class="field"><label class="check" style="align-items:flex-start"><input type="checkbox" name="consent" id="rg-consent" aria-describedby="rg-consent-err"><span><a class="link" href="#/sss">Kullanım koşullarını</a> ve kişisel verilerin işlenmesine ilişkin aydınlatma metnini okudum, onaylıyorum.</span></label><span class="field-error" id="rg-consent-err" role="alert"></span></div>
+          <button class="btn btn-primary btn-lg btn-block">Hesabı oluştur</button>
+        </form>
+        <p class="xs muted">${icon('lock', 'ico-sm')} Şifren düz metin olarak saklanmaz; tuzlu PBKDF2-SHA256 özeti (210.000 tur) tutulur.</p>`, authSideDefault())
     };
   };
 
@@ -248,11 +313,6 @@
       </section>
       <section class="card edge composer" aria-label="Gönderi oluştur">
         <div class="row">${avatar({ ...me(), kind: 'user' }, 'md')}<button class="composer-input" data-action="compose">Aklından neler geçiyor, ${esc(me().name.split(' ')[0])}?</button></div>
-        <div class="composer-tools">
-          <button class="btn btn-ghost btn-sm" data-action="compose" data-pick="1">${icon('image')}<span>Fotoğraf / Video</span></button>
-          <button class="btn btn-ghost btn-sm" data-action="compose" data-type="${K.isAdmin() ? 'event' : 'post'}">${icon('calendar')}<span>${K.isAdmin() ? 'Etkinlik oluştur' : 'Etkinlik paylaş'}</span></button>
-          <button class="btn btn-ghost btn-sm" data-action="compose" data-feeling="1">${icon('smile')}<span>Duygu / Aktivite</span></button>
-        </div>
       </section>
       <div class="feed-filter">
         ${chips([['tumu', 'Tümü'], ['takip', 'Takip ettiklerim'], ['etkinlik', 'Etkinlikler'], ['duyuru', 'Duyurular'], ['sponsor', 'Sponsor ihtiyaçları']], f, 'feed-filter')}
@@ -263,7 +323,7 @@
         </select>
       </div>
       ${posts.length ? posts.map(postCard).join('') : `<div class="card">${empty('layers', 'Bu filtrede gönderi yok', 'Başka bir filtre seç veya yeni topluluklara katıl.')}</div>`}
-      <p class="muted small" style="text-align:center;padding:16px">Hepsi bu kadar. <a class="link" href="#/kesfet">Yeni topluluklar keşfet</a></p>`
+      <p class="muted small" style="text-align:center;padding:16px">Hepsi bu kadar.</p>`
     };
   };
 
@@ -343,7 +403,7 @@
         ${!d.q ? `<div class="row" style="flex-wrap:wrap;gap:8px"><span class="small muted">Gündemde:</span>${trending.map((t) => `<a class="chip" href="#/kesfet?q=${encodeURIComponent('#' + t)}">#${t}</a>`).join('')}</div>` : ''}
       </section>
       <section class="card" style="overflow:hidden">${tabs([['tumu', 'Tümü'], ['topluluklar', 'Topluluklar'], ['gruplar', 'Gruplar'], ['gonderiler', 'Gönderiler'], ['sayfalar', 'Sayfalar'], ['etkinlikler', 'Etkinlikler']], tab, '#/kesfet')}</section>
-      <div id="discover-results" class="stack-lg" data-tab="${tab}">${discoverResults(tab)}</div>
+      <div id="discover-results" class="stack-lg" data-tab="${esc(tab)}">${discoverResults(tab)}</div>
       <p class="callout pad-x">${icon('lock')}<span>Gizli gruplar arama sonuçlarında görünmez; yalnızca davetle katılınabilir.</span></p>`
     };
   };
@@ -651,7 +711,7 @@
     const out = m.from === 'me';
     const u = !out && U(m.from);
     const showName = !out && conv.kind === 'group';
-    const content = m.img ? `<img src="${m.img}" alt="Gönderilen görsel">` : m.file ? `<span class="msg-file">${icon('file')}${esc(m.file)}</span>` : esc(m.text);
+    const content = m.img ? `<img src="${esc(m.img)}" alt="Gönderilen görsel">` : m.file ? `<span class="msg-file">${icon('file')}${esc(m.file)}</span>` : esc(m.text);
     return `<div class="msg ${out ? 'out' : 'in'}">${showName ? `<span class="from">${esc(u.name)}</span>` : ''}${content}<small>${fmt.clock(m.ts)}</small></div>`;
   }
   V.msgBubble = msgBubble;
@@ -751,12 +811,35 @@
   };
 
   /* ---------- ayarlar ---------- */
+  function accountCard() {
+    const A = window.Auth;
+    const a = A.account();
+    if (A.mode !== 'account' || !a) {
+      return `<section class="card card-pad row-between" style="flex-wrap:wrap"><div class="row" style="gap:12px">${icon('user')}<div><b>Demo modundasın</b><p class="small muted">Değişiklikler hesapsız demo alanına kaydediliyor. Kendi hesabınla devam etmek için kayıt ol.</p></div></div><div class="btn-row"><a class="btn btn-sm" href="#/giris">Giriş yap</a><a class="btn btn-sm btn-primary" href="#/kayit">Kayıt ol</a></div></section>`;
+    }
+    const d = (ts) => ts ? new Intl.DateTimeFormat('tr-TR', { dateStyle: 'medium', timeStyle: 'short' }).format(ts) : '—';
+    const s = A.session();
+    return `<section class="card card-pad stack">
+      <div class="row-between" style="flex-wrap:wrap"><h2 style="font-size:16px">${icon('user')} Hesap</h2><span class="badge green">${icon('check', 'ico-sm')}Oturum açık${s && s.remember ? ' · hatırlanıyor' : ''}</span></div>
+      <dl class="kv">
+        <div><dt>Ad soyad</dt><dd>${esc(a.name)}</dd></div>
+        <div><dt>Kullanıcı adı</dt><dd>@${esc(a.username)}</dd></div>
+        <div><dt>E-posta</dt><dd>${esc(a.email)}</dd></div>
+        <div><dt>Hesap türü</dt><dd>${esc(K.ROLES[a.role]?.label || '')}</dd></div>
+        <div><dt>Kayıt tarihi</dt><dd>${d(a.created)}</dd></div>
+        <div><dt>Önceki giriş</dt><dd>${d(a.prevLogin)}</dd></div>
+      </dl>
+      <p class="xs muted">${icon('lock', 'ico-sm')} Hesap kaydı ve verilerin yalnızca bu tarayıcıda saklanır. Şifre ${esc(a.algo)} özeti olarak tutulur.</p>
+      <div class="btn-row"><button class="btn btn-sm" data-action="show-record">${icon('file', 'ico-sm')}Saklanan kaydı göster</button><button class="btn btn-sm" data-action="logout">${icon('logout', 'ico-sm')}Çıkış yap</button></div>
+    </section>`;
+  }
   V.ayarlar = () => {
     const pv = state.privacy;
     return {
       title: 'Ayarlar', layout: 'wide',
       html: `<div class="page-head"><div><h1>Gizlilik ve hesap ayarları</h1><p>Hangi bilginin kimlerce görüleceğini kolayca anla ve değiştir.</p></div></div>
       <div class="callout">${icon('shield')}<span><b>Varsayılan yaklaşım:</b> En az veri, açık rıza, anlaşılır seçenekler ve geri alınabilir tercihler.</span></div>
+      ${accountCard()}
       <div class="split" style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));align-items:start">
         <div class="stack-lg">
           <section class="card card-pad stack"><h2 style="font-size:16px">${icon('eye')} Profil görünürlüğü</h2><p class="small muted">Profilini ve gönderilerini kimler görebilir?</p>
@@ -776,7 +859,7 @@
             ${state.devices.map((d) => `<div class="setting-row"><div class="row" style="gap:10px">${icon('devices')}<div><b>${esc(d.name)}</b><span class="muted">${esc(d.place)}</span></div></div>${d.current ? '<span class="badge green">Bu cihaz</span>' : `<button class="btn btn-sm" data-action="device-logout" data-id="${d.id}">Oturumu kapat</button>`}</div>`).join('')}</section>
           <section class="card card-pad"><h2 style="font-size:16px;margin-bottom:6px">${icon('download')} Veri kontrolleri</h2>
             <div class="setting-row"><div><b>Verilerini indir</b><span class="muted">Gönderi, mesaj ve profil bilgilerin (JSON)</span></div><button class="btn btn-sm" data-action="download-data">İndir</button></div>
-            <div class="setting-row"><div><b>Hesabını kapat</b><span class="muted">30 gün içinde geri alınabilir</span></div><button class="btn btn-sm btn-danger" data-action="close-account">Hesabı kapat</button></div></section>
+            ${window.Auth.mode === 'account' && window.Auth.account() ? `<div class="setting-row"><div><b>Hesabını sil</b><span class="muted">Hesap kaydı ve tüm verilerin bu tarayıcıdan kalıcı olarak silinir</span></div><button class="btn btn-sm btn-danger" data-action="close-account">Hesabı sil</button></div>` : `<div class="setting-row"><div><b>Hesabını kapat</b><span class="muted">Demo modunda kapatılacak hesap yok</span></div><button class="btn btn-sm btn-danger" data-action="close-account">Hesabı kapat</button></div>`}</section>
           <section class="card card-pad"><h2 style="font-size:16px;margin-bottom:6px">${icon('sun')} Görünüm ve demo</h2>
             <div class="setting-row"><div><b>Koyu tema</b><span class="muted">Sistem ayarından bağımsız</span></div><label class="switch"><input type="checkbox" data-change="theme" ${state.theme === 'dark' ? 'checked' : ''} aria-label="Koyu tema"><span></span></label></div>
             <div class="setting-row"><div><b>Bildirim tercihleri</b><span class="muted">Tür, sıklık, sessiz saatler</span></div><a class="btn btn-sm" href="#/bildirimler">Aç</a></div>

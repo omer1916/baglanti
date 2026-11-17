@@ -6,6 +6,9 @@
   <title>Bağlantı · Etkinlik Portalı</title>
   <meta name="description" content="Toplulukların etkinlik, duyuru ve sponsor ihtiyaçlarını paylaştığı sosyal içerik ve topluluk platformu.">
   <meta name="theme-color" content="#0D1220">
+  <!-- Güvenlik: yalnızca kendi betiklerimiz çalışır; dış bağlantı, eklenti, form gönderimi ve <base> değişikliği kapalı -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -17,7 +20,6 @@
 
   <header class="topbar" id="topbar">
     <div class="topbar-inner">
-      <button class="icon-btn only-tablet" data-action="toggle-drawer" aria-label="Menüyü aç"><span data-icon="menu"></span></button>
       <a class="brand" href="#/akis" aria-label="Bağlantı ana sayfa">
         <span class="brand-mark" aria-hidden="true"></span>
         <span class="brand-text">Bağlantı<small>Etkinlik Portalı</small></span>
@@ -27,10 +29,8 @@
         <input type="search" name="q" placeholder="Ara: kişiler, topluluklar, etkinlikler" aria-label="Platformda ara" autocomplete="off">
       </form>
       <div class="top-actions">
-        <button class="btn btn-primary hide-mobile" data-action="compose"><span data-icon="plus"></span><span>Oluştur</span></button>
-        <a class="icon-btn only-mobile" href="#/kesfet" aria-label="Ara"><span data-icon="search"></span></a>
-        <a class="icon-btn" href="#/mesajlar" aria-label="Mesajlar" data-badge="messages"><span data-icon="message"></span></a>
-        <a class="icon-btn hide-mobile" href="#/bildirimler" aria-label="Bildirimler" data-badge="notifications"><span data-icon="bell"></span></a>
+        <button class="btn btn-primary hide-mobile top-create" data-action="compose"><span data-icon="plus"></span><span>Oluştur</span></button>
+        <a class="icon-btn only-mobile" href="#/mesajlar" aria-label="Mesajlar" data-badge="messages"><span data-icon="message"></span></a>
         <button class="icon-btn hide-mobile" data-action="toggle-theme" aria-label="Temayı değiştir"><span data-icon="sun"></span></button>
         <div class="account-menu hide-mobile">
           <button class="avatar-btn" data-action="toggle-menu" data-menu="account" aria-haspopup="true" aria-expanded="false" aria-label="Hesap menüsü" id="account-btn"></button>
@@ -62,6 +62,7 @@
 
   <script src="assets/js/data.js"></script>
   <script src="assets/js/core.js"></script>
+  <script src="assets/js/auth.js"></script>
   <script src="assets/js/views.js"></script>
   <script src="assets/js/app.js"></script>
 </body>
