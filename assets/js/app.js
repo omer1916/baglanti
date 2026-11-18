@@ -65,7 +65,7 @@
   function renderShell(r) {
     const key = r.name === 'topluluk' ? 'topluluklar' : r.name === 'etkinlik' ? 'etkinlikler' : r.name === 'sayfa' && !(r.id === K.BRAND_PAGE && K.isBrand()) ? 'sponsorlar' : r.name;
     const m = me();
-    setHTML(els.sidebar, navItems().map(([k, href, ic, label, count]) => `<a class="nav-link" href="${href}" ${k === key ? 'aria-current="page"' : ''} title="${label}">${icon(ic)}<span>${label}</span>${count ? `<span class="count">${count}</span>` : ''}</a>`).join(''));
+    setHTML(els.sidebar, navItems().map(([k, href, ic, label, count]) => `<a class="nav-link" data-sec="${k}" href="${href}" ${k === key ? 'aria-current="page"' : ''} title="${label}">${icon(ic)}<span>${label}</span>${count ? `<span class="count">${count}</span>` : ''}</a>`).join(''));
 
     // hesap menüsü (profil fotoğrafı): hesapla ilgili her şey burada
     const pending = state.reports.filter((x) => x.status === 'Bekliyor').length;

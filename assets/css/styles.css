@@ -1334,3 +1334,58 @@ button.tag-chip[aria-pressed="true"]::before, .tag-check input:checked + .tag-ch
 .l-section > .card { margin-top: 28px; }
 @media (max-width: 720px) { .main > p, .main > .seo-intro { margin-left: 16px; margin-right: 16px; } }
 .topbar { background: var(--bg); backdrop-filter: none; -webkit-backdrop-filter: none; }
+
+/* =========================================================
+   Bölüm renkleri: her bölüm sunum paletinden bir renk taşır.
+   Sol menüde renkli ikon karosu, sayfa başlığında aynı renkte
+   nokta dokulu bant ("bağlantı" noktaları).
+   ========================================================= */
+:root { --sec: var(--blue); }
+body[data-route="kesfet"], .nav-link[data-sec="kesfet"] { --sec: var(--cyan); }
+body[data-route="topluluklar"], body[data-route="topluluk"], .nav-link[data-sec="topluluklar"] { --sec: var(--green); }
+body[data-route="etkinlikler"], body[data-route="etkinlik"], .nav-link[data-sec="etkinlikler"] { --sec: var(--pink); }
+body[data-route="sponsorlar"], body[data-route="sayfa"], .nav-link[data-sec="sponsorlar"] { --sec: var(--amber); }
+body[data-route="ilanlar"], .nav-link[data-sec="ilanlar"] { --sec: var(--purple); }
+body[data-route="medya"], .nav-link[data-sec="medya"] { --sec: var(--cyan); }
+body[data-route="uyeler"], .nav-link[data-sec="uyeler"] { --sec: var(--green); }
+body[data-route="bildirimler"], body[data-route="kaydedilenler"] { --sec: var(--amber); }
+body[data-route="yonetim"] { --sec: var(--purple); }
+.nav-link[data-sec="akis"] { --sec: var(--blue); }
+
+/* sol menü: renkli ikon karoları */
+.sidebar .nav-link { gap: 12px; padding: 6px 10px 6px 7px; min-height: 44px; }
+.sidebar .nav-link > .ico { width: 30px; height: 30px; padding: 6px; border-radius: 9px; flex: none;
+  color: color-mix(in srgb, var(--sec) 78%, var(--text)); background: color-mix(in srgb, var(--sec) 15%, transparent);
+  transition: background .2s var(--ease), color .2s var(--ease), transform .2s var(--ease-out); }
+[data-theme="light"] .sidebar .nav-link > .ico { color: color-mix(in srgb, var(--sec) 70%, #000); background: color-mix(in srgb, var(--sec) 14%, #fff); }
+.sidebar .nav-link[aria-current="page"] > .ico, [data-theme="light"] .sidebar .nav-link[aria-current="page"] > .ico {
+  color: #fff; background: var(--sec); box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 1px 2px rgba(0,0,0,.18); }
+.sidebar .nav-link[aria-current="page"] { color: var(--text); font-weight: 700; }
+@media (hover: hover) { .sidebar .nav-link:hover > .ico { transform: scale(1.06); } }
+@media (max-width: 1080px) and (min-width: 721px) { .sidebar .nav-link { justify-content: center; padding: 6px; } }
+
+/* sayfa başlığı bandı */
+.main > .page-head {
+  position: relative; isolation: isolate; overflow: hidden;
+  padding: 30px 30px 28px; border-radius: 18px; align-items: flex-end;
+  background: color-mix(in srgb, var(--sec) 14%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sec) 22%, transparent);
+}
+[data-theme="light"] .main > .page-head { background: color-mix(in srgb, var(--sec) 12%, #fff); }
+.main > .page-head::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: radial-gradient(color-mix(in srgb, var(--sec) 60%, transparent) 1.1px, transparent 1.6px);
+  background-size: 16px 16px; background-position: right -4px top -4px;
+  -webkit-mask-image: linear-gradient(255deg, #000 0%, rgba(0,0,0,.55) 30%, transparent 62%);
+  mask-image: linear-gradient(255deg, #000 0%, rgba(0,0,0,.55) 30%, transparent 62%);
+}
+.main > .page-head h1 { font-size: 34px; letter-spacing: -.035em; }
+.main > .page-head p { color: color-mix(in srgb, var(--sec) 22%, var(--text-2)); }
+[data-theme="light"] .main > .page-head p { color: color-mix(in srgb, var(--sec) 30%, var(--text-2)); }
+.main > .page-head + * { margin-top: 18px; }
+
+@media (max-width: 720px) {
+  .main > .page-head { margin-left: 12px; margin-right: 12px; padding: 22px 20px 20px; border-radius: 16px; }
+  .main > .page-head h1 { font-size: 27px; }
+  .main > .page-head .btn { flex: 1; }
+}
