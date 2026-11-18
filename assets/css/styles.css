@@ -1333,3 +1333,4 @@ button.tag-chip[aria-pressed="true"]::before, .tag-check input:checked + .tag-ch
 .job-foot > .small { font-weight: 600; }
 .l-section > .card { margin-top: 28px; }
 @media (max-width: 720px) { .main > p, .main > .seo-intro { margin-left: 16px; margin-right: 16px; } }
+.topbar { background: var(--bg); backdrop-filter: none; -webkit-backdrop-filter: none; }
