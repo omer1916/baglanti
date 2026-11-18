@@ -168,19 +168,17 @@
         </nav>
         <section class="l-hero">
           <div>
-            <span class="l-kicker">${icon('sparkle', 'ico-sm')}Sosyal içerik ve topluluk platformu</span>
             <h1>Topluluklarının etkinliklerini <em>tek yerde</em> keşfet, paylaş, buluş.</h1>
             <p class="lead">Grupların etkinlik duyurularını, sosyal içeriklerini ve sponsor ihtiyaçlarını bir araya getiren platform. Kullanıcıya kontrol, topluluğa görünürlük, içeriğe kolay erişim.</p>
             <div class="l-cta">
               <a class="btn btn-primary" href="#/kayit">Ücretsiz kayıt ol ${icon('arrowRight', 'ico-sm')}</a>
               <button class="btn" data-action="scroll-to" data-target="roller">Hesapsız dene</button>
             </div>
-            <div class="l-pills" aria-label="Platformun temel alanları"><span>İNSAN</span><span>İÇERİK</span><span>TOPLULUK</span><span>ETKİNLİK</span><span>DUYURULAR</span><span>SPONSORLAR</span></div>
+            <ul class="l-proof" aria-label="Platformda neler var">${[['users', `${Object.keys(state.communities).length} topluluk`], ['calendar', `${state.events.length} etkinlik`], ['briefcase', `${(state.listings || []).length} ilan`]].map(([ic, t]) => `<li>${icon(ic, 'ico-sm')}${t}</li>`).join('')}</ul>
           </div>
           <div class="l-visual" aria-hidden="true">
-            <div class="l-glow"></div>
             <div class="l-phone">
-              <div class="mini-top"><span class="brand-mark" style="width:22px;height:22px;border-radius:7px"></span>Bağlantı</div>
+              <div class="mini-top"><span class="brand-mark mini" aria-hidden="true"></span>Bağlantı</div>
               <div class="mini-stories">${[0, 1, 2, 3, 4].map((g) => `<i class="g${g}"><b></b></i>`).join('')}</div>
               <div class="mini-post">${media({ scene: 'camp' })}<p><b>Doğa ve Kamp</b> · Kış kampı kayıtları açıldı!</p></div>
               <div class="mini-post">${media({ scene: 'music' })}</div>
@@ -191,32 +189,35 @@
           </div>
         </section>
 
-        <section class="l-section" aria-labelledby="l-vizyon">
-          <h2 id="l-vizyon">Proje vizyonu</h2>
-          <p>İnsanların içerik paylaşabildiği, ilgi alanlarına göre topluluk kurabildiği dijital alan.</p>
-          <div class="l-grid">
-            ${[['megaphone', 'Etkinlik duyurularını paylaş', 'Metin, fotoğraf, video ve bağlantı paylaşımı. Etkinlik ve sponsor duyuruları.', 'var(--brand-soft)', 'var(--brand)'],
-               ['compass', 'Etkinlikleri keşfet', 'Kişiler, sayfalar, gruplar ve yeni konular tek arama noktasında.', 'var(--accent-soft)', 'var(--accent)'],
-               ['users', 'Topluluklar arası bağ kur', 'Kulübüne katıl, etkinliklere birlikte git, birden fazla topluluğun ortak etkinliklerinde buluş.', 'var(--success-soft)', 'var(--success)']]
-              .map(([ic, t, d, bg, fg]) => `<div class="card l-card"><span class="l-ico" style="background:${bg};color:${fg}">${icon(ic, 'ico-lg')}</span><h3>${t}</h3><p>${d}</p></div>`).join('')}
+        <section class="l-section l-split" aria-labelledby="l-vizyon">
+          <div class="l-split-head">
+            <h2 id="l-vizyon">Kulüp hayatı tek yerde, gürültüsüz.</h2>
+            <p>İnsanların içerik paylaşabildiği, ilgi alanlarına göre topluluk kurabildiği dijital alan.</p>
           </div>
+          <ul class="l-features">
+            ${[['megaphone', 'Etkinlik duyurularını paylaş', 'Metin, fotoğraf, video ve bağlantı paylaşımı. Etkinlik ve sponsor duyuruları.', 'g0'],
+               ['compass', 'Etkinlikleri keşfet', 'Kişiler, sayfalar, gruplar ve yeni konular tek arama noktasında.', 'g5'],
+               ['users', 'Topluluklar arası bağ kur', 'Kulübüne katıl, etkinliklere birlikte git, birden fazla topluluğun ortak etkinliklerinde buluş.', 'g2'],
+               ['briefcase', 'İş ve staj fırsatlarını yakala', 'Markaların ilanlarını ilgi alanı etiketleriyle süz; sana uygun olanlar öne çıksın.', 'g1']]
+              .map(([ic, t, d, g]) => `<li><span class="l-feat-ico ${g}">${icon(ic)}</span><div><h3>${t}</h3><p>${d}</p></div></li>`).join('')}
+          </ul>
         </section>
 
         <section class="l-section" id="roller" aria-labelledby="l-roller">
           <h2 id="l-roller">Her rol için tek ve tutarlı deneyim</h2>
           <p>Kayıt olmadan, dört farklı kullanıcı rolüyle deneyebilirsin. Rolü daha sonra hesap menüsünden değiştirebilirsin.</p>
-          <div class="l-grid four">
-            ${roleCards.map(([r, ic, bg, fg]) => `<div class="card l-card"><span class="l-ico" style="background:${bg};color:${fg}">${icon(ic, 'ico-lg')}</span><h3>${K.ROLES[r].label}</h3><p>${K.ROLES[r].desc}</p><button class="btn btn-sm" data-action="enter-demo" data-role="${r}">Bu rolle dene ${icon('arrowRight', 'ico-sm')}</button></div>`).join('')}
+          <div class="card l-roles">
+            ${roleCards.map(([r, ic], i) => `<button class="l-role" data-action="enter-demo" data-role="${r}"><span class="l-feat-ico g${[0, 1, 5, 3][i]}">${icon(ic)}</span><span class="grow"><b>${K.ROLES[r].label}</b><span>${K.ROLES[r].desc}</span></span><span class="l-role-go">Bu rolle dene ${icon('arrowRight', 'ico-sm')}</span></button>`).join('')}
           </div>
         </section>
 
         <section class="l-section" aria-labelledby="l-nasil">
           <h2 id="l-nasil">Nasıl çalışır?</h2>
-          <div class="l-grid l-steps">
-            <div class="card l-card"><h3>Topluluğuna katıl</h3><p>Herkese açık gruplara tek dokunuşla katıl, özel gruplara üyelik isteği gönder.</p></div>
-            <div class="card l-card"><h3>Etkinlikleri takip et</h3><p>Kişiselleştirilmiş akışta duyuruları gör, katılımını bildir, hatırlatma al.</p></div>
-            <div class="card l-card"><h3>Sponsorla buluş</h3><p>Topluluklar ihtiyaçlarını yayınlar, markalar destek olur, herkes görünür olur.</p></div>
-          </div>
+          <ol class="l-timeline">
+            <li><h3>Kulübünü seç</h3><p>Kayıt olurken kulübünü seç; başvurun yöneticiye gider, onaylanınca üyesin.</p></li>
+            <li><h3>Etkinlikleri takip et</h3><p>Kişiselleştirilmiş akışta duyuruları gör, katılımını bildir, hatırlatma al.</p></li>
+            <li><h3>Sponsorla buluş</h3><p>Topluluklar ihtiyaçlarını yayınlar, markalar destek olur ve ilan verir.</p></li>
+          </ol>
         </section>
 
         <section class="l-section" id="sss" aria-labelledby="l-sss">
@@ -814,7 +815,7 @@
     return {
       title: u.name,
       html: `<section class="card edge profile-head">
-        <div class="scene profile-cover" style="background:linear-gradient(120deg, rgba(67,126,245,.55), rgba(153,112,245,.45) 50%, rgba(64,205,220,.45))"></div>
+        <div class="scene profile-cover g${(u.hue || 0) % 6}"></div>
         <div class="profile-info">
           ${avatar({ ...u, kind: 'user' }, 'xl')}
           <div class="grow"><h1>${esc(u.name)}</h1><p class="muted small">@${esc(u.handle)} · ${esc(u.city)} · ${posts.length} gönderi · ${self ? cn.friends.length : 12 + u.hue} bağlantı</p></div>

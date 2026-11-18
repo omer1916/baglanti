@@ -104,7 +104,7 @@
   function applyTheme() {
     document.documentElement.setAttribute('data-theme', state.theme);
     const meta = $('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', state.theme === 'dark' ? '#0D1220' : '#F4F7FC');
+    if (meta) meta.setAttribute('content', state.theme === 'dark' ? '#0E0F13' : '#F3F4F7');
   }
 
   /* =============== yönlendirme =============== */
@@ -123,7 +123,10 @@
     renderShell(r);
     document.title = `${view.title} · Bağlantı`;
     const routeKey = r.path;
+    els.main.classList.remove('route-enter');
     if (routeKey !== lastRoute && !opts.keepScroll) {
+      void els.main.offsetWidth;   // animasyonu yeniden başlat
+      els.main.classList.add('route-enter');
       window.scrollTo(0, 0);
       if (lastRoute) els.main.focus({ preventScroll: true });
     }
