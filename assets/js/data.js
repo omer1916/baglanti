@@ -157,10 +157,17 @@
         { id: 'nt3', type: 'request', text: '<b>Mert Arslan</b> üyelik isteği gönderdi', ts: ago(60), read: false, link: '#/uyeler', who: 'u4' },
         { id: 'nt4', type: 'event', text: 'Etkinlik hatırlatması: <b>Açık Sahne Gecesi</b> yaklaşıyor', ts: ago(1440), read: true, link: '#/etkinlik/e3' },
         { id: 'nt5', type: 'sponsor', text: '<b>Zirve Outdoor</b> “40 adet uyku tulumu” ihtiyacına destek oldu', ts: ago(2000), read: true, link: '#/sponsorlar' },
-        { id: 'nt6', type: 'comment', text: '<b>Ece Demir</b> gönderine yorum yaptı: “Çok güzel bir rota!”', ts: ago(2900), read: true, link: '#/profil', who: 'u2' },
         { id: 'nt7', type: 'event', text: '<b>Uludağ Kış Kampı</b> ortak etkinliğine katılımın onaylandı', ts: ago(4300), read: true, link: '#/etkinlik/e1' }
       ],
-      notifSettings: { like: true, comment: true, community: true, event: true, request: true, sponsor: true, frequency: 'Anında', quiet: false },
+      docs: [
+        { id: 'd1', owner: 'u0', cat: 'cv', title: 'Özgeçmiş', name: 'selin-koc-cv.pdf', size: 184320, ts: ago(9000) },
+        { id: 'd2', owner: 'u0', cat: 'sertifika', title: 'İlk Yardım Sertifikası', name: 'ilk-yardim.pdf', size: 352256, ts: ago(30000) },
+        { id: 'd3', owner: 'u1', cat: 'proje', title: 'Kampüs Etkinlik Botu', name: 'etkinlik-botu-rapor.pdf', size: 512000, ts: ago(12000) },
+        { id: 'd4', owner: 'u1', cat: 'sertifika', title: 'Bulut Bilişime Giriş', name: 'bulut-sertifika.pdf', size: 204800, ts: ago(50000) },
+        { id: 'd5', owner: 'u3', cat: 'sertifika', title: 'Doğa Rehberliği Eğitimi', name: 'doga-rehberligi.pdf', size: 296960, ts: ago(70000) },
+        { id: 'd6', owner: 'u2', cat: 'proje', title: 'Sokak Fotoğrafçılığı Seçkisi', name: 'portfolyo.pdf', size: 768000, ts: ago(20000) }
+      ],
+      notifSettings: { like: true, community: true, event: true, request: true, sponsor: true, frequency: 'Anında', quiet: false },
 
       connections: {
         incoming: [{ kind: 'community', id: 'foto', mutual: 12, note: 'Topluluk davetiyesi' }, { kind: 'user', id: 'u4', mutual: 5, note: 'Bağlantı isteği' }, { kind: 'user', id: 'u3', mutual: 8, note: 'X Topluluğu Moderatörü' }],
@@ -170,7 +177,7 @@
       },
 
       reports: [
-        { id: 'r1', target: 'Yorum · Doğa ve Kamp', preview: '“Bu rotayı bilmeyen …” (hakaret içeren yorum)', reason: 'Taciz / hakaret', reporter: 'u7', priority: 'Yüksek', risk: 'Taciz', community: 'doga', ts: ago(25), status: 'Bekliyor' },
+        { id: 'r1', target: 'Gönderi · Doğa ve Kamp', preview: '“Bu rotayı bilmeyen …” (hakaret içeren gönderi)', reason: 'Taciz / hakaret', reporter: 'u7', priority: 'Yüksek', risk: 'Taciz', community: 'doga', ts: ago(25), status: 'Bekliyor' },
         { id: 'r2', target: 'Gönderi · Kod & Kahve', preview: '“Ucuz takipçi satın almak için …”', reason: 'Spam', reporter: 'u9', priority: 'Orta', risk: 'Spam', community: 'kodkahve', ts: ago(140), status: 'Bekliyor' },
         { id: 'r3', target: 'Profil · yeni hesap', preview: 'Sahte olduğu düşünülen kurum hesabı', reason: 'Sahte hesap', reporter: 'u3', priority: 'Orta', risk: 'Sahte hesap', community: 'doga', ts: ago(600), status: 'Bekliyor' },
         { id: 'r4', target: 'Fotoğraf · Müzik Atölyesi', preview: 'İzinsiz kullanılan konser fotoğrafı', reason: 'Telif', reporter: 'u5', priority: 'Düşük', risk: 'Telif', community: 'muzik', ts: ago(1600), status: 'Bekliyor' }

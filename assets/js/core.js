@@ -5,7 +5,7 @@
      - demo:    hesapsız göz atma (rol seçerek)
      - account: kayıtlı tek hesabın verileri
      Hangisinin açık olduğu `baglanti-active` anahtarında tutulur. */
-  const KEYS = { active: 'baglanti-active', auth: 'baglanti-auth-v1', session: 'baglanti-session', flash: 'baglanti-flash', demo: 'baglanti-demo-v1', account: 'baglanti-account-v1' };
+  const KEYS = { active: 'baglanti-active', auth: 'baglanti-auth-v1', session: 'baglanti-session', flash: 'baglanti-flash', demo: 'baglanti-demo-v1', account: 'baglanti-account-v1', apps: 'baglanti-applications-v1' };
   const mode = (() => { try { return localStorage.getItem(KEYS.active) === 'account' ? 'account' : 'demo'; } catch (e) { return 'demo'; } })();
   const KEY = KEYS[mode];
 
@@ -18,7 +18,13 @@
       Object.assign(s.users.u0, { name: acc.name, handle: acc.username, city: acc.city || 'Bursa', bio: 'Bağlantı’ya yeni katıldım.', joined: String(new Date(acc.created).getFullYear()) });
       s.posts = s.posts.filter((p) => !(p.author.kind === 'user' && p.author.id === 'u0'));
       s.posts.forEach((p) => { p.comments = p.comments.filter((c) => c.user !== 'u0'); });
-      s.notifications.unshift({ id: 'nt-welcome', type: 'community', text: '<b>Bağlantı</b>’ya hoş geldin! Profilini tamamla ve ilk topluluğuna katıl.', ts: Date.now(), read: false, link: '#/profil' });
+      s.docs = s.docs.filter((d) => d.owner !== 'u0');
+      s.notifications.unshift({ id: 'nt-welcome', type: 'community', text: '<b>Bağlantı</b>’ya hoş geldin! Profilini tamamla; sertifika, proje ve CV’ni Belgeler sekmesine ekle.', ts: Date.now(), read: false, link: '#/profil?tab=belgeler' });
+      const club = acc.club && s.communities[acc.club];
+      if (club) {
+        club.joined = false; club.requested = true;
+        s.notifications.unshift({ id: 'nt-app', type: 'request', text: `<b>${club.name}</b> üyelik başvurun kulüp yöneticisine iletildi. Onaylanınca bildirim alacaksın.`, ts: Date.now() + 1, read: false, link: '#/topluluk/' + club.id, community: club.id });
+      }
     }
     return s;
   }
@@ -35,13 +41,18 @@
     return window.SEED();
   }
   const state = load();
+  // Kaldırılan özellikler: eski kayıtlardaki yorum bildirimlerini temizle
+  state.notifications = state.notifications.filter((n) => n.type !== 'comment');
+  if (state.notifSettings) delete state.notifSettings.comment;
+  if (!state.docs) state.docs = window.SEED().docs || [];
   if (!state.memberRequests) state.memberRequests = [{ user: 'u4', community: 'kodkahve', ts: Date.now() - 50 * 60000 }, { user: 'u8', community: 'doga', ts: Date.now() - 300 * 60000 }];
 
   let warnedQuota = false;
-  function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(state)); }
+  function save(quiet) {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); return true; }
     catch (e) {
-      if (!warnedQuota) { warnedQuota = true; App.toast('Yüklenen medya büyük; yalnızca bu oturumda saklanacak.', 'info'); }
+      if (!quiet && !warnedQuota) { warnedQuota = true; App.toast('Yüklenen medya büyük; yalnızca bu oturumda saklanacak.', 'info'); }
+      return false;
     }
   }
   function reset() {
@@ -141,6 +152,8 @@
   const role = () => state.role;
   const isManager = () => state.role === 'moderator' || state.role === 'yonetici';
   const isAdmin = () => state.role === 'yonetici';
+  // Üyeler şimdilik kimseye mesaj gönderemez (rahatsız edici / siyasi içerik riskine karşı)
+  const canMessage = () => state.role !== 'uye';
   const isBrand = () => state.role === 'marka';
 
   /* ---------------- varlıklar ---------------- */
@@ -297,10 +310,46 @@
     return `<div class="scene ${cls}" role="img" aria-label="${esc((m && m.alt) || SCENE_ALT[s] || 'Görsel')}">${sceneSVG(s)}</div>`;
   }
 
+  /* ---------------- kulüp başvuruları ----------------
+     Kayıtta seçilen kulübe yapılan başvurular, iki çalışma alanının (hesap ve demo yönetici) ortak
+     gördüğü ayrı bir anahtarda tutulur. Gerçek sistemde bu liste sunucuda, ilgili kulübün yöneticisine gider. */
+  function readApps() {
+    try { const v = JSON.parse(localStorage.getItem(KEYS.apps)); return Array.isArray(v) ? v : []; } catch (e) { return []; }
+  }
+  function writeApps(list) {
+    try { localStorage.setItem(KEYS.apps, JSON.stringify(list.slice(-100))); } catch (e) { /* depolama kapalı */ }
+  }
+  function syncApps() {
+    const list = readApps();
+    let changed = false;
+    if (isAdmin()) {   // yöneticiye yeni başvuruların bildirimi
+      state.notifiedApps = state.notifiedApps || [];
+      list.filter((a) => a.status === 'pending' && !state.notifiedApps.includes(a.id) && state.communities[a.club]).forEach((a) => {
+        state.notifiedApps.push(a.id);
+        state.notifications.unshift({ id: 'nt-' + a.id, type: 'request', text: `<b>${esc(a.name)}</b>, <b>${esc(state.communities[a.club].name)}</b> için üyelik başvurusu yaptı`, ts: a.ts, read: false, link: '#/yonetim?tab=uyelik', community: a.club });
+        changed = true;
+      });
+    }
+    if (mode === 'account') {   // başvuru sahibine sonucun bildirimi
+      let acc = null; try { acc = JSON.parse(localStorage.getItem(KEYS.auth)).account; } catch (e) { /* yok */ }
+      const app = acc && acc.appId && list.find((a) => a.id === acc.appId);
+      const c = app && state.communities[app.club];
+      if (c && app.status !== 'pending' && state.appResult !== app.status) {
+        state.appResult = app.status;
+        c.requested = false;
+        if (app.status === 'approved') { c.joined = true; c.members++; }
+        state.notifications.unshift({ id: 'nt-res-' + app.id, type: 'request', text: app.status === 'approved' ? `<b>${esc(c.name)}</b> üyeliğin onaylandı. Kulübe hoş geldin!` : `<b>${esc(c.name)}</b> üyelik başvurun bu kez onaylanmadı.`, ts: app.decided || Date.now(), read: false, link: '#/topluluk/' + c.id, community: c.id });
+        changed = true;
+      }
+    }
+    if (changed) save();
+  }
+
   /* ---------------- dışa aktar ---------------- */
   window.Core = {
     state, save, reset, mode, KEYS, buildWorkspace, $, $$, esc, setHTML, replaceHTML, appendHTML, lower, num, uid, initials, timeAgo, fmt, daysLeft,
-    ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand,
-    U, C, P, E, N, me, entity, avatar, verified, icon, sceneSVG, media
+    ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand, canMessage,
+    U, C, P, E, N, me, entity, avatar, verified, icon, sceneSVG, media, readApps, writeApps
   };
+  syncApps();
 })();

@@ -78,7 +78,7 @@
   let auth = readJSON(ls, KEYS.auth);
   function writeAuth() { ls.set(KEYS.auth, JSON.stringify(auth)); }
   function makeAccount(d, seeded) {
-    return { name: d.name.trim().slice(0, 40), email: d.email.trim().toLowerCase().slice(0, 254), username: d.username.trim().toLowerCase(), city: (d.city || '').trim().slice(0, 30), role: K.ROLES[d.role] ? d.role : 'uye', seeded: !!seeded, created: seeded ? Date.now() - 400 * 86400000 : Date.now(), lastLogin: null, failed: 0, locks: 0, lockUntil: 0, sessionToken: newSalt() };
+    return { name: d.name.trim().slice(0, 40), email: d.email.trim().toLowerCase().slice(0, 254), username: d.username.trim().toLowerCase(), city: (d.city || '').trim().slice(0, 30), role: K.ROLES[d.role] ? d.role : 'uye', club: d.club && K.state.communities[d.club] ? d.club : '', dept: (d.dept || '').trim().slice(0, 60), note: (d.note || '').trim().slice(0, 300), seeded: !!seeded, created: seeded ? Date.now() - 400 * 86400000 : Date.now(), lastLogin: null, failed: 0, locks: 0, lockUntil: 0, sessionToken: newSalt() };
   }
   // İlk açılışta örnek hesabı oluştur (hesap silinirse geri gelmez).
   if (!auth) {
@@ -133,6 +133,8 @@
     if (!RX.email.test(d.email.trim()) || d.email.trim().length > 254) e.email = 'Geçerli bir e-posta adresi yaz (ör. ad@ornek.com).';
     const pe = passwordError(d.password); if (pe) e.password = pe;
     if (!e.password && d.password !== d.confirm) e.confirm = 'Şifreler eşleşmiyor.';
+    if ((K.ROLES[d.role] ? d.role : 'uye') === 'uye' && !(d.club && K.state.communities[d.club])) e.club = 'Üye olmak istediğin kulübü seç.';
+    if (d.note && d.note.trim().length > 300) e.note = 'Tanıtım en fazla 300 karakter olabilir.';
     if (!d.consent) e.consent = 'Devam etmek için kullanım koşullarını ve aydınlatma metnini onayla.';
     return e;
   }
@@ -144,6 +146,14 @@
     const a = makeAccount(d, false);
     await setPassword(a, d.password);
     a.lastLogin = Date.now();
+    // Kulüp başvurusu: yöneticinin onay listesine düşer (eski hesabın başvurusu silinir)
+    const old = auth.account;
+    const apps = K.readApps().filter((x) => !(old && x.id === old.appId));
+    if (a.role === 'uye' && a.club) {
+      a.appId = 'ap' + newSalt().slice(0, 10);
+      apps.push({ id: a.appId, name: a.name, username: a.username, email: a.email, city: a.city, dept: a.dept, note: a.note, club: a.club, ts: Date.now(), status: 'pending' });
+    }
+    K.writeApps(apps);
     auth.account = a;
     startSession(false);
     writeAuth();
@@ -188,6 +198,7 @@
     else { K.state.onboarded = false; K.save(); flash('Demodan çıkıldı.'); go('#/hosgeldin'); }
   }
   function deleteAccount() {
+    if (auth.account && auth.account.appId) K.writeApps(K.readApps().filter((x) => x.id !== auth.account.appId));
     auth.account = null; writeAuth();
     ls.del(KEYS.account); clearSession();
     ls.set(KEYS.active, 'demo');

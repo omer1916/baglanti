@@ -44,7 +44,7 @@
     return true;
   }
   const unreadNotifs = () => state.notifications.filter((n) => !n.read).length;
-  const unreadMsgs = () => state.conversations.reduce((s, c) => s + (c.unread || 0), 0);
+  const unreadMsgs = () => !K.canMessage() ? 0 : state.conversations.reduce((s, c) => s + (c.unread || 0), 0);
   function notify(type, text, link, extra = {}) {
     state.notifications.unshift({ id: uid('nt'), type, text, ts: Date.now(), read: false, link, ...extra });
   }
@@ -91,6 +91,8 @@
     // üst çubuk: etkin sayfa
     $$('.topbar [data-top]').forEach((el) => { if (el.dataset.top === r.name) el.setAttribute('aria-current', 'page'); else el.removeAttribute('aria-current'); });
 
+    // üyelerde mesaj simgesi gizli
+    $$('[data-top="mesajlar"]').forEach((el) => { el.hidden = !K.canMessage(); });
     // rozetler
     const counts = { messages: unreadMsgs(), notifications: unreadNotifs() };
     $$('[data-badge]').forEach((el) => { const n = counts[el.dataset.badge]; if (n) el.setAttribute('data-badge-count', n > 9 ? '9+' : n); else el.removeAttribute('data-badge-count'); });
@@ -432,7 +434,6 @@
   A.save = (el) => { const p = post(el.dataset.id); p.saved = !p.saved; rerenderPost(p.id); toast(p.saved ? 'Kaydedilenlere eklendi' : 'Kaydedilenlerden çıkarıldı'); };
   A.share = (el) => { const p = post(el.dataset.id); p.shares++; copy(location.href.split('#')[0] + '#/akis'); rerenderPost(p.id); toast('Gönderi bağlantısı kopyalandı'); };
   A['copy-link'] = (el) => { copy(location.href.split('#')[0] + (el.dataset.href || '#/akis')); toast('Bağlantı kopyalandı'); };
-  A['toggle-comments'] = (el) => { const id = el.dataset.id; UI.openComments.has(id) ? UI.openComments.delete(id) : UI.openComments.add(id); rerenderPost(id); if (UI.openComments.has(id)) $('#c-' + id)?.focus(); };
   A['hide-post'] = (el) => { state.hiddenPosts.push(el.dataset.id); rerenderPost(el.dataset.id); };
   A['unhide-post'] = (el) => { state.hiddenPosts = state.hiddenPosts.filter((x) => x !== el.dataset.id); rerenderPost(el.dataset.id); };
   A['edit-post'] = (el) => openComposer({ editId: el.dataset.id });
@@ -495,14 +496,29 @@
   A['notif-read-all'] = () => { state.notifications.forEach((n) => (n.read = true)); refresh(); toast('Tüm bildirimler okundu'); };
 
   A['mod-act'] = (el) => { const r = state.reports.find((x) => x.id === el.dataset.id); r.status = el.dataset.do; state.audit.push({ ts: Date.now(), who: state.me, text: `${r.target}: ${r.status.toLocaleLowerCase('tr')} (${r.reason})` }); refresh(); toast(`Şikâyet sonuçlandı: ${r.status}`); };
-  A['member-req'] = (el) => { const x = state.memberRequests.splice(+el.dataset.i, 1)[0]; if (el.dataset.ok) { C(x.community).members++; state.audit.push({ ts: Date.now(), who: state.me, text: `${U(x.user).name} üyeliği onaylandı (${C(x.community).name})` }); } refresh(); toast(el.dataset.ok ? 'Üyelik onaylandı' : 'Üyelik isteği reddedildi'); };
+  A['member-req'] = (el) => {
+    const ok = !!el.dataset.ok;
+    let name, comm;
+    if (el.dataset.app) {   // kayıtta kulüp seçen üyenin başvurusu
+      const apps = K.readApps(); const a = apps.find((x) => x.id === el.dataset.app);
+      if (!a || a.status !== 'pending') return refresh();
+      a.status = ok ? 'approved' : 'rejected'; a.decided = Date.now(); K.writeApps(apps);
+      name = a.name; comm = C(a.club);
+    } else {
+      const x = state.memberRequests.splice(+el.dataset.i, 1)[0]; if (!x) return;
+      name = U(x.user).name; comm = C(x.community);
+    }
+    if (ok) comm.members++;
+    state.audit.push({ ts: Date.now(), who: state.me, text: `${name} üyelik başvurusu ${ok ? 'onaylandı' : 'reddedildi'} (${comm.name})` });
+    refresh(); toast(ok ? `${name} kulübe üye yapıldı` : 'Başvuru reddedildi');
+  };
   A['mod-remove'] = (el) => { const c = C(UI.adminComm); c.moderators = c.moderators.filter((x) => x !== el.dataset.id); state.audit.push({ ts: Date.now(), who: state.me, text: `${U(el.dataset.id).name} moderatörlükten alındı (${c.name})` }); refresh(); toast('Moderatör yetkisi kaldırıldı'); };
   A['topic-toggle'] = (el) => { const t = C(UI.adminComm).departments[+el.dataset.d].topics[+el.dataset.t]; t.open = !t.open; refresh(); toast(t.open ? 'Konu açıldı' : 'Konu kapatıldı'); };
 
   A.unblock = (el) => { state.privacy.blocked.splice(+el.dataset.i, 1); refresh(); toast('Engel kaldırıldı'); };
   A['block-user'] = (el) => confirmModal({ title: 'Kullanıcıyı engelle', text: `<b>${esc(el.dataset.name)}</b> seni bulamayacak, mesaj gönderemeyecek ve içeriklerini görmeyeceksin. Ayarlardan geri alabilirsin.`, ok: 'Engelle', danger: true, onOk: () => { state.privacy.blocked.push(el.dataset.name); refresh(); toast('Kullanıcı engellendi'); } });
   A['device-logout'] = (el) => { state.devices = state.devices.filter((d) => d.id !== el.dataset.id); refresh(); toast('Cihazdaki oturum kapatıldı'); };
-  A['download-data'] = () => { const data = { hesap: K.mode === 'account' ? window.Auth.record() : 'demo modu', profil: me(), gonderiler: state.posts.filter((p) => p.author.id === state.me), mesajlar: state.conversations.map((c) => ({ sohbet: c.title, mesajlar: c.messages.filter((m) => m.from === 'me').map((m) => m.text || m.file || 'görsel') })), gizlilik: state.privacy }; if (downloadFile('baglanti-verilerim.json', JSON.stringify(data, null, 2), 'application/json')) toast('Verilerin indirildi'); };
+  A['download-data'] = () => { const data = { hesap: K.mode === 'account' ? window.Auth.record() : 'demo modu', profil: me(), gonderiler: state.posts.filter((p) => p.author.id === state.me), mesajlar: state.conversations.map((c) => ({ sohbet: c.title, mesajlar: c.messages.filter((m) => m.from === 'me').map((m) => m.text || m.file || 'görsel') })), gizlilik: state.privacy, belgeler: state.docs.filter((d) => d.owner === state.me).map(({ data, ...rest }) => rest) }; if (downloadFile('baglanti-verilerim.json', JSON.stringify(data, null, 2), 'application/json')) toast('Verilerin indirildi'); };
   A.skip = (el, e) => { e.preventDefault(); els.main.focus(); };
   A['scroll-to'] = (el) => {
     const t = document.getElementById(el.dataset.target);
@@ -517,8 +533,65 @@
   A['change-password'] = () => openModal({ title: window.Auth.sampleOpen() ? 'Şifre belirle' : 'Şifre değiştir', form: 'password', body: `${window.Auth.sampleOpen() ? `<div class="callout">${icon('info')}<span>Örnek hesabın henüz şifresi yok. Şifre belirlersen tek tıkla giriş kapanır; sonraki girişlerde bu şifreyi kullanırsın.</span></div><input type="hidden" name="old" value="">` : `<div class="field"><label for="pw-old">Mevcut şifre</label><input class="input" type="password" id="pw-old" name="old" autocomplete="current-password" required></div>`}<div class="field"><label for="pw-new">Yeni şifre</label><input class="input" type="password" id="pw-new" name="new" autocomplete="new-password" minlength="8" required><span class="xs muted">En az 8 karakter; harf ve rakam içermeli.</span></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Güncelle</button>` });
   A['edit-profile'] = () => { const m = me(); openModal({ title: 'Profili düzenle', form: 'profile', body: `<div class="field"><label for="pf-name">Ad soyad</label><input class="input" id="pf-name" name="name" value="${esc(m.name)}" required maxlength="40"></div><div class="field"><label for="pf-city">Şehir</label><input class="input" id="pf-city" name="city" value="${esc(m.city)}" maxlength="30"></div><div class="field"><label for="pf-bio">Kısa biyografi</label><textarea class="textarea" id="pf-bio" name="bio" maxlength="160" style="min-height:90px">${esc(m.bio)}</textarea></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Kaydet</button>` }); };
   A['new-group'] = () => openModal({ title: 'Yeni grup oluştur', form: 'new-group', body: `<div class="field"><label for="ng-name">Grup adı</label><input class="input" id="ng-name" name="name" required maxlength="50"></div><div class="form-grid"><div class="field"><label for="ng-type">Grup türü</label><select class="select" id="ng-type" name="type"><option>Herkese açık</option><option>Özel</option><option>Gizli</option></select></div><div class="field"><label for="ng-cat">Kategori</label><select class="select" id="ng-cat" name="cat"><option>Kamp</option><option>Teknoloji</option><option>Müzik</option><option>Spor</option><option>Sanat</option><option>Gönüllülük</option></select></div></div><div class="field"><label for="ng-desc">Açıklama</label><textarea class="textarea" id="ng-desc" name="desc" maxlength="300" style="min-height:90px"></textarea></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Oluştur</button>` });
-  A.dm = (el) => { const id = el.dataset.id; let c = state.conversations.find((x) => x.kind === 'user' && x.with === id); if (!c) { c = { id: uid('c'), kind: 'user', with: id, title: U(id).name, subtitle: U(id).city, online: Math.random() > 0.5, unread: 0, messages: [] }; state.conversations.unshift(c); save(); } location.hash = '#/mesajlar/' + c.id; };
-  A['new-chat'] = () => openModal({ title: 'Yeni sohbet', body: `<div class="list">${Object.values(state.users).filter((u) => u.id !== state.me).map((u) => `<button class="list-item" style="width:100%;text-align:left" data-action="dm" data-id="${u.id}">${avatar({ ...u, kind: 'user' }, 'md')}<span class="grow"><b>${esc(u.name)}</b><span>${esc(u.city)}</span></span>${icon('chevronRight')}</button>`).join('')}</div>` });
+  const noMsg = () => { if (K.canMessage()) return false; toast('Mesajlaşma üyeler için şimdilik kapalı', 'info'); return true; };
+  /* ---------- profil belgeleri ---------- */
+  const DOC_MAX = 1.5 * 1024 * 1024;   // tarayıcı depolaması küçük olduğu için; sunucuda daha büyük olabilir
+  A['doc-add'] = () => openModal({
+    title: 'Belge ekle', form: 'doc-upload',
+    body: `<div class="stack">
+      <div class="field"><label for="doc-cat">Tür</label><select class="select" id="doc-cat" name="cat">${V.DOC_CATS.map(([k, l]) => `<option value="${k}">${l === 'CV' ? 'CV / özgeçmiş' : l.replace(/lar$/, '').replace(/ler$/, '')}</option>`).join('')}</select></div>
+      <div class="field"><label for="doc-title">Başlık</label><input class="input" id="doc-title" name="title" maxlength="60" required placeholder="Ör. Python ile Veri Analizi Sertifikası" aria-describedby="doc-title-err"><span class="field-error" id="doc-title-err" role="alert"></span></div>
+      <div class="field"><label for="doc-file">PDF dosyası</label><input class="input" type="file" id="doc-file" name="file" accept="application/pdf,.pdf" required aria-describedby="doc-file-err"><span class="xs muted">Yalnızca PDF · en fazla 1,5 MB</span><span class="field-error" id="doc-file-err" role="alert"></span></div>
+    </div>`,
+    foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Yükle</button>`
+  });
+  async function docUpload(f) {
+    const file = f.file.files && f.file.files[0];
+    const title = f.title.value.trim();
+    const errs = {};
+    if (title.length < 2) errs.title = 'Belgeye kısa bir başlık ver.';
+    if (!file) errs.file = 'Bir PDF dosyası seç.';
+    else if (file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name)) errs.file = 'Yalnızca PDF dosyası yüklenebilir.';
+    else if (file.size > DOC_MAX) errs.file = 'Dosya 1,5 MB sınırını aşıyor.';
+    else if (new TextDecoder().decode(await file.slice(0, 5).arrayBuffer()) !== '%PDF-') errs.file = 'Dosya geçerli bir PDF değil.';   // uzantıya değil içeriğe bak
+    showFieldErrors(f, errs);
+    if (Object.keys(errs).length) return;
+    const cat = V.DOC_CATS.some(([k]) => k === f.cat.value) ? f.cat.value : 'sertifika';
+    let data;
+    try { data = await readURL(file); } catch (e) { showFieldErrors(f, { file: 'Dosya okunamadı.' }); return; }
+    data = 'data:application/pdf;base64,' + data.slice(data.indexOf(',') + 1);
+    const doc = { id: uid('d'), owner: state.me, cat, title: title.slice(0, 60), name: safeName(file.name).replace(/[\\/:*?"<>|]/g, '_'), size: file.size, ts: Date.now(), data };
+    state.docs.push(doc);
+    if (!save(true)) { state.docs.pop(); save(true); showFieldErrors(f, { file: 'Tarayıcı depolama alanı doldu. Daha küçük bir PDF dene ya da eski bir belgeyi sil.' }); return; }
+    closeModal(); location.hash = '#/profil?tab=belgeler'; refresh(); toast('Belge profiline eklendi');
+  };
+  // Örnek belgeler için içerik yok: başlığı yazan tek sayfalık örnek PDF üret
+  function samplePdf(d) {
+    const tr = { ç: 'c', Ç: 'C', ğ: 'g', Ğ: 'G', ı: 'i', İ: 'I', ö: 'o', Ö: 'O', ş: 's', Ş: 'S', ü: 'u', Ü: 'U', '’': "'" };
+    const t = (x) => String(x).replace(/[çÇğĞıİöÖşŞüÜ’]/g, (c) => tr[c]).replace(/[^\x20-\x7e]/g, '').replace(/([()\\])/g, '\\$1');
+    const owner = U(d.owner);
+    const stream = `BT /F1 22 Tf 72 720 Td (${t(d.title)}) Tj 0 -32 Td /F1 13 Tf (${t(owner ? owner.name : '')}) Tj 0 -24 Td (Baglanti - ornek belge) Tj ET`;
+    const objs = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>', '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>', `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'];
+    let out = '%PDF-1.4\n'; const off = [];
+    objs.forEach((o, i) => { off.push(out.length); out += `${i + 1} 0 obj\n${o}\nendobj\n`; });
+    const x = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n${off.map((n) => String(n).padStart(10, '0') + ' 00000 n \n').join('')}trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${x}\n%%EOF`;
+    return new TextEncoder().encode(out);
+  }
+  A['doc-open'] = (el) => {
+    const d = state.docs.find((x) => x.id === el.dataset.id); if (!d) return;
+    let bytes;
+    if (d.data && d.data.startsWith('data:application/pdf;base64,')) { const bin = atob(d.data.slice(28)); bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i); }
+    else bytes = samplePdf(d);
+    if (downloadFile(d.name, bytes, 'application/pdf')) toast(`${d.name} indirildi`);
+  };
+  A['doc-del'] = (el) => {
+    const d = state.docs.find((x) => x.id === el.dataset.id && x.owner === state.me); if (!d) return;
+    confirmModal({ title: 'Belgeyi sil', text: `<b>${esc(d.title)}</b> profilinden kaldırılacak. Bu işlem geri alınamaz.`, ok: 'Sil', danger: true, onOk: () => { state.docs = state.docs.filter((x) => x !== d); save(); refresh(); toast('Belge silindi'); } });
+  };
+
+  A.dm = (el) => { if (noMsg()) return; const id = el.dataset.id; let c = state.conversations.find((x) => x.kind === 'user' && x.with === id); if (!c) { c = { id: uid('c'), kind: 'user', with: id, title: U(id).name, subtitle: U(id).city, online: Math.random() > 0.5, unread: 0, messages: [] }; state.conversations.unshift(c); save(); } location.hash = '#/mesajlar/' + c.id; };
+  A['new-chat'] = () => noMsg() || openModal({ title: 'Yeni sohbet', body: `<div class="list">${Object.values(state.users).filter((u) => u.id !== state.me).map((u) => `<button class="list-item" style="width:100%;text-align:left" data-action="dm" data-id="${u.id}">${avatar({ ...u, kind: 'user' }, 'md')}<span class="grow"><b>${esc(u.name)}</b><span>${esc(u.city)}</span></span>${icon('chevronRight')}</button>`).join('')}</div>` });
   A['mute-chat'] = () => toast('Sohbet 8 saat sessize alındı');
 
   // filtreler
@@ -534,8 +607,8 @@
   F['top-search'] = (f) => { const q = f.q.value.trim(); f.q.value = ''; f.q.blur(); UI.discover.q = q; location.hash = '#/kesfet' + (q ? '?q=' + encodeURIComponent(q) : ''); };
   F.discover = (f) => { f.querySelector('input').blur(); };
   F.noop = () => {};
-  F.comment = (f) => { const p = post(f.dataset.id); const t = f.text.value.trim(); if (!t) return; p.comments.push({ user: state.me, text: t, ts: Date.now() }); rerenderPost(p.id); $('#c-' + p.id)?.focus(); };
   F.compose = () => submitComposer();
+  F['doc-upload'] = docUpload;
   F.report = (f) => {
     const reason = f.reason.value;
     const pr = /Taciz/.test(reason) ? 'Yüksek' : /Spam|Sahte|Kişisel/.test(reason) ? 'Orta' : 'Düşük';
@@ -589,7 +662,7 @@
     if (!res.ok) { alert.textContent = res.error; alert.hidden = false; f.password.value = ''; f.password.focus(); }
   };
   F.register = (f) => {
-    const d = { name: f.name.value, username: f.username.value, email: f.email.value, city: f.city.value, role: f.role.value, password: f.password.value, confirm: f.confirm.value, consent: f.consent.checked };
+    const d = { name: f.name.value, username: f.username.value, email: f.email.value, city: f.city.value, role: f.role.value, club: f.role.value === 'uye' ? f.club.value : '', dept: f.dept.value, note: f.note.value, password: f.password.value, confirm: f.confirm.value, consent: f.consent.checked };
     const errs = window.Auth.validateRegister(d);
     showFieldErrors(f, errs);
     if (Object.keys(errs).length) return;
@@ -610,6 +683,7 @@
   F['add-topic'] = (f) => { const t = f.t.value.trim(); if (!t) return; C(UI.adminComm).departments[+f.dataset.d].topics.push({ t, open: true }); refresh(); toast('Konu açıldı'); };
   F['add-dept'] = (f) => { const n = f.name.value.trim(); if (!n) return; C(UI.adminComm).departments.push({ id: uid('d'), name: n, topics: [] }); refresh(); toast('Departman eklendi'); };
   F.chat = (f) => {
+    if (noMsg()) return;
     const conv = state.conversations.find((c) => c.id === f.dataset.id);
     const t = f.text.value.trim(); if (!t) return;
     conv.messages.push({ from: 'me', text: t, ts: Date.now() });
@@ -649,6 +723,7 @@
   CH['discover-filter'] = (el) => { UI.discover[el.dataset.key] = el.value; const box = $('#discover-results'); if (box) setHTML(box, V.discoverResults(box.dataset.tab)); };
   CH['media-comm'] = (el) => { UI.mediaComm = el.value; render({ keepScroll: true }); };
   CH['admin-comm'] = (el) => { UI.adminComm = el.value; render({ keepScroll: true }); };
+  CH['rg-role'] = (el) => { const box = $('#rg-club-box'); if (box) box.hidden = el.value !== 'uye'; };
   CH['notif-setting'] = (el) => { state.notifSettings[el.dataset.key] = el.checked; save(); toast(el.checked ? 'Bildirim türü açıldı' : 'Bildirim türü sessize alındı'); };
   CH['notif-freq'] = (el) => { state.notifSettings.frequency = el.value; save(); toast(`Bildirim sıklığı: ${el.value}`); };
   CH['notif-quiet'] = (el) => { state.notifSettings.quiet = el.checked; save(); toast(el.checked ? 'Sessiz saatler açık' : 'Sessiz saatler kapalı'); };
@@ -687,6 +762,7 @@
     if (cs) renderComposer();
   };
   CH['chat-file'] = (el) => {
+    if (noMsg()) return;
     const file = el.files && el.files[0];
     if (!file) return;
     const conv = state.conversations.find((c) => c.id === el.dataset.id);

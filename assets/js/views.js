@@ -5,7 +5,6 @@
   const { state, esc, lower, num, timeAgo, fmt, daysLeft, icon, avatar, verified, media, entity, U, C, P, E, N, me } = K;
 
   const UI = window.UI = {
-    openComments: new Set(),
     feedFilter: 'tumu', feedSort: 'onerilen',
     discover: { q: '', date: 'all', loc: 'all', kind: 'all', priv: 'all' },
     eventCat: 'Tümü', mediaComm: 'all', mediaKind: 'Tümü', notifFilter: 'all', sponsorCat: 'Tümü', memberQ: '', adminComm: 'kodkahve', modFilter: 'all'
@@ -69,7 +68,6 @@
     const ev = p.event && E(p.event);
     const need = p.need && N(p.need);
     const m = p.media || [];
-    const open = UI.openComments.has(p.id);
 
     return `<article class="card post" id="post-${p.id}" aria-label="${esc(a.name)} gönderisi">
       <header class="post-head">
@@ -106,17 +104,12 @@
       ${m.length ? `<div class="post-media n${Math.min(m.length, 3)}">${m.slice(0, 3).map((x, i) => mediaBtn(x, `data-action="lightbox" data-post="${p.id}" data-i="${i}"`, 'Görseli büyüt')).join('')}</div>` : ''}
       <div class="post-stats">
         <span class="likes">${p.likes ? `<button type="button" class="likes-btn" data-action="show-likes" data-id="${p.id}" aria-label="${num(p.likes)} beğeni · beğenenleri gör"><span class="like-dot">${icon('heart')}</span>${num(p.likes)}</button>` : ''}</span>
-        <span>${p.comments.length} yorum · ${p.shares} paylaşım</span>
+        <span>${p.shares} paylaşım</span>
       </div>
       <div class="post-actions">
         <button data-action="like" data-id="${p.id}" aria-pressed="${p.liked}">${icon('heart')}<span>Beğen</span></button>
-        <button data-action="toggle-comments" data-id="${p.id}" aria-expanded="${open}">${icon('comment')}<span>Yorum</span></button>
         <button data-action="share" data-id="${p.id}">${icon('share')}<span>Paylaş</span></button>
       </div>
-      ${open ? `<div class="post-comments">
-        ${p.comments.map((c) => { const cu = U(c.user); return `<div class="comment">${avatar({ ...cu, kind: 'user' }, 'sm')}<div><div class="comment-bubble"><b>${esc(cu.name)}</b>${esc(c.text)}</div><div class="comment-time">${timeAgo(c.ts)}</div></div></div>`; }).join('')}
-        <form class="comment-form" data-form="comment" data-id="${p.id}">${avatar({ ...me(), kind: 'user' }, 'sm')}<label class="sr-only" for="c-${p.id}">Yorum yaz</label><input class="input" id="c-${p.id}" name="text" placeholder="Yorum yaz…" autocomplete="off" maxlength="500" required><button class="icon-btn" aria-label="Yorumu gönder">${icon('send')}</button></form>
-      </div>` : ''}
     </article>`;
   }
 
@@ -203,7 +196,7 @@
           <div class="l-grid">
             ${[['megaphone', 'Etkinlik duyurularını paylaş', 'Metin, fotoğraf, video ve bağlantı paylaşımı. Etkinlik ve sponsor duyuruları.', 'var(--brand-soft)', 'var(--brand)'],
                ['compass', 'Etkinlikleri keşfet', 'Kişiler, sayfalar, gruplar ve yeni konular tek arama noktasında.', 'var(--accent-soft)', 'var(--accent)'],
-               ['users', 'Topluluklar arası bağ kur', 'Arkadaşlık, yorum, mesaj ve birden fazla topluluğun ortak etkinlikleri.', 'var(--success-soft)', 'var(--success)']]
+               ['users', 'Topluluklar arası bağ kur', 'Kulübüne katıl, etkinliklere birlikte git, birden fazla topluluğun ortak etkinliklerinde buluş.', 'var(--success-soft)', 'var(--success)']]
               .map(([ic, t, d, bg, fg]) => `<div class="card l-card"><span class="l-ico" style="background:${bg};color:${fg}">${icon(ic, 'ico-lg')}</span><h3>${t}</h3><p>${d}</p></div>`).join('')}
           </div>
         </section>
@@ -291,8 +284,17 @@
             <div class="field"><label for="rg-username">Kullanıcı adı</label><input class="input" id="rg-username" name="username" autocomplete="username" required maxlength="20" autocapitalize="none" spellcheck="false" placeholder="ornek_ad" aria-describedby="rg-username-err"><span class="field-error" id="rg-username-err" role="alert"></span></div>
             <div class="field full"><label for="rg-email">E-posta</label><input class="input" type="email" id="rg-email" name="email" autocomplete="email" required maxlength="254" inputmode="email" aria-describedby="rg-email-err"><span class="field-error" id="rg-email-err" role="alert"></span></div>
             <div class="field"><label for="rg-city">Şehir</label><input class="input" id="rg-city" name="city" autocomplete="address-level2" maxlength="30" placeholder="Bursa"></div>
-            <div class="field"><label for="rg-role">Hesap türü</label><select class="select" id="rg-role" name="role">${Object.entries(K.ROLES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('')}</select></div>
+            <div class="field"><label for="rg-role">Hesap türü</label><select class="select" id="rg-role" name="role" data-change="rg-role">${Object.entries(K.ROLES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('')}</select></div>
           </div>
+          <fieldset class="club-box stack" id="rg-club-box">
+            <legend>Kulüp başvurusu</legend>
+            <p class="small muted" style="margin:0">Başvurun seçtiğin kulübün yöneticisine gider. Yönetici bilgilerine bakıp onaylayınca kulübe üye olursun.</p>
+            <div class="form-grid">
+              <div class="field full"><label for="rg-club">Kulüp</label><select class="select" id="rg-club" name="club" aria-describedby="rg-club-err"><option value="">Kulüp seç…</option>${Object.values(state.communities).filter((c) => c.type !== 'Gizli').map((c) => `<option value="${esc(c.id)}">${esc(c.name)} · ${esc(c.category)}</option>`).join('')}</select><span class="field-error" id="rg-club-err" role="alert"></span></div>
+              <div class="field full"><label for="rg-dept">Okul / bölüm <span class="muted">(isteğe bağlı)</span></label><input class="input" id="rg-dept" name="dept" maxlength="60" placeholder="Uludağ Üni. · Bilgisayar Müh."></div>
+              <div class="field full"><label for="rg-note">Kendini kısaca tanıt <span class="muted">(isteğe bağlı)</span></label><textarea class="textarea" id="rg-note" name="note" rows="3" maxlength="300" placeholder="İlgi alanların, kulüpte ne yapmak istediğin…" aria-describedby="rg-note-err"></textarea><span class="field-error" id="rg-note-err" role="alert"></span></div>
+            </div>
+          </fieldset>
           ${pwField('rg-pass', 'password', 'Şifre', 'new-password', ' minlength="8"')}
           <div class="strength" id="rg-strength" aria-live="polite"><div class="strength-bar"><i></i><i></i><i></i><i></i><i></i></div><span>En az 8 karakter; harf ve rakam içermeli.</span></div>
           ${pwField('rg-confirm', 'confirm', 'Şifre (tekrar)', 'new-password')}
@@ -314,7 +316,7 @@
     if (UI.feedSort === 'yeni') posts.sort((a, b) => b.ts - a.ts);
     else {
       // Önerilen: etkileşim / yaş; kendi yeni gönderin en üstte kalır
-      const score = (p) => (isMine(p) && Date.now() - p.ts < 30 * 60000 ? 1e6 : 0) + (p.likes + p.comments.length * 3) / Math.pow((Date.now() - p.ts) / 3600000 + 2, 1.2);
+      const score = (p) => (isMine(p) && Date.now() - p.ts < 30 * 60000 ? 1e6 : 0) + (p.likes + p.shares * 2) / Math.pow((Date.now() - p.ts) / 3600000 + 2, 1.2);
       posts.sort((a, b) => score(b) - score(a));
     }
     const stories = state.stories.filter((s) => !s.hidden).sort((a, b) => (a.muted - b.muted) || (a.seen - b.seen));
@@ -499,7 +501,7 @@
         <div class="profile-info">
           ${avatar({ ...c, kind: 'community' }, 'xl')}
           <div class="grow"><h1>${esc(c.name)}</h1><p class="muted small">${esc(c.city)} · ${num(c.members)} üye · ${esc(c.type)} ${c.kind === 'grup' ? 'grup' : 'topluluk'}</p></div>
-          <div class="profile-actions">${joinButton(c)}<a class="btn" href="#/mesajlar">${icon('message', 'ico-sm')}Mesaj</a>
+          <div class="profile-actions">${joinButton(c)}${K.canMessage() ? `<a class="btn" href="#/mesajlar">${icon('message', 'ico-sm')}Mesaj</a>` : ''}
             <div class="menu-wrap"><button class="btn" data-action="toggle-menu" data-menu="cm-${c.id}" aria-label="Diğer seçenekler" aria-haspopup="true" aria-expanded="false">${icon('more')}</button>
               <div class="popover" data-popover="cm-${c.id}" hidden><button data-action="copy-link" data-href="${base}">${icon('link')}Bağlantıyı kopyala</button><button data-action="report" data-kind="Topluluk" data-id="${c.id}">${icon('flag')}Topluluğu bildir</button>${manage ? `<hr><a href="#/yonetim">${icon('shield')}Yönetim paneli</a>` : ''}</div></div>
           </div>
@@ -646,7 +648,7 @@
         <div class="profile-info">
           ${avatar({ ...p, kind: 'page' }, 'xl')}
           <div class="grow"><h1>${esc(p.name)} ${verified(p.verified)}</h1><p class="muted small">${esc(p.category)} · ${num(p.followers)} takipçi</p><p class="small" style="margin-top:4px">${esc(p.desc)}</p></div>
-          <div class="profile-actions">${own ? `<button class="btn btn-primary" data-action="compose">${icon('plus', 'ico-sm')}Gönderi</button>` : `<button class="btn ${p.following ? 'btn-success' : 'btn-primary'}" data-action="follow-page" data-id="${p.id}">${p.following ? icon('check', 'ico-sm') + 'Takip ediliyor' : 'Takip et'}</button><a class="btn" href="#/mesajlar">${icon('message', 'ico-sm')}Mesaj gönder</a>`}</div>
+          <div class="profile-actions">${own ? `<button class="btn btn-primary" data-action="compose">${icon('plus', 'ico-sm')}Gönderi</button>` : `<button class="btn ${p.following ? 'btn-success' : 'btn-primary'}" data-action="follow-page" data-id="${p.id}">${p.following ? icon('check', 'ico-sm') + 'Takip ediliyor' : 'Takip et'}</button>${K.canMessage() ? `<a class="btn" href="#/mesajlar">${icon('message', 'ico-sm')}Mesaj gönder</a>` : ''}`}</div>
         </div>
         ${tabs([...(own ? [['istatistik', 'İstatistik & yönetim']] : []), ['gonderiler', 'Gönderiler'], ['hakkinda', 'Hakkında'], ['medya', 'Medya']], tab, base)}
       </section>
@@ -683,6 +685,7 @@
 
   /* ---------- mesajlar ---------- */
   V.mesajlar = (r) => {
+    if (!K.canMessage()) return { title: 'Mesajlar', html: `<div class="page-head"><div><h1>Mesajlar</h1></div></div><section class="card">${empty('lock', 'Mesajlaşma şimdilik kapalı', 'Topluluğun huzuru için üyeler arası özel mesajlaşma şu an kapalı. Duyuruları ve etkinlikleri akışından, gelişmeleri bildirimlerden takip edebilirsin.', '<a class="btn btn-primary" href="#/akis">Akışa dön</a>')}</section>` };
     const mobile = matchMedia('(max-width: 720px)').matches;
     const activeId = r.id || (mobile ? null : state.conversations[0]?.id);
     const conv = state.conversations.find((c) => c.id === activeId);
@@ -733,19 +736,19 @@
   V.msgBubble = msgBubble;
 
   /* ---------- bildirimler ---------- */
-  const NT = { like: ['heart', 'var(--pink)', 'Beğeni'], comment: ['comment', 'var(--blue)', 'Yorum'], community: ['users', 'var(--green)', 'Topluluk'], event: ['calendar', 'var(--purple)', 'Etkinlik'], request: ['userPlus', 'var(--cyan)', 'Üyelik'], sponsor: ['gift', 'var(--amber)', 'Sponsor'] };
+  const NT = { like: ['heart', 'var(--pink)', 'Beğeni'], community: ['users', 'var(--green)', 'Topluluk'], event: ['calendar', 'var(--purple)', 'Etkinlik'], request: ['userPlus', 'var(--cyan)', 'Üyelik'], sponsor: ['gift', 'var(--amber)', 'Sponsor'] };
   V.bildirimler = () => {
     const f = UI.notifFilter;
     const s = state.notifSettings;
     let list = state.notifications.slice().sort((a, b) => b.ts - a.ts);
     if (f === 'unread') list = list.filter((n) => !n.read);
-    else if (f === 'social') list = list.filter((n) => n.type === 'like' || n.type === 'comment');
+    else if (f === 'social') list = list.filter((n) => n.type === 'like');
     else if (f !== 'all') list = list.filter((n) => n.type === f);
     const toggles = Object.entries(NT).map(([k, [ic, , label]]) => `<div class="setting-row"><div class="row" style="gap:10px">${icon(ic)}<b>${label}</b></div><label class="switch"><input type="checkbox" data-change="notif-setting" data-key="${k}" ${s[k] ? 'checked' : ''} aria-label="${label} bildirimleri"><span></span></label></div>`).join('');
     return {
       title: 'Bildirimler',
       html: `<div class="page-head"><div><h1>Bildirimler</h1><p>Önemli gelişmeler tek yerde; yoğunluğu sen yönetirsin.</p></div><button class="btn" data-action="notif-read-all">${icon('check', 'ico-sm')}Tümünü okundu işaretle</button></div>
-        ${chips([['all', 'Tümü'], ['unread', 'Okunmamış'], ['social', 'Beğeni & yorum'], ['community', 'Topluluk'], ['event', 'Etkinlik'], ['request', 'Üyelik'], ['sponsor', 'Sponsor']], f, 'notif-filter')}
+        ${chips([['all', 'Tümü'], ['unread', 'Okunmamış'], ['social', 'Beğeni'], ['community', 'Topluluk'], ['event', 'Etkinlik'], ['request', 'Üyelik'], ['sponsor', 'Sponsor']], f, 'notif-filter')}
         <section class="card" style="overflow:hidden">${list.length ? list.map((n) => { const [ic, col] = NT[n.type]; const who = n.who ? { ...U(n.who), kind: 'user' } : n.community ? { ...C(n.community), kind: 'community' } : { name: NT[n.type][2], hue: 1, kind: 'page' }; return `<button class="notif ${n.read ? '' : 'unread'}" data-action="notif-open" data-id="${n.id}"><span class="notif-ico">${avatar(who, 'md')}<span class="type" style="background:${col}">${icon(ic)}</span></span><span class="grow">${n.text}<span class="when">${timeAgo(n.ts)}</span></span>${n.read ? '' : '<span class="dot-unread" aria-label="Okunmadı"></span>'}</button>`; }).join('') : empty('bell', 'Bildirim yok', 'Bu filtrede gösterilecek bir şey kalmadı.')}</section>
         <section class="card card-pad only-narrow-settings">${notifSettingsHTML(toggles, s)}</section>`,
       rail: `<section class="card card-pad">${notifSettingsHTML(toggles, s)}</section>`
@@ -806,6 +809,7 @@
     else if (tab === 'hakkinda') body = `<section class="card card-pad stack"><h2 style="font-size:16px">Hakkında</h2><p>${esc(u.bio || '')}</p><div class="meta-line">${icon('pin')}${esc(u.city)}</div>${u.title ? `<div class="meta-line">${icon('shield')}${esc(u.title)}</div>` : ''}<div class="meta-line">${icon('clock')}${esc(u.joined || '2023')} yılından beri üye</div><h3 style="font-size:15px;margin-top:8px">Topluluklar</h3><div class="stack">${myComms.map((c) => `<a class="row" href="#/topluluk/${c.id}">${avatar({ ...c, kind: 'community' }, 'sm')}<b class="small">${esc(c.name)}</b></a>`).join('') || '<span class="muted small">—</span>'}</div>${self ? `<div class="callout">${icon('eye')}<span>Profil görünürlüğün: <b>${esc(state.privacy.visibility)}</b>. <a class="link" href="#/ayarlar">Değiştir</a></span></div>` : ''}</section>`;
     else if (tab === 'fotograflar') { const imgs = posts.flatMap((p) => p.media.map((m, i) => ({ m, p, i }))); body = imgs.length ? `<div class="gallery">${imgs.map(({ m, p, i }) => `<button class="tile" data-action="lightbox" data-post="${p.id}" data-i="${i}" aria-label="Görseli büyüt">${media(m)}</button>`).join('')}</div>` : `<div class="card">${empty('image', 'Fotoğraf yok', 'Paylaşılan fotoğraflar burada görünür.')}</div>`; }
     else if (tab === 'etkinlikler') { const evs = self ? state.events.filter((e) => e.attending || e.interested) : state.events.slice(0, 2); body = `<section class="card"><div class="list">${evs.map((e) => `<a class="event-row" href="#/etkinlik/${e.id}">${dateBlock(e.start)}<span class="grow"><b style="display:block">${esc(e.title)}</b><span class="small muted">${esc(e.location)}</span></span>${e.attending ? '<span class="badge green">Katılıyor</span>' : e.interested ? '<span class="badge blue">İlgileniyor</span>' : ''}</a>`).join('') || '<div class="list-item muted">Etkinlik yok.</div>'}</div></section>`; }
+    else if (tab === 'belgeler') body = docsTab(u, self);
     return {
       title: u.name,
       html: `<section class="card edge profile-head">
@@ -813,13 +817,25 @@
         <div class="profile-info">
           ${avatar({ ...u, kind: 'user' }, 'xl')}
           <div class="grow"><h1>${esc(u.name)}</h1><p class="muted small">@${esc(u.handle)} · ${esc(u.city)} · ${posts.length} gönderi · ${self ? cn.friends.length : 12 + u.hue} bağlantı</p></div>
-          <div class="profile-actions">${self ? `<button class="btn" data-action="edit-profile">${icon('edit', 'ico-sm')}Profili düzenle</button><a class="btn" href="#/ayarlar" aria-label="Gizlilik ayarları">${icon('lock', 'ico-sm')}Gizlilik</a>` : `${friend ? `<span class="btn btn-success">${icon('check', 'ico-sm')}Bağlantı</span>` : pending ? `<button class="btn" disabled>İstek gönderildi</button>` : `<button class="btn btn-primary" data-action="conn-add" data-id="${u.id}">${icon('userPlus', 'ico-sm')}Bağlantı kur</button>`}<button class="btn" data-action="dm" data-id="${u.id}">${icon('message', 'ico-sm')}Mesaj</button>
+          <div class="profile-actions">${self ? `<button class="btn" data-action="edit-profile">${icon('edit', 'ico-sm')}Profili düzenle</button><a class="btn" href="#/ayarlar" aria-label="Gizlilik ayarları">${icon('lock', 'ico-sm')}Gizlilik</a>` : `${friend ? `<span class="btn btn-success">${icon('check', 'ico-sm')}Bağlantı</span>` : pending ? `<button class="btn" disabled>İstek gönderildi</button>` : `<button class="btn btn-primary" data-action="conn-add" data-id="${u.id}">${icon('userPlus', 'ico-sm')}Bağlantı kur</button>`}${K.canMessage() ? `<button class="btn" data-action="dm" data-id="${u.id}">${icon('message', 'ico-sm')}Mesaj</button>` : ''}
             <div class="menu-wrap"><button class="btn" data-action="toggle-menu" data-menu="um" aria-label="Diğer" aria-haspopup="true" aria-expanded="false">${icon('more')}</button><div class="popover" data-popover="um" hidden><button data-action="report" data-kind="Profil" data-id="${u.id}">${icon('flag')}Profili bildir</button><button class="danger" data-action="block-user" data-name="${esc(u.name)}">${icon('ban')}Engelle</button></div></div>`}</div>
         </div>
-        ${tabs([['gonderiler', 'Gönderiler'], ['hakkinda', 'Hakkında'], ['fotograflar', 'Fotoğraflar'], ['etkinlikler', 'Etkinlikler']], tab, base)}
+        ${tabs([['gonderiler', 'Gönderiler'], ['hakkinda', 'Hakkında'], ['belgeler', 'Belgeler'], ['fotograflar', 'Fotoğraflar'], ['etkinlikler', 'Etkinlikler']], tab, base)}
       </section>${body}`
     };
   };
+
+  /* ---------- profil belgeleri (sertifika, proje, CV · PDF) ---------- */
+  const DOC_CATS = [['sertifika', 'Sertifikalar', 'badgeCheck'], ['proje', 'Projeler', 'layers'], ['cv', 'CV', 'file']];
+  const kb = (n) => n >= 1048576 ? (n / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+  function docsTab(u, self) {
+    const docs = state.docs.filter((d) => d.owner === u.id).sort((a, b) => b.ts - a.ts);
+    const head = `<div class="row-between" style="flex-wrap:wrap;gap:8px"><div><h2 style="font-size:16px">Belgeler</h2><p class="small muted" style="margin:0">${self ? 'Sertifikalarını, yaptığın projeleri ve CV’ni PDF olarak ekle.' : 'Sertifikalar, projeler ve CV.'}</p></div>${self ? `<button class="btn btn-primary" data-action="doc-add">${icon('plus', 'ico-sm')}Belge ekle</button>` : ''}</div>`;
+    if (!docs.length) return `<section class="card card-pad stack">${head}${empty('file', 'Henüz belge yok', self ? 'İlk PDF’ini ekleyerek profilini güçlendir.' : 'Bu kişi henüz belge eklemedi.')}</section>`;
+    return `<section class="card card-pad stack">${head}${DOC_CATS.map(([k, label, ic]) => { const list = docs.filter((d) => d.cat === k); return list.length ? `<div class="stack" style="gap:8px"><h3 class="doc-cat">${icon(ic, 'ico-sm')}${label} <span class="muted">${list.length}</span></h3><div class="doc-list">${list.map((d) => `<div class="doc-item"><span class="doc-ico" aria-hidden="true">PDF</span><span class="grow"><b>${esc(d.title)}</b><span class="xs muted">${esc(d.name)} · ${kb(d.size)} · ${timeAgo(d.ts)}</span></span><div class="btn-row"><button class="btn btn-sm" data-action="doc-open" data-id="${esc(d.id)}">${icon('download', 'ico-sm')}Aç</button>${self ? `<button class="icon-btn" data-action="doc-del" data-id="${esc(d.id)}" aria-label="${esc(d.title)} belgesini sil">${icon('trash')}</button>` : ''}</div></div>`).join('')}</div></div>` : ''; }).join('')}
+      ${self ? `<p class="xs muted" style="margin:0">${icon('eye', 'ico-sm')} Belgelerin, profilini görebilen kişilere açıktır (<b>${esc(state.privacy.visibility)}</b>). <a class="link" href="#/ayarlar">Değiştir</a></p>` : ''}</section>`;
+  }
+  V.DOC_CATS = DOC_CATS;
 
   V.kaydedilenler = () => {
     const posts = state.posts.filter((p) => p.saved);
@@ -903,18 +919,18 @@
       body = `<div class="stat-grid">
           <div class="card stat"><div class="label">Aktif kullanıcı</div><div class="value">${num(2184)}</div><div class="delta">▲ %9 bu hafta</div></div>
           <div class="card stat"><div class="label">7 / 30 gün geri dönüş</div><div class="value">%46 / %31</div><div class="delta">▲ 3 puan</div></div>
-          <div class="card stat"><div class="label">Bugün gönderi · yorum</div><div class="value">${state.activity[6].posts} · ${state.activity[6].comments}</div><div class="delta">612 mesaj · ▲ %6</div></div>
+          <div class="card stat"><div class="label">Bugün gönderi</div><div class="value">${state.activity[6].posts}</div><div class="delta">▲ %6 dünden</div></div>
           <div class="card stat"><div class="label">Şikâyet çözüm süresi</div><div class="value">3,2 sa</div><div class="delta">${open} açık şikâyet</div></div>
           <div class="card stat"><div class="label">Kullanıcı memnuniyeti</div><div class="value">4,6 / 5</div><div class="delta">▲ 0,2</div></div>
         </div>
         <section class="card card-pad stack">
           <div class="row-between"><h2 style="font-size:16px">Haftalık gönderi sayısı</h2><span class="small muted">Son 7 gün · tüm yönetilen topluluklar</span></div>
-          <div class="bars" role="img" aria-label="Haftalık gönderi sayısı: ${state.activity.map((a) => a.d + ' ' + a.posts).join(', ')}">${state.activity.map((a) => `<div class="bar" tabindex="0" style="--h:${a.posts / max * 100}%"><span style="height:${a.posts / max * 100}%"></span><em class="tip" style="font-style:normal">${a.d}: ${a.posts} gönderi · ${a.comments} yorum</em></div>`).join('')}</div>
+          <div class="bars" role="img" aria-label="Haftalık gönderi sayısı: ${state.activity.map((a) => a.d + ' ' + a.posts).join(', ')}">${state.activity.map((a) => `<div class="bar" tabindex="0" style="--h:${a.posts / max * 100}%"><span style="height:${a.posts / max * 100}%"></span><em class="tip" style="font-style:normal">${a.d}: ${a.posts} gönderi</em></div>`).join('')}</div>
           <div class="bars-x" aria-hidden="true">${state.activity.map((a) => `<span>${a.d}</span>`).join('')}</div>
-          <details class="small"><summary class="link" style="cursor:pointer">Tablo olarak göster</summary><div class="table-wrap"><table><thead><tr><th>Gün</th><th>Gönderi</th><th>Yorum</th></tr></thead><tbody>${state.activity.map((a) => `<tr><td>${a.d}</td><td>${a.posts}</td><td>${a.comments}</td></tr>`).join('')}</tbody></table></div></details>
+          <details class="small"><summary class="link" style="cursor:pointer">Tablo olarak göster</summary><div class="table-wrap"><table><thead><tr><th>Gün</th><th>Gönderi</th></tr></thead><tbody>${state.activity.map((a) => `<tr><td>${a.d}</td><td>${a.posts}</td></tr>`).join('')}</tbody></table></div></details>
         </section>
         <section class="card"><div class="card-head"><h2>İçerik performansı</h2><span class="small muted">En çok etkileşim alanlar</span></div>
-          <div class="table-wrap" style="margin-top:8px"><table><thead><tr><th>Gönderi</th><th>Topluluk</th><th>Beğeni</th><th>Yorum</th><th>Paylaşım</th></tr></thead><tbody>${top.map((p) => `<tr><td style="max-width:260px"><a class="link ellipsis" style="display:block" href="#/topluluk/${p.community}">${esc((p.text || '').slice(0, 48))}…</a></td><td>${esc(C(p.community).name)}</td><td>${num(p.likes)}</td><td>${p.comments.length}</td><td>${p.shares}</td></tr>`).join('')}</tbody></table></div></section>`;
+          <div class="table-wrap" style="margin-top:8px"><table><thead><tr><th>Gönderi</th><th>Topluluk</th><th>Beğeni</th><th>Paylaşım</th></tr></thead><tbody>${top.map((p) => `<tr><td style="max-width:260px"><a class="link ellipsis" style="display:block" href="#/topluluk/${p.community}">${esc((p.text || '').slice(0, 48))}…</a></td><td>${esc(C(p.community).name)}</td><td>${num(p.likes)}</td><td>${p.shares}</td></tr>`).join('')}</tbody></table></div></section>`;
     } else if (tab === 'moderasyon') {
       let reps = state.reports.slice().sort((a, b) => ({ Yüksek: 0, Orta: 1, Düşük: 2 }[a.priority] - { Yüksek: 0, Orta: 1, Düşük: 2 }[b.priority]) || b.ts - a.ts);
       if (UI.modFilter === 'open') reps = reps.filter((x) => x.status === 'Bekliyor');
@@ -929,12 +945,21 @@
             ${x.status === 'Bekliyor' ? `<div class="btn-row"><button class="btn btn-sm" data-action="mod-act" data-id="${x.id}" data-do="Uyarı verildi">Uyar</button><button class="btn btn-sm btn-danger" data-action="mod-act" data-id="${x.id}" data-do="Kaldırıldı">Kaldır</button><button class="btn btn-sm btn-ghost" data-action="mod-act" data-id="${x.id}" data-do="Reddedildi">Reddet</button></div>` : x.status !== 'İtiraz edildi' ? `<div class="btn-row"><button class="btn btn-sm btn-ghost" data-action="mod-act" data-id="${x.id}" data-do="İtiraz edildi">İtirazı işle</button></div>` : ''}
           </div>`).join('') : '<div class="list-item muted">Kuyruk boş 🎉</div>'}</div></section>
         <div class="grid-cards">
-          <section class="card card-pad stack"><h3 class="card-title">Kullanıcı araçları</h3>${['Şikâyet et / bildir', 'Engelle ve sessize al', 'Yorumları gizle', 'İçeriği gizle'].map((x) => `<span class="row small">${icon('check', 'ico-sm')}${x}</span>`).join('')}</section>
+          <section class="card card-pad stack"><h3 class="card-title">Kullanıcı araçları</h3>${['Şikâyet et / bildir', 'Engelle ve sessize al', 'İçeriği gizle'].map((x) => `<span class="row small">${icon('check', 'ico-sm')}${x}</span>`).join('')}</section>
           <section class="card card-pad stack"><h3 class="card-title">Topluluk kuralları</h3>${['Nefret ve taciz yasağı', 'Spam ve sahte hesap önleme', 'Telif ve kişisel veri koruması', 'Şeffaf yaptırım politikası'].map((x) => `<span class="row small">${icon('shield', 'ico-sm')}${x}</span>`).join('')}</section>
         </div>`;
     } else if (tab === 'uyelik') {
-      const reqs = state.memberRequests;
-      body = `<section class="card"><div class="card-head"><h2>Üyelik istekleri</h2><span class="small muted">Özel gruplar yönetici onayı ister</span></div><div class="list" style="margin-top:6px">${reqs.length ? reqs.map((x, i) => { const u = U(x.user); return `<div class="list-item">${avatar({ ...u, kind: 'user' }, 'md')}<a class="grow" href="#/kisi/${u.id}"><b>${esc(u.name)}</b><span>${esc(C(x.community).name)} · ${timeAgo(x.ts)}</span></a><div class="btn-row"><button class="btn btn-sm btn-primary" data-action="member-req" data-i="${i}" data-ok="1">Onayla</button><button class="btn btn-sm" data-action="member-req" data-i="${i}">Reddet</button></div></div>`; }).join('') : '<div class="list-item muted">Bekleyen istek yok.</div>'}</div></section>`;
+      const apps = K.readApps().filter((a) => C(a.club));
+      const pending = apps.filter((a) => a.status === 'pending').sort((a, b) => b.ts - a.ts);
+      const decided = apps.filter((a) => a.status !== 'pending').sort((a, b) => (b.decided || 0) - (a.decided || 0)).slice(0, 5);
+      const info = (rows) => `<dl class="app-info">${rows.filter(([, v]) => v).map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`;
+      const btns = (attr) => `<div class="btn-row"><button class="btn btn-sm btn-primary" data-action="member-req" ${attr} data-ok="1">${icon('check', 'ico-sm')}Onayla</button><button class="btn btn-sm" data-action="member-req" ${attr}>Reddet</button></div>`;
+      const item = (av, name, club, ts, rows, note, attr) => `<div class="list-item app-item">${av}<div class="grow stack" style="gap:8px"><div class="row" style="gap:8px;flex-wrap:wrap"><b>${name}</b><span class="badge blue">${esc(C(club).name)}</span><span class="xs muted">${timeAgo(ts)}</span></div>${info(rows)}${note ? `<p class="app-note">${esc(note)}</p>` : ''}</div>${btns(attr)}</div>`;
+      const rowsA = pending.map((a) => item(avatar({ name: a.name, hue: 5, kind: 'user' }, 'md'), esc(a.name) + ' <span class="badge green">Yeni kayıt</span>', a.club, a.ts, [['Kullanıcı adı', '@' + a.username], ['E-posta', a.email], ['Şehir', a.city], ['Okul / bölüm', a.dept]], a.note, `data-app="${esc(a.id)}"`));
+      const rowsS = state.memberRequests.map((x, i) => { const u = U(x.user); return item(avatar({ ...u, kind: 'user' }, 'md'), `<a href="#/kisi/${u.id}">${esc(u.name)}</a>`, x.community, x.ts, [['Kullanıcı adı', '@' + u.handle], ['Şehir', u.city]], u.bio, `data-i="${i}"`); });
+      const total = rowsA.length + rowsS.length;
+      body = `<section class="card"><div class="card-head"><h2>Üyelik başvuruları</h2><span class="small muted">${total ? total + ' bekleyen başvuru · bilgileri inceleyip onayla' : 'Kayıtta kulüp seçen üyeler burada listelenir'}</span></div><div class="list" style="margin-top:6px">${total ? rowsA.join('') + rowsS.join('') : '<div class="list-item muted">Bekleyen başvuru yok.</div>'}</div></section>
+        ${decided.length ? `<section class="card"><div class="card-head"><h2>Son kararlar</h2></div><div class="list" style="margin-top:6px">${decided.map((a) => `<div class="list-item">${avatar({ name: a.name, hue: 5, kind: 'user' }, 'sm')}<span class="grow"><b>${esc(a.name)}</b> · ${esc(C(a.club).name)}</span><span class="badge ${a.status === 'approved' ? 'green' : ''}">${a.status === 'approved' ? 'Onaylandı' : 'Reddedildi'}</span></div>`).join('')}</div></section>` : ''}`;
     } else if (tab === 'moderatorler') {
       const mods = comm.moderators.map(U);
       const cands = Object.values(state.users).filter((u) => !comm.moderators.includes(u.id) && u.id !== state.me);
