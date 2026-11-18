@@ -378,7 +378,7 @@
   A['toggle-menu'] = (el) => togglePopover(el);
   A['toggle-drawer'] = () => (document.body.classList.contains('drawer-open') ? closeDrawer() : openDrawer());
   A['close-drawer'] = closeDrawer;
-  A['toggle-theme'] = () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; applyTheme(); refresh(); };
+  A['toggle-theme'] = () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; applyTheme(); save(true); refresh(); };
   A['close-modal'] = closeModal;
   A['confirm-ok'] = () => { const fn = onConfirm; onConfirm = null; closeModal(); fn && fn(); };
   A['set-role'] = (el) => { state.role = el.dataset.role; refresh(); toast(`Rol: ${K.ROLES[state.role].label}`); };

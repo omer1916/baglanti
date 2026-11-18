@@ -46,6 +46,7 @@
   if (state.notifSettings) delete state.notifSettings.comment;
   if (!state.docs) state.docs = window.SEED().docs || [];
   if (!state.tags) { const s0 = window.SEED(); state.tags = s0.tags; state.listings = s0.listings; state.followedTags = s0.followedTags; }
+  if (state.themeV !== 2) { state.theme = 'light'; state.themeV = 2; } // açık tema varsayılan oldu
   if (!state.memberRequests) state.memberRequests = [{ user: 'u4', community: 'kodkahve', ts: Date.now() - 50 * 60000 }, { user: 'u8', community: 'doga', ts: Date.now() - 300 * 60000 }];
 
   let warnedQuota = false;

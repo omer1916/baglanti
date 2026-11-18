@@ -14,7 +14,7 @@
       version: 1,
       onboarded: false,
       role: 'uye', // uye | moderator | yonetici | marka
-      theme: 'dark',
+      theme: 'light', themeV: 2,
       me: 'u0',
 
       users: {
