@@ -45,6 +45,7 @@
   state.notifications = state.notifications.filter((n) => n.type !== 'comment');
   if (state.notifSettings) delete state.notifSettings.comment;
   if (!state.docs) state.docs = window.SEED().docs || [];
+  if (!state.tags) { const s0 = window.SEED(); state.tags = s0.tags; state.listings = s0.listings; state.followedTags = s0.followedTags; }
   if (!state.memberRequests) state.memberRequests = [{ user: 'u4', community: 'kodkahve', ts: Date.now() - 50 * 60000 }, { user: 'u8', community: 'doga', ts: Date.now() - 300 * 60000 }];
 
   let warnedQuota = false;
@@ -246,6 +247,7 @@
     link: '<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/>',
     crown: '<path d="m3 8 4.5 4L12 5l4.5 7L21 8l-2 11H5z"/>',
     alert: '<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>',
+    briefcase: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>',
     tag: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>',
     sparkle: '<path d="M12 3c.6 4.5 2.5 6.4 7 7-4.5.6-6.4 2.5-7 7-.6-4.5-2.5-6.4-7-7 4.5-.6 6.4-2.5 7-7z"/>',
     building: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M10 21v-3h4v3"/>'

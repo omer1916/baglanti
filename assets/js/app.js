@@ -57,6 +57,7 @@
       ['topluluklar', '#/topluluklar', 'users', 'Topluluklar & gruplar'],
       ['etkinlikler', '#/etkinlikler', 'calendar', 'Etkinlikler'],
       ['sponsorlar', '#/sponsorlar', 'gift', 'Sponsorlar & sayfalar'],
+      ['ilanlar', '#/ilanlar', 'briefcase', 'İş & staj ilanları'],
       ['medya', '#/medya', 'image', 'Medya arşivi'],
       ['uyeler', '#/uyeler', 'userPlus', 'Üyeler & bağlantılar', state.connections.incoming.length]
     ];
@@ -597,7 +598,46 @@
   // filtreler
   A['feed-filter'] = (el) => { UI.feedFilter = el.dataset.value; render({ keepScroll: true }); };
   A['event-cat'] = (el) => { UI.eventCat = el.dataset.value; render({ keepScroll: true }); };
-  A['sponsor-cat'] = (el) => { UI.sponsorCat = el.dataset.value; render({ keepScroll: true }); };
+  /* ---------- iş & staj ilanları ---------- */
+  const HEX = /^#[0-9a-f]{6}$/i;
+  const jobsRender = () => render({ keepScroll: true });
+  A['jobs-type'] = (el) => { UI.jobs.type = el.dataset.value; jobsRender(); };
+  A['jobs-tag'] = (el) => { const t = UI.jobs.tags; const id = el.dataset.value; UI.jobs.tags = t.includes(id) ? t.filter((x) => x !== id) : [...t, id]; if (parseHash().name !== 'ilanlar') location.hash = '#/ilanlar'; else jobsRender(); };
+  A['jobs-clear'] = () => { UI.jobs = { ...UI.jobs, type: 'Tümü', tags: [], mode: 'all', q: '', followed: false }; jobsRender(); };
+  A['tag-follow'] = (el) => { const id = el.dataset.id; const on = state.followedTags.includes(id); state.followedTags = on ? state.followedTags.filter((x) => x !== id) : [...state.followedTags, id]; save(); jobsRender(); toast(on ? 'Etiket takipten çıkarıldı' : 'Etiket takip ediliyor; ilanlarda öne çıkar'); };
+  const listing = (id) => state.listings.find((l) => l.id === id);
+  A['job-save'] = (el) => { const l = listing(el.dataset.id); if (!l) return; l.saved = !l.saved; save(); jobsRender(); toast(l.saved ? 'İlan kaydedildi' : 'İlan kayıtlardan çıkarıldı'); };
+  A['job-apply'] = (el) => {
+    const l = listing(el.dataset.id); if (!l || l.applied || K.isBrand()) return;
+    const docs = state.docs.filter((d) => d.owner === state.me).length;
+    confirmModal({ title: 'İlana başvur', text: `<b>${esc(l.title)}</b> · ${esc(P(l.page).name)}<br><br>Başvurunla birlikte adın, kullanıcı adın ve profilindeki ${docs ? `<b>${docs} belge</b> (CV, sertifika, proje)` : 'belgeler'} ilan sahibiyle paylaşılır.${docs ? '' : ' Henüz belge eklemedin; önce <a class="link" href="#/profil?tab=belgeler">CV’ni eklemek</a> isteyebilirsin.'}`, ok: 'Başvur', onOk: () => { l.applied = true; l.applicants++; save(); jobsRender(); toast('Başvurun iletildi'); } });
+  };
+  A['job-del'] = (el) => {
+    const l = listing(el.dataset.id); if (!l || !(K.isBrand() && l.page === K.BRAND_PAGE)) return;
+    confirmModal({ title: 'İlanı kaldır', text: `<b>${esc(l.title)}</b> ilanı yayından kaldırılacak. Bu işlem geri alınamaz.`, ok: 'Kaldır', danger: true, onOk: () => { state.listings = state.listings.filter((x) => x !== l); save(); jobsRender(); toast('İlan kaldırıldı'); } });
+  };
+  A['job-new'] = () => {
+    if (!K.isBrand()) return;
+    const min = new Date(Date.now() + 86400000).toISOString().slice(0, 10), max = new Date(Date.now() + 180 * 86400000).toISOString().slice(0, 10);
+    openModal({
+      title: 'İlan ver', form: 'job-post',
+      body: `<div class="stack">
+        <div class="field"><label for="jp-title">İlan başlığı</label><input class="input" id="jp-title" name="title" maxlength="80" required placeholder="Ör. Grafik tasarım stajyeri" aria-describedby="jp-title-err"><span class="field-error" id="jp-title-err" role="alert"></span></div>
+        <div class="form-grid">
+          <div class="field"><label for="jp-type">İlan türü</label><select class="select" id="jp-type" name="type">${V.JOB_TYPES.map((t) => `<option>${t}</option>`).join('')}</select></div>
+          <div class="field"><label for="jp-mode">Çalışma şekli</label><select class="select" id="jp-mode" name="mode">${V.JOB_MODES.map((t) => `<option>${t}</option>`).join('')}</select></div>
+          <div class="field"><label for="jp-city">Şehir</label><input class="input" id="jp-city" name="city" maxlength="30" value="Bursa"></div>
+          <div class="field"><label for="jp-deadline">Son başvuru</label><input class="input" type="date" id="jp-deadline" name="deadline" min="${min}" max="${max}" required aria-describedby="jp-deadline-err"><span class="field-error" id="jp-deadline-err" role="alert"></span></div>
+        </div>
+        <fieldset class="field" style="border:0;padding:0;margin:0"><legend style="font-weight:700;font-size:14px;margin-bottom:6px">Etiketler <span class="muted" style="font-weight:500">(1–5 tane · ilan yalnızca bu etiketlerle ilgilenenlerin filtresinde öne çıkar)</span></legend>
+          <div class="tag-pick" id="jp-tags" aria-describedby="jp-tags-err">${state.tags.map((t) => `<label class="tag-check"><input type="checkbox" name="tags" value="${esc(t.id)}">${V.tagChip(t)}</label>`).join('')}</div>
+          <span class="field-error" id="jp-tags-err" role="alert"></span></fieldset>
+        <div class="field"><label for="jp-desc">Açıklama</label><textarea class="textarea" id="jp-desc" name="desc" rows="4" maxlength="600" required placeholder="Görev, aranan nitelikler, çalışma saatleri…" aria-describedby="jp-desc-err"></textarea><span class="field-error" id="jp-desc-err" role="alert"></span></div>
+      </div>`,
+      foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">${icon('briefcase', 'ico-sm')}Yayınla</button>`
+    });
+  };
+(el) => { UI.sponsorCat = el.dataset.value; render({ keepScroll: true }); };
   A['notif-filter'] = (el) => { UI.notifFilter = el.dataset.value; render({ keepScroll: true }); };
   A['mod-filter'] = (el) => { UI.modFilter = el.dataset.value; render({ keepScroll: true }); };
   A['media-kind'] = (el) => { UI.mediaKind = el.dataset.value; render({ keepScroll: true }); };
@@ -608,6 +648,36 @@
   F.discover = (f) => { f.querySelector('input').blur(); };
   F.noop = () => {};
   F.compose = () => submitComposer();
+  F['jobs-search'] = (f) => { UI.jobs.q = f.q.value.trim().slice(0, 60); jobsRender(); };
+  F['job-post'] = (f) => {
+    if (!K.isBrand()) return;
+    const title = f.title.value.trim(), desc = f.desc.value.trim();
+    const tags = $$('input[name="tags"]:checked', f).map((x) => x.value).filter((id) => state.tags.some((t) => t.id === id));
+    const dl = f.deadline.value ? new Date(f.deadline.value + 'T23:59').getTime() : NaN;
+    const errs = {};
+    if (title.length < 5) errs.title = 'Başlık en az 5 karakter olmalı.';
+    if (!(dl > Date.now() && dl < Date.now() + 181 * 86400000)) errs.deadline = 'Bugünden sonra, en fazla 6 ay içinde bir tarih seç.';
+    if (desc.length < 20) errs.desc = 'Açıklama en az 20 karakter olmalı.';
+    showFieldErrors(f, errs);
+    const tagErr = $('#jp-tags-err'); tagErr.textContent = !tags.length ? 'En az bir etiket seç.' : tags.length > 5 ? 'En fazla 5 etiket seçebilirsin.' : '';
+    if (Object.keys(errs).length || tagErr.textContent) return;
+    state.listings.unshift({ id: uid('l'), page: K.BRAND_PAGE, title: title.slice(0, 80), type: V.JOB_TYPES.includes(f.type.value) ? f.type.value : 'Staj', mode: V.JOB_MODES.includes(f.mode.value) ? f.mode.value : 'Yerinde', city: f.city.value.trim().slice(0, 30) || 'Bursa', tags, deadline: dl, ts: Date.now(), applicants: 0, applied: false, saved: false, desc: desc.slice(0, 600) });
+    save(); closeModal(); UI.jobs.tab = 'benim'; location.hash = '#/ilanlar?tab=benim'; jobsRender(); toast('İlan yayınlandı');
+  };
+  F['tag-create'] = (f) => {
+    if (!K.isAdmin()) return;
+    const name = f.elements.name.value.trim().replace(/\s+/g, ' ');
+    const sel = f.querySelector('input[name="color"]:checked');
+    const color = sel && sel.value === 'custom' ? f.elements.custom.value : sel ? sel.value : '';
+    const errs = {};
+    if (name.length < 2 || name.length > 24) errs.name = 'Etiket adı 2–24 karakter olmalı.';
+    else if (state.tags.some((t) => t.name.toLocaleLowerCase('tr') === name.toLocaleLowerCase('tr'))) errs.name = 'Bu adla bir etiket zaten var.';
+    showFieldErrors(f, errs);
+    if (Object.keys(errs).length || !HEX.test(color)) return;
+    state.tags.push({ id: uid('tg'), name, color: color.toUpperCase(), community: UI.adminComm, ts: Date.now() });
+    state.audit.push({ ts: Date.now(), who: state.me, text: `“${name}” etiketi oluşturuldu (${C(UI.adminComm).name})` });
+    save(); refresh(); toast('Etiket oluşturuldu');
+  };
   F['doc-upload'] = docUpload;
   F.report = (f) => {
     const reason = f.reason.value;
@@ -723,6 +793,36 @@
   CH['discover-filter'] = (el) => { UI.discover[el.dataset.key] = el.value; const box = $('#discover-results'); if (box) setHTML(box, V.discoverResults(box.dataset.tab)); };
   CH['media-comm'] = (el) => { UI.mediaComm = el.value; render({ keepScroll: true }); };
   CH['admin-comm'] = (el) => { UI.adminComm = el.value; render({ keepScroll: true }); };
+  CH['tag-preview'] = (el) => {
+    const f = el.form; if (!f) return;
+    if (el.name === 'custom') { const r = f.querySelector('input[name="color"][value="custom"]'); if (r) r.checked = true; }
+    const sel = f.querySelector('input[name="color"]:checked');
+    const color = sel && sel.value === 'custom' ? f.elements.custom.value : sel && sel.value;
+    const prev = $('#tag-preview'); if (!prev) return;
+    if (HEX.test(color || '')) prev.style.setProperty('--tag', color);
+    prev.textContent = f.elements.name.value.trim() || 'Etiket önizleme';
+  };
+  CH['jobs-mode'] = (el) => { UI.jobs.mode = el.value; jobsRender(); };
+  CH['jobs-sort'] = (el) => { UI.jobs.sort = el.value; jobsRender(); };
+  CH['jobs-followed'] = (el) => { UI.jobs.followed = el.checked; jobsRender(); };
+  CH['tag-color'] = (el) => {
+    const t = state.tags.find((x) => x.id === el.dataset.id);
+    if (!t || !K.isAdmin() || !K.MANAGED.includes(t.community) || !HEX.test(el.value)) return;
+    t.color = el.value.toUpperCase(); save(); refresh(); toast(`“${t.name}” rengi güncellendi`);
+  };
+  A['tag-del'] = (el) => {
+    const t = state.tags.find((x) => x.id === el.dataset.id);
+    if (!t || !K.isAdmin() || !K.MANAGED.includes(t.community)) return;
+    const used = state.listings.filter((l) => l.tags.includes(t.id)).length;
+    confirmModal({ title: 'Etiketi sil', text: `<b>${esc(t.name)}</b> etiketi silinecek${used ? ` ve ${used} ilandan kaldırılacak` : ''}. Bu işlem geri alınamaz.`, ok: 'Sil', danger: true, onOk: () => {
+      state.tags = state.tags.filter((x) => x !== t);
+      state.listings.forEach((l) => { l.tags = l.tags.filter((x) => x !== t.id); });
+      state.followedTags = state.followedTags.filter((x) => x !== t.id);
+      UI.jobs.tags = UI.jobs.tags.filter((x) => x !== t.id);
+      state.audit.push({ ts: Date.now(), who: state.me, text: `“${t.name}” etiketi silindi` });
+      save(); refresh(); toast('Etiket silindi');
+    } });
+  };
   CH['rg-role'] = (el) => { const box = $('#rg-club-box'); if (box) box.hidden = el.value !== 'uye'; };
   CH['notif-setting'] = (el) => { state.notifSettings[el.dataset.key] = el.checked; save(); toast(el.checked ? 'Bildirim türü açıldı' : 'Bildirim türü sessize alındı'); };
   CH['notif-freq'] = (el) => { state.notifSettings.frequency = el.value; save(); toast(`Bildirim sıklığı: ${el.value}`); };

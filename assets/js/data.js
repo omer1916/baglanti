@@ -159,6 +159,24 @@
         { id: 'nt5', type: 'sponsor', text: '<b>Zirve Outdoor</b> “40 adet uyku tulumu” ihtiyacına destek oldu', ts: ago(2000), read: true, link: '#/sponsorlar' },
         { id: 'nt7', type: 'event', text: '<b>Uludağ Kış Kampı</b> ortak etkinliğine katılımın onaylandı', ts: ago(4300), read: true, link: '#/etkinlik/e1' }
       ],
+      // Etiketler: topluluk yöneticileri oluşturur, sponsorlar ilan verirken seçer, üyeler bunlarla filtreler
+      tags: [
+        { id: 'tg1', name: 'Yazılım', color: '#437EF5', community: 'kodkahve', ts: ago(90000) },
+        { id: 'tg2', name: 'Veri bilimi', color: '#9970F5', community: 'kodkahve', ts: ago(80000) },
+        { id: 'tg3', name: 'Tasarım', color: '#E0579A', community: 'foto', ts: ago(70000) },
+        { id: 'tg4', name: 'Pazarlama', color: '#F08A24', community: 'muzik', ts: ago(60000) },
+        { id: 'tg5', name: 'Outdoor', color: '#2FA36B', community: 'doga', ts: ago(50000) },
+        { id: 'tg6', name: 'Etkinlik yönetimi', color: '#14A3B8', community: 'doga', ts: ago(40000) }
+      ],
+      followedTags: ['tg1', 'tg5'],
+      listings: [
+        { id: 'l1', page: 'kuzey', title: 'Web geliştirici stajyeri', type: 'Staj', mode: 'Hibrit', city: 'Bursa', tags: ['tg1'], deadline: inDays(14, 23), ts: ago(180), applicants: 23, applied: false, saved: false, desc: 'Sipariş ve sadakat uygulamamızın web arayüzünde çalışacak, HTML, CSS ve JavaScript bilen stajyer arıyoruz. Haftada 3 gün ofiste.' },
+        { id: 'l2', page: 'zirve', title: 'Veri analisti stajyeri', type: 'Staj', mode: 'Uzaktan', city: 'İstanbul', tags: ['tg2', 'tg1'], deadline: inDays(9, 23), ts: ago(900), applicants: 41, applied: false, saved: true, desc: 'Satış ve stok verilerini Python ile analiz edip haftalık rapor hazırlayacak öğrenci arkadaş arıyoruz.' },
+        { id: 'l3', page: 'kitabevi', title: 'Sosyal medya içerik asistanı', type: 'Yarı zamanlı', mode: 'Uzaktan', city: 'Bursa', tags: ['tg4', 'tg3'], deadline: inDays(20, 23), ts: ago(2400), applicants: 12, applied: false, saved: false, desc: 'Kitap önerileri ve söyleşi duyuruları için kısa video ve görsel içerik hazırlayacak, haftada 15 saat.' },
+        { id: 'l4', page: 'zirve', title: 'Kamp ekipmanı tanıtım gönüllüsü', type: 'Gönüllü', mode: 'Yerinde', city: 'Bursa', tags: ['tg5', 'tg6'], deadline: inDays(6, 23), ts: ago(3000), applicants: 8, applied: false, saved: false, desc: 'Uludağ Kış Kampı’nda ekipman standında katılımcılara ürünleri tanıtacak gönüllüler. Yemek ve ulaşım bizden.' },
+        { id: 'l5', page: 'pedal', title: 'Mağaza satış danışmanı', type: 'İş', mode: 'Yerinde', city: 'Bursa', tags: ['tg5'], deadline: inDays(30, 23), ts: ago(5000), applicants: 17, applied: false, saved: false, desc: 'Bisiklet ve ekipman satışı, servis kabulü. Bisiklete ilgi duyan, hafta sonu çalışabilecek tam zamanlı ekip arkadaşı.' },
+        { id: 'l6', page: 'kuzey', title: 'Etkinlik ve topluluk koordinatörü', type: 'Yarı zamanlı', mode: 'Yerinde', city: 'Bursa', tags: ['tg6', 'tg4'], deadline: inDays(11, 23), ts: ago(7000), applicants: 9, applied: false, saved: false, desc: 'Mekânımızdaki açık sahne ve atölye gecelerini topluluklarla birlikte planlayacak, akşamları müsait öğrenci.' }
+      ],
       docs: [
         { id: 'd1', owner: 'u0', cat: 'cv', title: 'Özgeçmiş', name: 'selin-koc-cv.pdf', size: 184320, ts: ago(9000) },
         { id: 'd2', owner: 'u0', cat: 'sertifika', title: 'İlk Yardım Sertifikası', name: 'ilk-yardim.pdf', size: 352256, ts: ago(30000) },

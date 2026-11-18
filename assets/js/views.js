@@ -7,6 +7,7 @@
   const UI = window.UI = {
     feedFilter: 'tumu', feedSort: 'onerilen',
     discover: { q: '', date: 'all', loc: 'all', kind: 'all', priv: 'all' },
+    jobs: { type: 'Tümü', tags: [], mode: 'all', q: '', followed: false, sort: 'yeni' },
     eventCat: 'Tümü', mediaComm: 'all', mediaKind: 'Tümü', notifFilter: 'all', sponsorCat: 'Tümü', memberQ: '', adminComm: 'kodkahve', modFilter: 'all'
   };
 
@@ -837,6 +838,70 @@
   }
   V.DOC_CATS = DOC_CATS;
 
+  /* ---------- etiketler ve iş & staj ilanları ---------- */
+  const JOB_TYPES = ['İş', 'Staj', 'Yarı zamanlı', 'Gönüllü'];
+  const JOB_MODES = ['Yerinde', 'Hibrit', 'Uzaktan'];
+  const HEXC = /^#[0-9a-f]{6}$/i;
+  const T = (id) => state.tags.find((t) => t.id === id);
+  function tagChip(t, attrs = '') {
+    if (!t) return '';
+    const c = HEXC.test(t.color) ? t.color : '#437EF5';
+    return attrs ? `<button type="button" class="tag-chip" style="--tag:${c}" ${attrs}>${esc(t.name)}</button>` : `<span class="tag-chip" style="--tag:${c}">${esc(t.name)}</span>`;
+  }
+  function jobCard(l) {
+    const pg = P(l.page) || { name: 'Silinmiş sayfa', hue: 0 };
+    const own = K.isBrand() && l.page === K.BRAND_PAGE;
+    const followed = l.tags.some((id) => state.followedTags.includes(id));
+    return `<article class="card job-card" aria-label="${esc(l.title)}">
+      <div class="job-head">${avatar({ ...pg, kind: 'page' }, 'md')}<div class="grow"><h3><span>${esc(l.title)}</span></h3><div class="small muted"><a href="#/sayfa/${esc(l.page)}">${esc(pg.name)}</a>${verified(pg.verified)} · ${timeAgo(l.ts)}</div></div>${followed && !own ? '<span class="badge green">Sana uygun</span>' : ''}</div>
+      <div class="job-meta"><span class="badge blue">${esc(l.type)}</span><span class="badge">${esc(l.mode)}</span><span class="meta-line">${icon('pin', 'ico-sm')}${esc(l.city)}</span><span class="meta-line">${icon('clock', 'ico-sm')}${daysLeft(l.deadline)}</span></div>
+      <p class="job-desc">${esc(l.desc)}</p>
+      <div class="tag-row">${l.tags.map((id) => tagChip(T(id), `data-action="jobs-tag" data-value="${esc(id)}" aria-label="${esc(T(id) ? T(id).name : '')} etiketine göre filtrele"`)).join('')}</div>
+      <div class="job-foot"><span class="small muted">${num(l.applicants)} başvuru</span><div class="btn-row">${own ? `<button class="btn btn-sm btn-danger" data-action="job-del" data-id="${esc(l.id)}">${icon('trash', 'ico-sm')}Kaldır</button>` : `<button class="btn btn-sm ${l.saved ? 'btn-soft' : ''}" data-action="job-save" data-id="${esc(l.id)}" aria-pressed="${!!l.saved}">${icon('bookmark', 'ico-sm')}${l.saved ? 'Kaydedildi' : 'Kaydet'}</button>${K.isBrand() ? '' : `<button class="btn btn-sm ${l.applied ? 'btn-success' : 'btn-primary'}" data-action="job-apply" data-id="${esc(l.id)}" ${l.applied ? 'disabled' : ''}>${l.applied ? icon('check', 'ico-sm') + 'Başvuruldu' : 'Başvur'}</button>`}`}</div></div>
+    </article>`;
+  }
+  V.ilanlar = (r) => {
+    const J = UI.jobs;
+    const brand = K.isBrand();
+    const tab = r.q.get('tab') || 'tum';
+    const now = Date.now();
+    let list = state.listings.slice();
+    if (tab === 'benim') list = list.filter((l) => l.page === K.BRAND_PAGE);
+    else if (tab === 'kaydedilen') list = list.filter((l) => l.saved || l.applied);
+    else list = list.filter((l) => l.deadline > now);
+    if (J.type !== 'Tümü') list = list.filter((l) => l.type === J.type);
+    if (J.mode !== 'all') list = list.filter((l) => l.mode === J.mode);
+    if (J.tags.length) list = list.filter((l) => l.tags.some((id) => J.tags.includes(id)));
+    if (J.followed && state.followedTags.length) list = list.filter((l) => l.tags.some((id) => state.followedTags.includes(id)));
+    if (J.q) { const q = lower(J.q); list = list.filter((l) => lower(l.title + ' ' + l.desc + ' ' + l.city + ' ' + ((P(l.page) || {}).name || '')).includes(q)); }
+    list.sort(J.sort === 'son' ? (a, b) => a.deadline - b.deadline : (a, b) => b.ts - a.ts);
+    const active = J.type !== 'Tümü' || J.mode !== 'all' || J.tags.length || J.followed || J.q;
+    const T3 = [['tum', 'Tüm ilanlar'], ['kaydedilen', brand ? 'Kaydettiklerim' : 'Kaydettiklerim & başvurularım'], ...(brand ? [['benim', 'İlanlarım']] : [])];
+    const followedTags = state.tags.filter((t) => state.followedTags.includes(t.id));
+    const tagFollow = `<h2 style="font-size:16px;margin-bottom:4px">Etiket takibi</h2><p class="small muted" style="margin-bottom:10px">Takip ettiğin etiketlerdeki ilanlar “Sana uygun” olarak işaretlenir.</p><div class="list">${state.tags.map((t) => { const on = state.followedTags.includes(t.id); return `<div class="list-item" style="padding:6px 0">${tagChip(t)}<span class="grow"></span><button class="btn btn-sm ${on ? 'btn-soft' : ''}" data-action="tag-follow" data-id="${esc(t.id)}" aria-pressed="${on}">${on ? 'Takipte' : 'Takip et'}</button></div>`; }).join('')}</div>`;
+    return {
+      title: 'İş & staj ilanları',
+      html: `<div class="page-head"><div><h1>İş ve staj ilanları</h1><p>Sponsor markaların iş, staj ve gönüllülük ilanları. Etiket seçerek sana uygun olanları bul.</p></div>${brand ? `<button class="btn btn-primary" data-action="job-new">${icon('plus', 'ico-sm')}İlan ver</button>` : ''}</div>
+        <section class="card" style="overflow:hidden">${tabs(T3, tab, '#/ilanlar')}</section>
+        <section class="card card-pad stack job-filters" aria-label="İlan filtreleri">
+          <form class="top-search job-search" role="search" data-form="jobs-search"><span aria-hidden="true">${icon('search')}</span><input type="search" name="q" value="${esc(J.q)}" placeholder="Pozisyon, marka veya şehir ara" aria-label="İlanlarda ara" autocomplete="off"></form>
+          ${chips([['Tümü', 'Tüm türler'], ...JOB_TYPES.map((t) => [t, t])], J.type, 'jobs-type')}
+          <div><div class="xs muted" style="margin-bottom:6px">Etiketler <span>(birden fazla seçebilirsin)</span></div><div class="tag-row">${state.tags.map((t) => tagChip(t, `data-action="jobs-tag" data-value="${esc(t.id)}" aria-pressed="${J.tags.includes(t.id)}"`)).join('')}</div></div>
+          <div class="row" style="gap:10px;flex-wrap:wrap">
+            <select class="select" style="width:auto" data-change="jobs-mode" aria-label="Çalışma şekli"><option value="all">Tüm çalışma şekilleri</option>${JOB_MODES.map((m) => `<option ${J.mode === m ? 'selected' : ''}>${m}</option>`).join('')}</select>
+            <select class="select" style="width:auto" data-change="jobs-sort" aria-label="Sıralama"><option value="yeni" ${J.sort === 'yeni' ? 'selected' : ''}>En yeni</option><option value="son" ${J.sort === 'son' ? 'selected' : ''}>Son başvurusu yakın</option></select>
+            ${followedTags.length ? `<label class="check small"><input type="checkbox" data-change="jobs-followed" ${J.followed ? 'checked' : ''}>Yalnızca takip ettiğim etiketler</label>` : ''}
+            ${active ? `<button class="btn btn-sm btn-ghost" data-action="jobs-clear">${icon('x', 'ico-sm')}Filtreleri temizle</button>` : ''}
+          </div>
+        </section>
+        <p class="small muted" aria-live="polite" style="margin:0 4px">${list.length} ilan</p>
+        ${list.length ? list.map(jobCard).join('') : `<div class="card">${empty('briefcase', tab === 'benim' ? 'Henüz ilan vermedin' : 'Bu filtrelere uyan ilan yok', tab === 'benim' ? 'İlk ilanını ver; etiket seçerek doğru kişilere ulaştır.' : 'Etiket veya türü değiştirerek tekrar dene.', tab === 'benim' ? `<button class="btn btn-primary" data-action="job-new">İlan ver</button>` : active ? `<button class="btn" data-action="jobs-clear">Filtreleri temizle</button>` : '')}</div>`}
+        <section class="card card-pad only-narrow-settings">${tagFollow}</section>`,
+      rail: `<section class="card card-pad">${tagFollow}</section>`
+    };
+  };
+  Object.assign(V, { JOB_TYPES, JOB_MODES, tagChip });
+
   V.kaydedilenler = () => {
     const posts = state.posts.filter((p) => p.saved);
     return { title: 'Kaydedilenler', html: `<div class="page-head"><div><h1>Kaydedilenler</h1><p>Daha sonra dönmek için kaydettiğin gönderiler.</p></div></div>${posts.length ? posts.map(postCard).join('') : `<div class="card">${empty('bookmark', 'Kaydedilen gönderi yok', 'Gönderi menüsünden “Kaydet”i seçerek buraya ekleyebilirsin.')}</div>`}` };
@@ -908,7 +973,7 @@
     }
     const admin = K.isAdmin();
     const tab = r.q.get('tab') || 'genel';
-    const T = [['genel', 'Genel bakış'], ['moderasyon', 'Moderasyon'], ...(admin ? [['uyelik', 'Üyelik istekleri'], ['moderatorler', 'Moderatörler'], ['departmanlar', 'Departmanlar & konular']] : []), ['kayitlar', 'Denetim kayıtları']];
+    const T = [['genel', 'Genel bakış'], ['moderasyon', 'Moderasyon'], ...(admin ? [['uyelik', 'Üyelik istekleri'], ['etiketler', 'Etiketler'], ['moderatorler', 'Moderatörler'], ['departmanlar', 'Departmanlar & konular']] : []), ['kayitlar', 'Denetim kayıtları']];
     const comm = C(UI.adminComm);
     const commSel = `<label class="sr-only" for="admin-comm">Topluluk</label><select class="select" id="admin-comm" data-change="admin-comm" style="width:auto">${K.MANAGED.map((id) => `<option value="${id}" ${UI.adminComm === id ? 'selected' : ''}>${esc(C(id).name)}</option>`).join('')}</select>`;
     let body = '';
@@ -972,6 +1037,25 @@
           <div class="list" style="margin-top:6px">${dp.topics.map((t, ti) => `<div class="list-item" style="flex-wrap:nowrap"><span class="grow small">${icon('hash', 'ico-sm')} ${esc(t.t)}</span><span class="badge ${t.open ? 'green' : ''}">${t.open ? 'Açık' : 'Kapalı'}</span><button class="btn btn-sm" data-action="topic-toggle" data-d="${di}" data-t="${ti}">${t.open ? 'Konuyu kapat' : 'Konuyu aç'}</button></div>`).join('')}
           <form class="list-item" data-form="add-topic" data-d="${di}" style="flex-wrap:nowrap"><label class="sr-only" for="nt-${di}">Yeni konu</label><input class="input" id="nt-${di}" name="t" placeholder="Yeni konu başlığı" required autocomplete="off"><button class="btn btn-sm btn-soft">Konu aç</button></form></div></section>`).join('')}
         <section class="card card-pad stack"><h2 style="font-size:16px">Yeni departman</h2><form class="row" data-form="add-dept"><label class="sr-only" for="nd">Departman adı</label><input class="input" id="nd" name="name" placeholder="Örn. Sosyal medya ekibi" required autocomplete="off"><button class="btn btn-primary">Ekle</button></form></section>`;
+    } else if (tab === 'etiketler' && admin) {
+      const SW = ['#437EF5', '#9970F5', '#E0579A', '#F46767', '#F08A24', '#D9A400', '#2FA36B', '#14A3B8'];
+      const mine = state.tags.filter((t) => K.MANAGED.includes(t.community));
+      const others = state.tags.filter((t) => !K.MANAGED.includes(t.community));
+      const usage = (t) => state.listings.filter((l) => l.tags.includes(t.id)).length;
+      body = `<section class="card card-pad stack">
+          <div class="row-between" style="flex-wrap:wrap;gap:8px"><div><h2 style="font-size:16px">Yeni etiket</h2><p class="small muted" style="margin:0">Sponsorlar ilan verirken etiket seçer; üyeler ilanları etiketlere göre filtreler. Böylece ilan doğru kişilere ulaşır.</p></div>${commSel}</div>
+          <form class="stack" data-form="tag-create" novalidate>
+            <div class="field"><label for="tag-name">Etiket adı</label><input class="input" id="tag-name" name="name" maxlength="24" required placeholder="Ör. Mobil geliştirme" data-change="tag-preview" aria-describedby="tag-name-err"><span class="field-error" id="tag-name-err" role="alert"></span></div>
+            <fieldset class="field" style="border:0;padding:0;margin:0"><legend style="font-weight:700;font-size:14px;margin-bottom:6px">Yazı rengi</legend>
+              <div class="swatches">${SW.map((c, i) => `<label class="swatch" title="${c}"><input type="radio" name="color" value="${c}" ${i === 0 ? 'checked' : ''} data-change="tag-preview"><span style="--tag:${c}"></span><span class="sr-only">${c}</span></label>`).join('')}
+                <label class="swatch swatch-custom" title="Özel renk"><input type="radio" name="color" value="custom" data-change="tag-preview"><span class="small">Özel</span><input type="color" name="custom" value="#437EF5" data-change="tag-preview" aria-label="Özel renk seç"></label></div></fieldset>
+            <div class="row" style="gap:10px;flex-wrap:wrap"><span class="small muted">Önizleme:</span><span class="tag-chip" id="tag-preview" style="--tag:#437EF5">Etiket önizleme</span></div>
+            <div><button class="btn btn-primary">${icon('plus', 'ico-sm')}Etiket oluştur</button></div>
+          </form>
+        </section>
+        <section class="card"><div class="card-head"><h2>Topluluklarının etiketleri</h2><span class="small muted">Rengi değiştirmek için renk kutusuna tıkla</span></div>
+          <div class="list" style="margin-top:6px">${mine.length ? mine.map((t) => `<div class="list-item">${tagChip(t)}<span class="grow small muted">${esc(C(t.community).name)} · ${usage(t)} ilan · ${state.followedTags.includes(t.id) ? 'takip ediyorsun' : ''}</span><label class="color-edit" title="Rengi değiştir"><input type="color" value="${esc(t.color)}" data-change="tag-color" data-id="${esc(t.id)}" aria-label="${esc(t.name)} rengini değiştir"></label><button class="icon-btn" data-action="tag-del" data-id="${esc(t.id)}" aria-label="${esc(t.name)} etiketini sil">${icon('trash')}</button></div>`).join('') : '<div class="list-item muted">Henüz etiket yok.</div>'}</div></section>
+        ${others.length ? `<section class="card card-pad stack"><h3 class="card-title">Diğer toplulukların etiketleri</h3><div class="tag-row">${others.map(tagChip).join('')}</div></section>` : ''}`;
     } else if (tab === 'kayitlar') {
       body = `<section class="card"><div class="card-head"><h2>Denetim kayıtları</h2><span class="small muted">Tüm moderasyon işlemleri izlenebilir</span></div><div class="list" style="margin-top:6px">${state.audit.slice().sort((a, b) => b.ts - a.ts).map((a) => `<div class="list-item">${avatar({ ...U(a.who), kind: 'user' }, 'sm')}<span class="grow"><b class="small">${esc(a.text)}</b><span>${esc(U(a.who).name)} · ${timeAgo(a.ts)}</span></span></div>`).join('')}</div></section>`;
     }

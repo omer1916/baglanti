@@ -996,3 +996,40 @@ body[data-route="akis"] .top-create { display: none !important; }
 .doc-item b, .doc-item .xs { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .doc-ico { flex: none; display: grid; place-items: center; width: 40px; height: 48px; border-radius: 8px; background: var(--danger-soft, var(--surface-2)); color: var(--danger, var(--text)); font-size: 11px; font-weight: 800; letter-spacing: .04em; }
 @media (max-width: 480px) { .doc-item { flex-wrap: wrap; } .doc-item .btn-row { margin-left: 52px; } }
+
+
+/* etiketler */
+.tag-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; line-height: 1.2;
+  color: var(--tag, var(--brand)); background: color-mix(in srgb, var(--tag, var(--brand)) 15%, transparent); border: 1px solid color-mix(in srgb, var(--tag, var(--brand)) 35%, transparent); }
+html[data-theme="light"] .tag-chip { color: color-mix(in srgb, var(--tag, var(--brand)) 70%, #000); }
+button.tag-chip { cursor: pointer; }
+button.tag-chip[aria-pressed="true"] { background: var(--tag, var(--brand)); border-color: var(--tag, var(--brand)); color: #fff; }
+button.tag-chip[aria-pressed="true"]::before { content: "✓"; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-pick { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-check { display: inline-flex; cursor: pointer; }
+.tag-check input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.tag-check input:checked + .tag-chip { background: var(--tag); border-color: var(--tag); color: #fff; }
+.tag-check input:checked + .tag-chip::before { content: "✓"; }
+.tag-check input:focus-visible + .tag-chip { outline: 2px solid var(--brand); outline-offset: 2px; }
+.swatches { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.swatch { position: relative; display: inline-grid; place-items: center; width: 36px; height: 36px; cursor: pointer; }
+.swatch input[type="radio"] { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.swatch > span:not(.sr-only) { width: 28px; height: 28px; border-radius: 50%; background: var(--tag); box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--border); }
+.swatch input:checked + span { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text); }
+.swatch input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 4px; }
+.swatch-custom { width: auto; gap: 6px; padding: 0 4px; border-radius: 10px; }
+.swatch-custom:has(input[type="radio"]:checked) { box-shadow: 0 0 0 2px var(--text); }
+.swatch-custom input[type="color"], .color-edit input { width: 36px; height: 32px; padding: 0; border: 1px solid var(--border); border-radius: 8px; background: none; cursor: pointer; }
+.color-edit { display: inline-flex; }
+/* iş & staj ilanları */
+.job-filters { gap: 14px; }
+.job-search { max-width: none; width: 100%; }
+.job-card { padding: 16px; display: grid; gap: 12px; }
+.job-head { display: flex; gap: 12px; align-items: flex-start; }
+.job-head h3 { font-size: 16px; margin: 0 0 2px; }
+.job-meta { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.job-meta .meta-line { margin: 0; font-size: 13px; color: var(--text-2); }
+.job-desc { margin: 0; font-size: 14px; color: var(--text-2); }
+.job-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--border); }
+.swatch-custom > span.small, .swatch-custom input:checked + span.small { width: auto; height: auto; border-radius: 0; background: none; box-shadow: none; color: var(--text-2); font-weight: 700; }
