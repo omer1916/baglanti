@@ -985,7 +985,7 @@ body[data-route="akis"] .top-create { display: none !important; }
 .app-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 16px; margin: 0; }
 .app-info dt { font-size: 12px; color: var(--muted); }
 .app-info dd { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
-.app-note { margin: 0; padding: 8px 12px; border-left: 3px solid var(--brand); background: var(--surface-2); border-radius: 0 10px 10px 0; font-size: 14px; color: var(--text-2); }
+.app-note { margin: 0; padding: 8px 12px; background: var(--surface-2); border-radius: 10px; font-size: 14px; color: var(--text-2); }
 
 /* profil: belgeler */
 .doc-cat { display: flex; align-items: center; gap: 8px; font-size: 14px; margin: 0; }
