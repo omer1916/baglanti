@@ -15,11 +15,13 @@
     s.onboarded = true;
     s.role = (acc && acc.role) || 'uye';
     if (acc && !acc.seeded) {
-      Object.assign(s.users.u0, { name: acc.name, handle: acc.username, city: acc.city || 'Bursa', dept: acc.dept || '', tags: [], bio: 'Bağlantı’ya yeni katıldım.', joined: String(new Date(acc.created).getFullYear()) });
+      Object.assign(s.users.u0, { name: acc.name, handle: acc.username, city: acc.city || 'Bursa', dept: acc.dept || '', tags: [], grad: !!acc.grad, gradYear: acc.gradYear || '', gradVerified: false, bio: 'Bağlantı’ya yeni katıldım.', joined: String(new Date(acc.created).getFullYear()) });
       s.posts = s.posts.filter((p) => !(p.author.kind === 'user' && p.author.id === 'u0'));
       s.posts.forEach((p) => { p.comments = p.comments.filter((c) => c.user !== 'u0'); });
       s.docs = s.docs.filter((d) => d.owner !== 'u0');
       s.followedTags = [];   // yeni hesap: ilgi alanlarını kendisi seçer
+      // Yeni üye hiçbir topluluğun üyesi olarak başlamaz (demo üyelikleri devralınmaz)
+      if (s.role === 'uye') Object.values(s.communities).forEach((c) => { if (c.joined) { c.joined = false; c.members = Math.max(0, c.members - 1); } c.requested = false; });
       s.notifications.unshift({ id: 'nt-welcome', type: 'community', text: '<b>Bağlantı</b>’ya hoş geldin! Profilini tamamla; sertifika, proje ve CV’ni Belgeler sekmesine ekle.', ts: Date.now(), read: false, link: '#/profil?tab=belgeler' });
       const club = acc.club && s.communities[acc.club];
       if (club) {
@@ -58,6 +60,13 @@
   }
   // Profil görünürlüğü: "Sadece ben" yerine yalnızca yetkililer (moderatör, topluluk yöneticisi, sponsor)
   if (state.privacy && state.privacy.visibility === 'Sadece ben') state.privacy.visibility = 'Yetkililer';
+  if (state.role === 'site') state.role = 'uye';
+  if (state.tagLimitV !== 2) {   // etiket sınırı 8 oldu
+    state.tagLimit = 8;
+    if (state.tagAlerts) state.tagAlerts = state.tagAlerts.filter((a) => a.status !== 'open' || a.count > 8);
+    state.tagLimitV = 2;
+  }
+  if (state.gradV !== 1) { const z = state.users.u6; if (z && z.grad === undefined) Object.assign(z, { grad: true, gradYear: '2021', gradVerified: true }); state.gradV = 1; }
   if (state.tagsV !== 1) {
     const sd = window.SEED();
     Object.values(state.users).forEach((u) => { if (!u.tags) u.tags = (sd.users[u.id] && sd.users[u.id].tags) || []; });
@@ -187,7 +196,8 @@
   // Üyeler şimdilik kimseye mesaj gönderemez (rahatsız edici / siyasi içerik riskine karşı)
   const canMessage = () => state.role !== 'uye';
   const isBrand = () => state.role === 'marka';
-  const isSite = () => state.role === 'site';
+  // Site yöneticisi demo rolü değil: ayrı yönetici girişiyle (#/admin) açılan oturum
+  const isSite = () => !!(window.Admin && window.Admin.session());
 
   /* ---------------- etkinlik kayıt formu ---------------- */
   // Yalnızca https bağlantılar (javascript:, data: vb. engellenir)
@@ -199,7 +209,7 @@
   /* ---------------- etiketler ----------------
      Topluluk lideri onayda etiket atar (kullanıcının "tags" alanı); üye ayrıca İş & staj sayfasında
      kendi ilgi alanı etiketlerini seçer (followedTags). İkisinin toplamı sınırı aşarsa site yöneticisine uyarı. */
-  const tagLimit = () => state.tagLimit || 4;
+  const tagLimit = () => state.tagLimit || 8;
   const userTags = (u) => {
     if (!u) return [];
     const ids = (u.tags || []).concat(u.id === state.me ? state.followedTags : []);
@@ -411,10 +421,16 @@
       let acc = null; try { acc = JSON.parse(localStorage.getItem(KEYS.auth)).account; } catch (e) { /* yok */ }
       const app = acc && acc.appId && list.find((a) => a.id === acc.appId);
       const c = app && state.communities[app.club];
+      if (app && !app.club && app.grad && (app.status === 'approved' || app.status === 'rejected') && state.appResult !== app.status) {
+        state.appResult = app.status;
+        if (me()) me().gradVerified = app.status === 'approved';
+        state.notifications.unshift({ id: 'nt-res-' + app.id, type: 'request', text: app.status === 'approved' ? 'Mezun üyeliğin doğrulandı. Kulüplere göz atıp istediğine başvurabilirsin.' : 'Mezun üyelik başvurun bu kez doğrulanamadı.', ts: app.decided || Date.now(), read: false, link: '#/topluluklar' });
+        changed = true;
+      }
       if (c && (app.status === 'approved' || app.status === 'rejected') && state.appResult !== app.status) {
         state.appResult = app.status;
         c.requested = false;
-        if (app.status === 'approved') { c.joined = true; c.members++; if (me()) { me().tags = (app.tags || []).filter((id) => state.tags.some((t) => t.id === id)); checkTagLoad(state.me); } }
+        if (app.status === 'approved') { c.joined = true; c.members++; if (me()) { if (app.grad) me().gradVerified = true; me().tags = (app.tags || []).filter((id) => state.tags.some((t) => t.id === id)); checkTagLoad(state.me); } }
         state.notifications.unshift({ id: 'nt-res-' + app.id, type: 'request', text: app.status === 'approved' ? `<b>${esc(c.name)}</b> üyeliğin onaylandı. Kulübe hoş geldin!` : `<b>${esc(c.name)}</b> üyelik başvurun bu kez onaylanmadı.`, ts: app.decided || Date.now(), read: false, link: '#/topluluk/' + c.id, community: c.id });
         changed = true;
       }

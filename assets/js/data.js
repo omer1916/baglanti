@@ -24,7 +24,7 @@
         u3: { id: 'u3', name: 'Ayşe Kaya', handle: 'aysekaya', city: 'Bursa', hue: 3, bio: 'Doğa ve Kamp grubu moderatörü.', title: 'X Topluluğu Moderatörü', dept: 'Uludağ Üni. · Orman Müh.', tags: ['tg5'] },
         u4: { id: 'u4', name: 'Mert Arslan', handle: 'mertarslan', city: 'İstanbul', hue: 4, bio: 'Bisiklet ve şehir rotaları.', dept: 'Uludağ Üni. · Bilgisayar Müh.', tags: ['tg1'] },
         u5: { id: 'u5', name: 'Can Öztürk', handle: 'canozturk', city: 'Bursa', hue: 5, bio: 'Müzik atölyesi gitaristi.', dept: 'Uludağ Üni. · Müzik Öğretmenliği' },
-        u6: { id: 'u6', name: 'Zeynep Aydın', handle: 'zeynepaydin', city: 'İzmir', hue: 1, bio: 'Gönüllü Eller koordinatörü.', dept: 'Ege Üni. · Sosyal Hizmet' },
+        u6: { id: 'u6', name: 'Zeynep Aydın', handle: 'zeynepaydin', city: 'İzmir', hue: 1, bio: 'Gönüllü Eller koordinatörü.', dept: 'Ege Üni. · Sosyal Hizmet', grad: true, gradYear: '2021', gradVerified: true },
         u7: { id: 'u7', name: 'Burak Şahin', handle: 'buraksahin', city: 'Bursa', hue: 2, bio: 'Kampçı, ekipman meraklısı.', dept: 'Bursa Teknik Üni. · Makine Müh.', tags: ['tg5', 'tg6', 'tg1', 'tg2', 'tg4'] },
         u8: { id: 'u8', name: 'Elif Çelik', handle: 'elifcelik', city: 'Ankara', hue: 3, bio: 'Fotoğraf kulübü üyesi.', dept: 'Bursa Teknik Üni. · Peyzaj Mimarlığı' },
         u9: { id: 'u9', name: 'Kaan Erdem', handle: 'kaanerdem', city: 'Bursa', hue: 4, bio: 'Yazılım geliştirici.', dept: 'Uludağ Üni. · Yazılım Müh.', tags: ['tg1'] }
@@ -178,8 +178,8 @@
       ],
       followedTags: ['tg1', 'tg5'],
       // Bir kişide çok fazla etiket birikirse site yöneticisine uyarı düşer
-      tagLimit: 4,
-      tagAlerts: [{ id: 'ta1', user: 'u7', count: 5, ts: ago(240), status: 'open' }],
+      tagLimit: 8,
+      tagAlerts: [],
       listings: [
         { id: 'l1', page: 'kuzey', title: 'Web geliştirici stajyeri', type: 'Staj', mode: 'Hibrit', city: 'Bursa', tags: ['tg1'], deadline: inDays(14, 23), ts: ago(180), applicants: 23, applied: false, saved: false, desc: 'Sipariş ve sadakat uygulamamızın web arayüzünde çalışacak, HTML, CSS ve JavaScript bilen stajyer arıyoruz. Haftada 3 gün ofiste.' },
         { id: 'l2', page: 'zirve', title: 'Veri analisti stajyeri', type: 'Staj', mode: 'Uzaktan', city: 'İstanbul', tags: ['tg2', 'tg1'], deadline: inDays(9, 23), ts: ago(900), applicants: 41, applied: false, saved: true, desc: 'Satış ve stok verilerini Python ile analiz edip haftalık rapor hazırlayacak öğrenci arkadaş arıyoruz.' },

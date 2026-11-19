@@ -134,7 +134,7 @@
     const pe = passwordError(d.password); if (pe) e.password = pe;
     if (!e.password && d.password !== d.confirm) e.confirm = 'Şifreler eşleşmiyor.';
     if ((K.ROLES[d.role] ? d.role : 'uye') === 'uye') {
-      if (!(d.club && K.state.communities[d.club])) e.club = 'Üye olmak istediğin kulübü seç.';
+      if (!d.grad && !(d.club && K.state.communities[d.club])) e.club = 'Üye olmak istediğin kulübü seç.';
       if ((d.dept || '').trim().length < 3) e.dept = 'Okulunu ve bölümünü yaz.';
       if (d.grad) {
         const y = +String(d.gradYear || '').trim(), now = new Date().getFullYear();
@@ -156,7 +156,7 @@
     // Kulüp başvurusu: yöneticinin onay listesine düşer (eski hesabın başvurusu silinir)
     const old = auth.account;
     const apps = K.readApps().filter((x) => !(old && x.id === old.appId));
-    if (a.role === 'uye' && a.club) {
+    if (a.role === 'uye' && (a.club || a.grad)) {
       a.appId = 'ap' + newSalt().slice(0, 10);
       apps.push({ id: a.appId, name: a.name, username: a.username, email: a.email, city: a.city, dept: a.dept, studentNo: a.studentNo, grad: a.grad, gradYear: a.gradYear, note: a.note, club: a.club, ts: Date.now(), status: a.grad ? 'review' : 'pending' });
     }

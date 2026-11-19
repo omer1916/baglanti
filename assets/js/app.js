@@ -72,6 +72,7 @@
     const acc = [];
     if (K.isBrand()) acc.push(['sayfa:kuzey', '#/sayfa/kuzey', 'chart', 'Sayfam & istatistik']);
     if (K.isManager()) acc.push(['yonetim', '#/yonetim', 'shield', 'Yönetim paneli', pending]);
+    if (K.isSite()) acc.push(['admin-out', '#/admin', 'lock', 'Yönetici oturumu']);
     if (K.isSite()) acc.push(['site', '#/site', 'shield', 'Site yönetimi', K.readApps().filter((a) => a.status === 'review').length + state.memberRequests.filter((x) => x.stage === 'site').length + state.tagAlerts.filter((a) => a.status === 'open').length]);
     acc.push(['kaydedilenler', '#/kaydedilenler', 'bookmark', 'Kaydedilenler'], ['ayarlar', '#/ayarlar', 'settings', 'Ayarlar & gizlilik']);
     const accKey = r.name === 'sayfa' && r.id === K.BRAND_PAGE && K.isBrand() ? 'sayfa:kuzey' : r.name;
@@ -83,7 +84,7 @@
       ${acc.map(([k, href, ic, label, count]) => `<a href="${href}" ${k === accKey ? 'aria-current="page"' : ''}>${icon(ic)}<span class="grow">${label}</span>${count ? `<span class="count">${count}</span>` : ''}</a>`).join('')}
       <button data-action="toggle-theme">${icon(state.theme === 'dark' ? 'sun' : 'moon')}${state.theme === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç'}</button>
       <hr><div class="menu-label">Demo rolü</div>
-      ${Object.entries(K.ROLES).map(([k, v]) => `<button role="menuitemradio" aria-checked="${state.role === k}" data-action="set-role" data-role="${k}">${v.label}</button>`).join('')}
+      ${Object.entries(K.ROLES).filter(([k]) => k !== 'site').map(([k, v]) => `<button role="menuitemradio" aria-checked="${state.role === k}" data-action="set-role" data-role="${k}">${v.label}</button>`).join('')}
       <hr>
       <a href="#/hosgeldin">${icon('sparkle')}Tanıtım ve SSS</a>
       <button data-action="reset-demo">${icon('refresh')}${K.mode === 'account' ? 'Hesap verilerini sıfırla' : 'Demoyu sıfırla'}</button>
@@ -109,10 +110,10 @@
   }
 
   /* =============== yönlendirme =============== */
-  const PUBLIC_ROUTES = ['hosgeldin', 'giris', 'kayit', 'sss'];
+  const PUBLIC_ROUTES = ['hosgeldin', 'giris', 'kayit', 'sss', 'admin'];
   function render(opts = {}) {
     const r = parseHash();
-    if (!window.Auth.isAuthed() && !PUBLIC_ROUTES.includes(r.name)) { location.replace(K.mode === 'account' ? '#/giris' : '#/hosgeldin'); return; }
+    if (!window.Auth.isAuthed() && !PUBLIC_ROUTES.includes(r.name) && !(r.name === 'site' && K.isSite())) { location.replace(K.mode === 'account' ? '#/giris' : '#/hosgeldin'); return; }
     const fn = Object.prototype.hasOwnProperty.call(V, r.name) && !['discoverResults', 'galleryList', 'msgBubble', 'notfound'].includes(r.name) ? V[r.name] : V.notfound;
     const view = fn(r);
     const layout = view.layout || '';
@@ -261,17 +262,14 @@
   const Q_TYPES = [['text', 'Kısa yanıt'], ['long', 'Uzun yanıt'], ['choice', 'Seçenekli']];
   function formBuilder() {
     const ev = cs.ev; const f = ev.form;
-    const modes = [['none', 'Form yok'], ['site', 'Sitede oluştur'], ['link', 'Hazır form linki']];
+    const modes = [['none', 'Form yok'], ['site', 'Kayıt formu oluştur']];
     let inner = '';
     if (ev.formMode === 'site') {
       inner = `<div class="row" style="gap:8px;flex-wrap:wrap"><label class="small" for="ev-tpl">Şablondan başlat</label><select class="select" id="ev-tpl" data-change="cs-form-tpl" style="width:auto"><option value="">Şablon seç…</option>${Object.entries(FORM_TPL).map(([k, t]) => `<option value="${k}">${t.name}</option>`).join('')}</select></div>
         <div class="stack" style="gap:6px"><span class="xs muted">Her formda: Ad soyad ve e-posta. Ekle:</span><div class="row" style="flex-wrap:wrap;gap:6px">${Object.entries(K.FORM_FIELDS).map(([k, l]) => `<label class="chip" style="cursor:pointer"><input type="checkbox" data-csf="${k}" ${f.fields.includes(k) ? 'checked' : ''} style="accent-color:var(--brand-strong)">${l}</label>`).join('')}</div></div>
         <div class="stack q-list">${f.questions.map((q, i) => `<div class="q-row"><input class="input" data-csq="${i}:label" value="${esc(q.label)}" maxlength="120" placeholder="Soru ${i + 1}" aria-label="Soru ${i + 1}"><select class="select" data-csq="${i}:type" aria-label="Soru ${i + 1} türü">${Q_TYPES.map(([v, l]) => `<option value="${v}" ${q.type === v ? 'selected' : ''}>${l}</option>`).join('')}</select>${q.type === 'choice' ? `<input class="input q-opts" data-csq="${i}:options" value="${esc(q.options)}" maxlength="300" placeholder="Seçenekler, virgülle ayır" aria-label="Soru ${i + 1} seçenekleri">` : ''}<label class="check small"><input type="checkbox" data-csq="${i}:required" ${q.required ? 'checked' : ''}>Zorunlu</label><button type="button" class="icon-btn" data-action="cs-q-del" data-i="${i}" aria-label="Soru ${i + 1} sil">${icon('trash', 'ico-sm')}</button></div>`).join('')}</div>
         ${f.questions.length < 15 ? `<button type="button" class="btn btn-sm" data-action="cs-q-add" style="align-self:flex-start">${icon('plus', 'ico-sm')}Soru ekle</button>` : ''}
-        <span class="xs muted">Yanıtlar etkinlik sayfasında listelenir ve Excel dosyası olarak indirilebilir. Yalnızca topluluğun moderatör ve yöneticileri görür.</span>`;
-    } else if (ev.formMode === 'link') {
-      inner = `<div class="field"><label for="ev-formlink">Form bağlantısı</label><input class="input" type="url" id="ev-formlink" data-cs="ev.formLink" value="${esc(ev.formLink)}" maxlength="300" inputmode="url" placeholder="https://forms.gle/…"></div>
-        <div class="callout">${icon('info')}<span>Katılımcılar formu Google Forms’ta doldurur; yanıtlar Google Forms’ta kalır, siteye otomatik gelmez. Yanıtların doğrudan buraya düşmesini istersen aynı soruları <b>Sitede oluştur</b> ile ekle.</span></div>`;
+        <span class="xs muted">Yanıtlar etkinlik sayfasında listelenir ve Excel dosyası olarak indirilebilir. Yalnızca topluluğun moderatör ve yöneticileri görür. Elinde hazır bir Google Formu varsa sorularını buraya ekleyebilirsin.</span>`;
     }
     return `<fieldset class="field full ev-form"><legend class="label" style="margin-bottom:6px">Kayıt formu</legend><div class="seg" role="group" aria-label="Kayıt formu">${modes.map(([v, l]) => `<button type="button" data-action="cs-form" data-value="${v}" aria-pressed="${ev.formMode === v}">${l}</button>`).join('')}</div>${inner ? `<div class="stack" style="gap:10px;margin-top:10px">${inner}</div>` : ''}</fieldset>`;
   }
@@ -305,7 +303,6 @@
       if (ev.link.trim() && !link) return toast('Bağlantı https:// ile başlayan geçerli bir adres olmalı.', 'info');
       if (!ev.location.trim() && !link) return toast('Konum ya da bağlantıdan en az birini yaz.', 'info');
       let form = null, formLink = '';
-      if (ev.formMode === 'link') { formLink = K.safeUrl(ev.formLink); if (!formLink) return toast('Geçerli bir form bağlantısı yapıştır (https://…).', 'info'); }
       if (ev.formMode === 'site') {
         const qs = ev.form.questions.filter((q) => q.label.trim()).map((q, i) => ({ id: 'q' + (i + 1), label: q.label.trim().slice(0, 120), type: Q_TYPES.some(([v]) => v === q.type) ? q.type : 'text', required: !!q.required, ...(q.type === 'choice' ? { options: [...new Set(String(q.options).split(',').map((o) => o.trim().slice(0, 60)).filter(Boolean))].slice(0, 12) } : {}) }));
         const bad = qs.find((q) => q.type === 'choice' && q.options.length < 2);
@@ -426,7 +423,7 @@
   A['toggle-theme'] = () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; applyTheme(); save(true); refresh(); };
   A['close-modal'] = closeModal;
   A['confirm-ok'] = () => { const fn = onConfirm; onConfirm = null; closeModal(); fn && fn(); };
-  A['set-role'] = (el) => { if (!K.ROLES[el.dataset.role]) return; state.role = el.dataset.role; K.sync(); refresh(); toast(`Rol: ${K.ROLES[state.role].label}`); };
+  A['set-role'] = (el) => { if (!K.ROLES[el.dataset.role] || el.dataset.role === 'site') return; state.role = el.dataset.role; K.sync(); refresh(); toast(`Rol: ${K.ROLES[state.role].label}`); };
   A['enter-demo'] = (el) => {
     const r = el.dataset.role || 'uye';
     if (K.mode === 'account') return window.Auth.switchToDemo(r);
@@ -587,7 +584,7 @@
       state.memberRequests.splice(+ref.i, 1);
       const u = U(x.user); name = u.name; comm = C(x.community);
       given = tags.filter((id) => state.tags.some((t) => t.id === id && t.community === x.community));
-      if (ok) { u.tags = [...new Set((u.tags || []).concat(given))]; K.checkTagLoad(u.id); }
+      if (ok) { u.tags = [...new Set((u.tags || []).concat(given))]; u.clubs = [...new Set((u.clubs || []).concat(x.community))]; K.checkTagLoad(u.id); }
     }
     if (ok) comm.members++;
     const tn = given.map((id) => state.tags.find((t) => t.id === id).name);
@@ -607,26 +604,29 @@
       foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">${icon('check', 'ico-sm')}Onayla</button>` });
   };
   // Site yöneticisi: mezun başvurusunu doğrular, başvuru topluluk liderine geçer
+  A['admin-logout'] = () => { window.Admin.logout(); location.hash = '#/admin'; refresh(); toast('Yönetici oturumu kapatıldı'); };
+  A['admin-copy'] = () => { const t = $('#am-line'); if (t && t.value) { copy(t.value); toast('Satır kopyalandı'); } };
+  const siteBy = () => 'Site yöneticisi · ' + ((window.Admin.session() || {}).name || '');
   A['grad-review'] = (el) => {
     if (!K.isSite()) return;
     const ok = !!el.dataset.ok; let name, comm;
     if (el.dataset.app) {
       const apps = K.readApps(); const a = apps.find((x) => x.id === el.dataset.app);
       if (!a || a.status !== 'review') return refresh();
-      a.status = ok ? 'pending' : 'rejected'; if (!ok) a.decided = Date.now(); K.writeApps(apps);
-      name = a.name; comm = C(a.club);
+      a.status = ok ? (a.club ? 'pending' : 'approved') : 'rejected'; if (!ok || !a.club) a.decided = Date.now(); K.writeApps(apps);
+      name = a.name; comm = a.club ? C(a.club) : null;
     } else {
       const x = state.memberRequests[+el.dataset.i]; if (!x || x.stage !== 'site') return refresh();
       if (ok) delete x.stage; else state.memberRequests.splice(+el.dataset.i, 1);
       name = U(x.user).name; comm = C(x.community);
     }
-    state.audit.push({ ts: Date.now(), who: state.me, text: `${name} mezun başvurusu ${ok ? 'doğrulandı, ' + comm.name + ' liderine iletildi' : 'reddedildi'}` });
-    refresh(); toast(ok ? `Başvuru ${comm.name} liderine iletildi` : 'Mezun başvurusu reddedildi');
+    state.audit.push({ ts: Date.now(), who: state.me, by: siteBy(), text: `${name} mezun başvurusu ${ok ? (comm ? 'doğrulandı, ' + comm.name + ' liderine iletildi' : 'doğrulandı; Mezun üye oldu') : 'reddedildi'}` });
+    refresh(); toast(ok ? (comm ? `Başvuru ${comm.name} liderine iletildi` : `${name} Mezun üye olarak doğrulandı`) : 'Mezun başvurusu reddedildi');
   };
   A['alert-ok'] = (el) => {
     const a = K.isSite() && state.tagAlerts.find((x) => x.id === el.dataset.id); if (!a) return;
     a.status = 'ok'; a.decided = Date.now();
-    state.audit.push({ ts: Date.now(), who: state.me, text: `${U(a.user).name} etiket uyarısı incelendi: sorun yok` });
+    state.audit.push({ ts: Date.now(), who: state.me, by: siteBy(), text: `${U(a.user).name} etiket uyarısı incelendi: sorun yok` });
     refresh(); toast('Uyarı kapatıldı');
   };
   A['alert-edit'] = (el) => {
@@ -768,6 +768,22 @@
 
   /* =============== form gönderimleri =============== */
   const F = {};
+  F['admin-login'] = async (f) => {
+    const box = $('#ad-alert'); const btn = f.querySelector('.btn-primary');
+    if (btn) btn.disabled = true;
+    const res = await window.Admin.login(f.user.value, f.password.value);
+    if (btn) btn.disabled = false;
+    if (!res.ok) { if (box) { box.textContent = res.error; box.hidden = false; } f.password.value = ''; return; }
+    K.sync(); location.hash = '#/site'; toast(`Hoş geldin, ${res.name}`);
+  };
+  F['admin-make'] = async (f) => {
+    const box = $('#am-alert'); const show = (t) => { if (box) { box.textContent = t; box.hidden = !t; } };
+    if (f.password.value !== f.confirm.value) return show('Şifreler eşleşmiyor.');
+    const res = await window.Admin.makeEntry(f.user.value, f.name.value, f.password.value);
+    if (!res.ok) return show(res.error);
+    show(''); f.password.value = ''; f.confirm.value = '';
+    const out = $('#am-out'); $('#am-line').value = res.line; out.hidden = false;
+  };
   F['event-form'] = (f) => {
     const e = E(f.dataset.id); if (!e || !e.form) return closeModal();
     const val = (n) => { const el = f.elements[n]; if (!el) return ''; return String(el.value ?? '').trim(); };
@@ -887,7 +903,7 @@
     if (u.id === state.me) state.followedTags = state.followedTags.filter((id) => keep.includes(id));
     const after = K.userTags(u).length;
     a.status = after < before ? 'trimmed' : 'ok'; a.count = after; a.decided = Date.now();
-    state.audit.push({ ts: Date.now(), who: state.me, text: `${u.name} etiketleri ${before} → ${after} olarak düzenlendi` });
+    state.audit.push({ ts: Date.now(), who: state.me, by: siteBy(), text: `${u.name} etiketleri ${before} → ${after} olarak düzenlendi` });
     closeModal(); refresh(); toast('Etiketler güncellendi');
   };
   F.register = (f) => {
@@ -985,8 +1001,8 @@
   };
   CH['rg-role'] = (el) => { const box = $('#rg-club-box'); if (box) box.hidden = el.value !== 'uye'; };
   CH['cs-form-tpl'] = (el) => { const t = FORM_TPL[el.value]; if (!t) return; cs.ev.form = { fields: t.fields.slice(), questions: t.questions.map((q) => ({ ...q })) }; renderComposer(); toast(`“${t.name}” şablonu eklendi; soruları düzenleyebilirsin`); };
-  CH['rg-grad'] = (el) => { const g = !!el.value; const s = $('#rg-studentNo'); if (s) s.closest('.field').hidden = g; const y = $('#rg-gradYear-box'); if (y) y.hidden = !g; const n = $('#rg-grad-note'); if (n) n.hidden = !g; };
-  CH['tag-limit'] = (el) => { if (!K.isSite()) return; const n = +el.value; if (![3, 4, 5, 6, 8, 10].includes(n)) return; state.tagLimit = n; Object.values(state.users).forEach((u) => K.checkTagLoad(u.id)); K.sync(); refresh(); toast(`Etiket sınırı: ${n}`); };
+  CH['rg-grad'] = (el) => { const g = !!el.value; const cl = $('#rg-club-label'); if (cl) setHTML(cl, g ? 'Kulüp <span class="muted">(isteğe bağlı)</span>' : 'Kulüp'); const s = $('#rg-studentNo'); if (s) s.closest('.field').hidden = g; const y = $('#rg-gradYear-box'); if (y) y.hidden = !g; const n = $('#rg-grad-note'); if (n) n.hidden = !g; };
+  CH['tag-limit'] = (el) => { if (!K.isSite()) return; const n = +el.value; if (![5, 6, 8, 10, 12, 15].includes(n)) return; state.tagLimit = n; Object.values(state.users).forEach((u) => K.checkTagLoad(u.id)); K.sync(); refresh(); toast(`Etiket sınırı: ${n}`); };
   CH['notif-setting'] = (el) => { state.notifSettings[el.dataset.key] = el.checked; save(); toast(el.checked ? 'Bildirim türü açıldı' : 'Bildirim türü sessize alındı'); };
   CH['notif-freq'] = (el) => { state.notifSettings.frequency = el.value; save(); toast(`Bildirim sıklığı: ${el.value}`); };
   CH['notif-quiet'] = (el) => { state.notifSettings.quiet = el.checked; save(); toast(el.checked ? 'Sessiz saatler açık' : 'Sessiz saatler kapalı'); };
