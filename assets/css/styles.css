@@ -1414,3 +1414,11 @@ label.btn { cursor: pointer; }
   .cover-btn:hover { background: rgba(14, 15, 19, .8); }
 }
 @media (max-width: 720px) { .profile-info .av-wrap { margin-top: -40px; } .cover-tools { right: 8px; bottom: 8px; } }
+
+/* Öğrenci / mezun seçimi ve mezun rozeti */
+.badge.purple { background: color-mix(in srgb, var(--purple) 16%, transparent); color: color-mix(in srgb, var(--purple) 78%, var(--text)); }
+.seg-opt { flex: 1; display: flex; position: relative; cursor: pointer; }
+.seg-opt input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.seg-opt span { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 38px; padding: 0 12px; border-radius: 9px; font-weight: 700; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.seg-opt input:checked + span { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.seg-opt input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }

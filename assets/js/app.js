@@ -72,10 +72,11 @@
     const acc = [];
     if (K.isBrand()) acc.push(['sayfa:kuzey', '#/sayfa/kuzey', 'chart', 'Sayfam & istatistik']);
     if (K.isManager()) acc.push(['yonetim', '#/yonetim', 'shield', 'Yönetim paneli', pending]);
+    if (K.isSite()) acc.push(['site', '#/site', 'shield', 'Site yönetimi', K.readApps().filter((a) => a.status === 'review').length + state.memberRequests.filter((x) => x.stage === 'site').length + state.tagAlerts.filter((a) => a.status === 'open').length]);
     acc.push(['kaydedilenler', '#/kaydedilenler', 'bookmark', 'Kaydedilenler'], ['ayarlar', '#/ayarlar', 'settings', 'Ayarlar & gizlilik']);
     const accKey = r.name === 'sayfa' && r.id === K.BRAND_PAGE && K.isBrand() ? 'sayfa:kuzey' : r.name;
     setHTML($('#account-btn'), avatar({ ...m, kind: 'user' }, 'sm'));
-    $('#account-btn').toggleAttribute('data-active', ['profil', 'kaydedilenler', 'ayarlar', 'yonetim'].includes(accKey) || accKey === 'sayfa:kuzey' || (r.name === 'kisi' && r.id === state.me));
+    $('#account-btn').toggleAttribute('data-active', ['profil', 'kaydedilenler', 'ayarlar', 'yonetim', 'site'].includes(accKey) || accKey === 'sayfa:kuzey' || (r.name === 'kisi' && r.id === state.me));
     setHTML($('[data-popover="account"]'), `
       <a class="pop-me" href="#/profil">${avatar({ ...m, kind: 'user' }, 'md')}<span class="grow"><b>${esc(m.name)}</b><span>${K.mode === 'account' ? esc(window.Auth.account()?.email || '') : 'Demo modu · hesapsız'}</span><span>${esc(K.ROLES[state.role].label)} · Profilini gör</span></span></a>
       <hr>
@@ -381,7 +382,7 @@
   A['toggle-theme'] = () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; applyTheme(); save(true); refresh(); };
   A['close-modal'] = closeModal;
   A['confirm-ok'] = () => { const fn = onConfirm; onConfirm = null; closeModal(); fn && fn(); };
-  A['set-role'] = (el) => { state.role = el.dataset.role; refresh(); toast(`Rol: ${K.ROLES[state.role].label}`); };
+  A['set-role'] = (el) => { if (!K.ROLES[el.dataset.role]) return; state.role = el.dataset.role; K.sync(); refresh(); toast(`Rol: ${K.ROLES[state.role].label}`); };
   A['enter-demo'] = (el) => {
     const r = el.dataset.role || 'uye';
     if (K.mode === 'account') return window.Auth.switchToDemo(r);
@@ -493,22 +494,70 @@
   A['notif-read-all'] = () => { state.notifications.forEach((n) => (n.read = true)); refresh(); toast('Tüm bildirimler okundu'); };
 
   A['mod-act'] = (el) => { const r = state.reports.find((x) => x.id === el.dataset.id); r.status = el.dataset.do; state.audit.push({ ts: Date.now(), who: state.me, text: `${r.target}: ${r.status.toLocaleLowerCase('tr')} (${r.reason})` }); refresh(); toast(`Şikâyet sonuçlandı: ${r.status}`); };
-  A['member-req'] = (el) => {
-    const ok = !!el.dataset.ok;
-    let name, comm;
-    if (el.dataset.app) {   // kayıtta kulüp seçen üyenin başvurusu
-      const apps = K.readApps(); const a = apps.find((x) => x.id === el.dataset.app);
+  // Lider onaylarken üyeye kendi topluluğunun etiketlerinden atar
+  function decideMember(ref, ok, tags = []) {
+    if (!K.isAdmin()) return;
+    let name, comm, given = [];
+    if (ref.app) {   // kayıtta kulüp seçen üyenin başvurusu
+      const apps = K.readApps(); const a = apps.find((x) => x.id === ref.app);
       if (!a || a.status !== 'pending') return refresh();
-      a.status = ok ? 'approved' : 'rejected'; a.decided = Date.now(); K.writeApps(apps);
-      name = a.name; comm = C(a.club);
+      comm = C(a.club); given = tags.filter((id) => state.tags.some((t) => t.id === id && t.community === a.club));
+      a.status = ok ? 'approved' : 'rejected'; a.decided = Date.now(); if (ok) a.tags = given; K.writeApps(apps);
+      name = a.name;
     } else {
-      const x = state.memberRequests.splice(+el.dataset.i, 1)[0]; if (!x) return;
-      name = U(x.user).name; comm = C(x.community);
+      const x = state.memberRequests[+ref.i]; if (!x || x.stage === 'site') return refresh();
+      state.memberRequests.splice(+ref.i, 1);
+      const u = U(x.user); name = u.name; comm = C(x.community);
+      given = tags.filter((id) => state.tags.some((t) => t.id === id && t.community === x.community));
+      if (ok) { u.tags = [...new Set((u.tags || []).concat(given))]; K.checkTagLoad(u.id); }
     }
     if (ok) comm.members++;
-    state.audit.push({ ts: Date.now(), who: state.me, text: `${name} üyelik başvurusu ${ok ? 'onaylandı' : 'reddedildi'} (${comm.name})` });
-    refresh(); toast(ok ? `${name} kulübe üye yapıldı` : 'Başvuru reddedildi');
+    const tn = given.map((id) => state.tags.find((t) => t.id === id).name);
+    state.audit.push({ ts: Date.now(), who: state.me, text: `${name} üyelik başvurusu ${ok ? 'onaylandı' : 'reddedildi'} (${comm.name})${tn.length ? ' · etiketler: ' + tn.join(', ') : ''}` });
+    closeModal(); refresh(); toast(ok ? `${name} kulübe üye yapıldı${tn.length ? `; ${tn.length} etiket atandı` : ''}` : 'Başvuru reddedildi');
+  }
+  A['member-req'] = (el) => {
+    const ref = el.dataset.app ? { app: el.dataset.app } : { i: el.dataset.i };
+    if (!el.dataset.ok) return decideMember(ref, false);
+    let name, club;
+    if (ref.app) { const a = K.readApps().find((x) => x.id === ref.app); if (!a) return refresh(); name = a.name; club = a.club; }
+    else { const x = state.memberRequests[+ref.i]; if (!x) return refresh(); name = U(x.user).name; club = x.community; }
+    const tags = state.tags.filter((t) => t.community === club);
+    openModal({ title: 'Üyeliği onayla', form: 'member-approve', body: `<p><b>${esc(name)}</b> · ${esc(C(club).name)} üyeliğini onaylıyorsun.</p>
+      <input type="hidden" name="app" value="${esc(ref.app || '')}"><input type="hidden" name="i" value="${esc(ref.i ?? '')}">
+      <div class="field"><span class="label">Etiket ata <span class="muted">(isteğe bağlı)</span></span>${tags.length ? `<div class="tag-pick">${tags.map((t) => `<label class="tag-check"><input type="checkbox" name="tags" value="${esc(t.id)}">${V.tagChip(t)}</label>`).join('')}</div><span class="xs muted">Atadığın etiketlerdeki iş ve staj ilanları üyeye “Sana uygun” olarak gösterilir.</span>` : `<span class="small muted">Bu topluluğun henüz etiketi yok. <a class="link" href="#/yonetim?tab=etiketler">Etiketler</a> sekmesinden oluşturabilirsin.</span>`}</div>`,
+      foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">${icon('check', 'ico-sm')}Onayla</button>` });
   };
+  // Site yöneticisi: mezun başvurusunu doğrular, başvuru topluluk liderine geçer
+  A['grad-review'] = (el) => {
+    if (!K.isSite()) return;
+    const ok = !!el.dataset.ok; let name, comm;
+    if (el.dataset.app) {
+      const apps = K.readApps(); const a = apps.find((x) => x.id === el.dataset.app);
+      if (!a || a.status !== 'review') return refresh();
+      a.status = ok ? 'pending' : 'rejected'; if (!ok) a.decided = Date.now(); K.writeApps(apps);
+      name = a.name; comm = C(a.club);
+    } else {
+      const x = state.memberRequests[+el.dataset.i]; if (!x || x.stage !== 'site') return refresh();
+      if (ok) delete x.stage; else state.memberRequests.splice(+el.dataset.i, 1);
+      name = U(x.user).name; comm = C(x.community);
+    }
+    state.audit.push({ ts: Date.now(), who: state.me, text: `${name} mezun başvurusu ${ok ? 'doğrulandı, ' + comm.name + ' liderine iletildi' : 'reddedildi'}` });
+    refresh(); toast(ok ? `Başvuru ${comm.name} liderine iletildi` : 'Mezun başvurusu reddedildi');
+  };
+  A['alert-ok'] = (el) => {
+    const a = K.isSite() && state.tagAlerts.find((x) => x.id === el.dataset.id); if (!a) return;
+    a.status = 'ok'; a.decided = Date.now();
+    state.audit.push({ ts: Date.now(), who: state.me, text: `${U(a.user).name} etiket uyarısı incelendi: sorun yok` });
+    refresh(); toast('Uyarı kapatıldı');
+  };
+  A['alert-edit'] = (el) => {
+    const a = K.isSite() && state.tagAlerts.find((x) => x.id === el.dataset.id); if (!a) return;
+    const u = U(a.user); const ids = K.userTags(u);
+    openModal({ title: 'Etiketleri düzenle', form: 'alert-tags', body: `<p><b>${esc(u.name)}</b> hesabında ${ids.length} etiket var; sınır ${K.tagLimit()}. Kalmasını istediklerini işaretli bırak.</p><input type="hidden" name="alert" value="${esc(a.id)}"><div class="tag-pick">${ids.map((id) => { const t = state.tags.find((x) => x.id === id); return `<label class="tag-check"><input type="checkbox" name="tags" value="${esc(id)}" checked>${V.tagChip(t)}</label>`; }).join('')}</div>`,
+      foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Kaydet</button>` });
+  };
+
   A['mod-remove'] = (el) => { const c = C(UI.adminComm); c.moderators = c.moderators.filter((x) => x !== el.dataset.id); state.audit.push({ ts: Date.now(), who: state.me, text: `${U(el.dataset.id).name} moderatörlükten alındı (${c.name})` }); refresh(); toast('Moderatör yetkisi kaldırıldı'); };
   A['topic-toggle'] = (el) => { const t = C(UI.adminComm).departments[+el.dataset.d].topics[+el.dataset.t]; t.open = !t.open; refresh(); toast(t.open ? 'Konu açıldı' : 'Konu kapatıldı'); };
 
@@ -601,7 +650,7 @@
   A['jobs-type'] = (el) => { UI.jobs.type = el.dataset.value; jobsRender(); };
   A['jobs-tag'] = (el) => { const t = UI.jobs.tags; const id = el.dataset.value; UI.jobs.tags = t.includes(id) ? t.filter((x) => x !== id) : [...t, id]; if (parseHash().name !== 'ilanlar') location.hash = '#/ilanlar'; else jobsRender(); };
   A['jobs-clear'] = () => { UI.jobs = { ...UI.jobs, type: 'Tümü', tags: [], mode: 'all', q: '', followed: false }; jobsRender(); };
-  A['tag-follow'] = (el) => { const id = el.dataset.id; const on = state.followedTags.includes(id); state.followedTags = on ? state.followedTags.filter((x) => x !== id) : [...state.followedTags, id]; save(); jobsRender(); toast(on ? 'Etiket takipten çıkarıldı' : 'Etiket takip ediliyor; ilanlarda öne çıkar'); };
+  A['tag-follow'] = (el) => { const id = el.dataset.id; const on = state.followedTags.includes(id); state.followedTags = on ? state.followedTags.filter((x) => x !== id) : [...state.followedTags, id]; K.checkTagLoad(state.me); save(); jobsRender(); toast(on ? 'Etiket takipten çıkarıldı' : 'Etiket takip ediliyor; ilanlarda öne çıkar'); };
   const listing = (id) => state.listings.find((l) => l.id === id);
   A['job-save'] = (el) => { const l = listing(el.dataset.id); if (!l) return; l.saved = !l.saved; save(); jobsRender(); toast(l.saved ? 'İlan kaydedildi' : 'İlan kayıtlardan çıkarıldı'); };
   A['job-apply'] = (el) => {
@@ -728,8 +777,21 @@
     if (!res.ok) busy(f, false);
     if (!res.ok) { alert.textContent = res.error; alert.hidden = false; f.password.value = ''; f.password.focus(); }
   };
+  F['member-approve'] = (f) => decideMember(f.app.value ? { app: f.app.value } : { i: f.i.value }, true, $$('input[name="tags"]:checked', f).map((x) => x.value));
+  F['alert-tags'] = (f) => {
+    const a = K.isSite() && state.tagAlerts.find((x) => x.id === f.alert.value); if (!a) return closeModal();
+    const u = U(a.user); const keep = $$('input[name="tags"]:checked', f).map((x) => x.value);
+    const before = K.userTags(u).length;
+    u.tags = (u.tags || []).filter((id) => keep.includes(id));
+    if (u.id === state.me) state.followedTags = state.followedTags.filter((id) => keep.includes(id));
+    const after = K.userTags(u).length;
+    a.status = after < before ? 'trimmed' : 'ok'; a.count = after; a.decided = Date.now();
+    state.audit.push({ ts: Date.now(), who: state.me, text: `${u.name} etiketleri ${before} → ${after} olarak düzenlendi` });
+    closeModal(); refresh(); toast('Etiketler güncellendi');
+  };
   F.register = (f) => {
-    const d = { name: f.name.value, username: f.username.value, email: f.email.value, city: f.city.value, role: f.role.value, club: f.role.value === 'uye' ? f.club.value : '', dept: f.dept.value, studentNo: f.studentNo.value, note: f.note.value, password: f.password.value, confirm: f.confirm.value, consent: f.consent.checked };
+    const grad = !!(f.querySelector('input[name="grad"]:checked') || {}).value;
+    const d = { name: f.name.value, username: f.username.value, email: f.email.value, city: f.city.value, role: f.role.value, club: f.role.value === 'uye' ? f.club.value : '', dept: f.dept.value, grad, gradYear: f.gradYear.value, studentNo: f.studentNo.value, note: f.note.value, password: f.password.value, confirm: f.confirm.value, consent: f.consent.checked };
     const errs = window.Auth.validateRegister(d);
     showFieldErrors(f, errs);
     if (Object.keys(errs).length) return;
@@ -821,6 +883,8 @@
     } });
   };
   CH['rg-role'] = (el) => { const box = $('#rg-club-box'); if (box) box.hidden = el.value !== 'uye'; };
+  CH['rg-grad'] = (el) => { const g = !!el.value; const s = $('#rg-studentNo'); if (s) s.closest('.field').hidden = g; const y = $('#rg-gradYear-box'); if (y) y.hidden = !g; const n = $('#rg-grad-note'); if (n) n.hidden = !g; };
+  CH['tag-limit'] = (el) => { if (!K.isSite()) return; const n = +el.value; if (![3, 4, 5, 6, 8, 10].includes(n)) return; state.tagLimit = n; Object.values(state.users).forEach((u) => K.checkTagLoad(u.id)); K.sync(); refresh(); toast(`Etiket sınırı: ${n}`); };
   CH['notif-setting'] = (el) => { state.notifSettings[el.dataset.key] = el.checked; save(); toast(el.checked ? 'Bildirim türü açıldı' : 'Bildirim türü sessize alındı'); };
   CH['notif-freq'] = (el) => { state.notifSettings.frequency = el.value; save(); toast(`Bildirim sıklığı: ${el.value}`); };
   CH['notif-quiet'] = (el) => { state.notifSettings.quiet = el.checked; save(); toast(el.checked ? 'Sessiz saatler açık' : 'Sessiz saatler kapalı'); };

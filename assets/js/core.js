@@ -15,10 +15,11 @@
     s.onboarded = true;
     s.role = (acc && acc.role) || 'uye';
     if (acc && !acc.seeded) {
-      Object.assign(s.users.u0, { name: acc.name, handle: acc.username, city: acc.city || 'Bursa', dept: acc.dept || '', bio: 'Bağlantı’ya yeni katıldım.', joined: String(new Date(acc.created).getFullYear()) });
+      Object.assign(s.users.u0, { name: acc.name, handle: acc.username, city: acc.city || 'Bursa', dept: acc.dept || '', tags: [], bio: 'Bağlantı’ya yeni katıldım.', joined: String(new Date(acc.created).getFullYear()) });
       s.posts = s.posts.filter((p) => !(p.author.kind === 'user' && p.author.id === 'u0'));
       s.posts.forEach((p) => { p.comments = p.comments.filter((c) => c.user !== 'u0'); });
       s.docs = s.docs.filter((d) => d.owner !== 'u0');
+      s.followedTags = [];   // yeni hesap: ilgi alanlarını kendisi seçer
       s.notifications.unshift({ id: 'nt-welcome', type: 'community', text: '<b>Bağlantı</b>’ya hoş geldin! Profilini tamamla; sertifika, proje ve CV’ni Belgeler sekmesine ekle.', ts: Date.now(), read: false, link: '#/profil?tab=belgeler' });
       const club = acc.club && s.communities[acc.club];
       if (club) {
@@ -50,6 +51,16 @@
   if (!state.memberRequests) state.memberRequests = [{ user: 'u4', community: 'kodkahve', ts: Date.now() - 50 * 60000 }, { user: 'u8', community: 'doga', ts: Date.now() - 300 * 60000 }];
   const RQ = { u4: ['Uludağ Üni. · Bilgisayar Müh.', '032190045'], u8: ['Bursa Teknik Üni. · Peyzaj Mimarlığı', '22051017'] };
   state.memberRequests.forEach((x) => { if (!x.dept && RQ[x.user]) [x.dept, x.studentNo] = RQ[x.user]; });
+  // Profil görünürlüğü: "Sadece ben" yerine yalnızca yetkililer (moderatör, topluluk yöneticisi, sponsor)
+  if (state.privacy && state.privacy.visibility === 'Sadece ben') state.privacy.visibility = 'Yetkililer';
+  if (state.tagsV !== 1) {
+    const sd = window.SEED();
+    Object.values(state.users).forEach((u) => { if (!u.tags) u.tags = (sd.users[u.id] && sd.users[u.id].tags) || []; });
+    if (!state.tagAlerts) state.tagAlerts = sd.tagAlerts;
+    if (!state.tagLimit) state.tagLimit = sd.tagLimit;
+    if (!state.memberRequests.some((x) => x.grad)) state.memberRequests.push({ user: 'u6', community: 'doga', ts: Date.now() - 90 * 60000, grad: true, gradYear: '2021', dept: 'Ege Üni. · Sosyal Hizmet', stage: 'site' });
+    state.tagsV = 1;
+  }
   // Profillerde okul / bölüm gösteriliyor: eski kayıtlara ekle (kendi hesabın kayıttaki bilgiden gelir)
   if (state.deptV !== 1) {
     const sd = window.SEED().users;
@@ -160,7 +171,8 @@
     uye: { label: 'Bireysel kullanıcı', short: 'Üye', desc: 'İçeriklere erişir, etkinliklere katılır, üye olduğu gruplarla senkron kalır.' },
     moderator: { label: 'Topluluk moderatörü', short: 'Moderatör', desc: 'İçerik performansını ve etkileşimi takip eder, şikâyetleri inceler.' },
     yonetici: { label: 'Topluluk yöneticisi', short: 'Yönetici', desc: 'Kuralları uygular; üyeleri, etkinlikleri, departmanları ve moderatörleri yönetir.' },
-    marka: { label: 'Sponsor', short: 'Sponsor', desc: 'Topluluk sponsorluğunu üstlenir, toplulukların ihtiyaçlarını karşılar.' }
+    marka: { label: 'Sponsor', short: 'Sponsor', desc: 'Topluluk sponsorluğunu üstlenir, toplulukların ihtiyaçlarını karşılar.' },
+    site: { label: 'Site yöneticisi', short: 'Site yön.', desc: 'Mezun başvurularını doğrular, etiket uyarılarını inceler.' }
   };
   const MANAGED = ['doga', 'kodkahve'];
   const BRAND_PAGE = 'kuzey';
@@ -170,6 +182,25 @@
   // Üyeler şimdilik kimseye mesaj gönderemez (rahatsız edici / siyasi içerik riskine karşı)
   const canMessage = () => state.role !== 'uye';
   const isBrand = () => state.role === 'marka';
+  const isSite = () => state.role === 'site';
+
+  /* ---------------- etiketler ----------------
+     Topluluk lideri onayda etiket atar (kullanıcının "tags" alanı); üye ayrıca İş & staj sayfasında
+     kendi ilgi alanı etiketlerini seçer (followedTags). İkisinin toplamı sınırı aşarsa site yöneticisine uyarı. */
+  const tagLimit = () => state.tagLimit || 4;
+  const userTags = (u) => {
+    if (!u) return [];
+    const ids = (u.tags || []).concat(u.id === state.me ? state.followedTags : []);
+    return [...new Set(ids)].filter((id) => state.tags.some((t) => t.id === id));
+  };
+  const myTags = () => userTags(U(state.me));
+  function checkTagLoad(userId) {
+    const u = U(userId); if (!u) return;
+    const n = userTags(u).length;
+    const open = state.tagAlerts.find((a) => a.user === userId && a.status === 'open');
+    if (open) open.count = n;
+    else if (n > tagLimit()) state.tagAlerts.push({ id: uid('ta'), user: userId, count: n, ts: Date.now(), status: 'open' });
+  }
 
   /* ---------------- varlıklar ---------------- */
   // Yalnızca nesnenin kendi anahtarları: "__proto__", "constructor" gibi URL değerleri prototipe ulaşmasın
@@ -343,6 +374,19 @@
   function syncApps() {
     const list = readApps();
     let changed = false;
+    if (isSite()) {   // site yöneticisine mezun başvuruları ve etiket uyarıları
+      state.notifiedApps = state.notifiedApps || [];
+      list.filter((a) => a.status === 'review' && !state.notifiedApps.includes('r-' + a.id)).forEach((a) => {
+        state.notifiedApps.push('r-' + a.id);
+        state.notifications.unshift({ id: 'nt-r-' + a.id, type: 'request', text: `<b>${esc(a.name)}</b> mezun olarak katılmak istiyor; doğrulaman bekleniyor`, ts: a.ts, read: false, link: '#/site' });
+        changed = true;
+      });
+      state.tagAlerts.filter((a) => a.status === 'open' && !a.notified && U(a.user)).forEach((a) => {
+        a.notified = true;
+        state.notifications.unshift({ id: 'nt-' + a.id, type: 'request', text: `<b>${esc(U(a.user).name)}</b> hesabında ${a.count} etiket birikti (sınır ${tagLimit()})`, ts: a.ts, read: false, link: '#/site?tab=etiket' });
+        changed = true;
+      });
+    }
     if (isAdmin()) {   // yöneticiye yeni başvuruların bildirimi
       state.notifiedApps = state.notifiedApps || [];
       list.filter((a) => a.status === 'pending' && !state.notifiedApps.includes(a.id) && state.communities[a.club]).forEach((a) => {
@@ -355,21 +399,22 @@
       let acc = null; try { acc = JSON.parse(localStorage.getItem(KEYS.auth)).account; } catch (e) { /* yok */ }
       const app = acc && acc.appId && list.find((a) => a.id === acc.appId);
       const c = app && state.communities[app.club];
-      if (c && app.status !== 'pending' && state.appResult !== app.status) {
+      if (c && (app.status === 'approved' || app.status === 'rejected') && state.appResult !== app.status) {
         state.appResult = app.status;
         c.requested = false;
-        if (app.status === 'approved') { c.joined = true; c.members++; }
+        if (app.status === 'approved') { c.joined = true; c.members++; if (me()) { me().tags = (app.tags || []).filter((id) => state.tags.some((t) => t.id === id)); checkTagLoad(state.me); } }
         state.notifications.unshift({ id: 'nt-res-' + app.id, type: 'request', text: app.status === 'approved' ? `<b>${esc(c.name)}</b> üyeliğin onaylandı. Kulübe hoş geldin!` : `<b>${esc(c.name)}</b> üyelik başvurun bu kez onaylanmadı.`, ts: app.decided || Date.now(), read: false, link: '#/topluluk/' + c.id, community: c.id });
         changed = true;
       }
     }
     if (changed) save();
   }
+  const sync = () => syncApps();
 
   /* ---------------- dışa aktar ---------------- */
   window.Core = {
     state, save, reset, mode, KEYS, buildWorkspace, $, $$, esc, setHTML, replaceHTML, appendHTML, lower, num, uid, initials, timeAgo, fmt, daysLeft,
-    ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand, canMessage,
+    ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand, isSite, canMessage, tagLimit, userTags, myTags, checkTagLoad, sync,
     U, C, P, E, N, me, entity, avatar, safePhoto, verified, icon, sceneSVG, media, readApps, writeApps
   };
   syncApps();
