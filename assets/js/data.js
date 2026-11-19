@@ -111,11 +111,15 @@
           { id: 'r1', user: 'u1', ts: ago(300), a: { name: 'Deniz Yılmaz', email: 'deniz@ornek.com', phone: '0532 111 22 33', dept: 'Bursa Teknik Üni. · Bilgisayar Müh.', q1: 'Deneyimliyim' } },
           { id: 'r2', user: 'u2', ts: ago(700), a: { name: 'Ece Demir', email: 'ece@ornek.com', phone: '0533 222 33 44', dept: 'Uludağ Üni. · Biyoloji', q1: 'Birkaç kez' } },
           { id: 'r3', user: 'u4', ts: ago(1500), a: { name: 'Mert Arslan', email: 'mert@ornek.com', phone: '0535 333 44 55', dept: 'Uludağ Üni. · Bilgisayar Müh.', q1: 'İlk kez' } },
-          { id: 'r4', user: 'u7', ts: ago(2600), a: { name: 'Burak Şahin', email: 'burak@ornek.com', phone: '0536 444 55 66', dept: 'Bursa Teknik Üni. · Makine Müh.', q1: 'Deneyimliyim' } }
+          { id: 'r4', user: 'u7', ts: ago(2600), a: { name: 'Burak Şahin', email: 'burak@ornek.com', phone: '0536 444 55 66', dept: 'Bursa Teknik Üni. · Makine Müh.', q1: 'Deneyimliyim' } },
+          { id: 'r7', user: 'u3', ts: ago(45), status: 'pending', a: { name: 'Ayşe Kaya', email: 'ayse@ornek.com', phone: '0537 555 66 77', dept: 'Uludağ Üni. · Turizm İşletmeciliği', q1: 'İlk kez' } },
+          { id: 'r8', user: 'u9', ts: ago(130), status: 'pending', a: { name: 'Kaan Erdem', email: 'kaan@ornek.com', phone: '0538 666 77 88', dept: 'Uludağ Üni. · Yazılım Müh.', q1: 'Birkaç kez' } }
         ] },
         { id: 'e2', title: 'Aralık Meetup: Web’de Erişilebilirlik', communities: ['kodkahve'], start: inDays(9, 19), location: 'Kuzey Kahve, Nilüfer', category: 'Teknoloji', going: 41, capacity: 60, attending: false, interested: true, sponsors: ['kuzey'], scene: 'code', desc: 'Klavye ile gezinme, kontrast ve ekran okuyucu testleri üzerine iki kısa konuşma ve soru-cevap.', form: { fields: ['studentNo', 'dept'], questions: [{ id: 'q1', label: 'En çok hangi konuşmayı merak ediyorsun?', type: 'choice', options: ['Klavye ile gezinme', 'Kontrast ve renk', 'Ekran okuyucu testleri'], required: true }] }, responses: [
           { id: 'r5', user: 'u9', ts: ago(400), a: { name: 'Kaan Erdem', email: 'kaan@ornek.com', studentNo: '21360859', dept: 'Uludağ Üni. · Yazılım Müh.', q1: 'Ekran okuyucu testleri' } },
-          { id: 'r6', user: 'u4', ts: ago(1900), a: { name: 'Mert Arslan', email: 'mert@ornek.com', studentNo: '032190045', dept: 'Uludağ Üni. · Bilgisayar Müh.', q1: 'Klavye ile gezinme' } }
+          { id: 'r6', user: 'u4', ts: ago(1900), a: { name: 'Mert Arslan', email: 'mert@ornek.com', studentNo: '032190045', dept: 'Uludağ Üni. · Bilgisayar Müh.', q1: 'Klavye ile gezinme' } },
+          { id: 'r9', user: 'u5', ts: ago(60), status: 'pending', a: { name: 'Can Öztürk', email: 'can@ornek.com', studentNo: '21110423', dept: 'Bursa Teknik Üni. · Elektrik Müh.', q1: 'Kontrast ve renk' } },
+          { id: 'r10', user: 'u8', ts: ago(200), status: 'pending', a: { name: 'Elif Çelik', email: 'elif@ornek.com', studentNo: '22051017', dept: 'Bursa Teknik Üni. · Peyzaj Mimarlığı', q1: 'Ekran okuyucu testleri' } }
         ] },
         { id: 'e3', title: 'Açık Sahne Gecesi', communities: ['muzik'], start: inDays(2, 20, 30), location: 'Kuzey Kahve, Nilüfer', category: 'Müzik', going: 88, capacity: 120, attending: false, interested: false, sponsors: ['kuzey'], scene: 'music', desc: 'Herkesin 10 dakikalık sahne hakkı var. Sıra listesi etkinlik günü 19:00’da açılır.' },
         { id: 'e4', title: 'Mudanya Sahil Turu', communities: ['bisiklet'], start: inDays(6, 8), location: 'Mudanya İskele', category: 'Spor', going: 35, capacity: 50, attending: false, interested: false, sponsors: ['pedal'], scene: 'sea', desc: '42 km’lik sahil turu. Orta seviye kondisyon gerektirir. Kask zorunlu.' },
@@ -180,6 +184,7 @@
       // Bir kişide çok fazla etiket birikirse site yöneticisine uyarı düşer
       tagLimit: 8,
       tagAlerts: [],
+      formTemplates: [{ id: 'ft1', community: 'doga', name: 'Gece yürüyüşü kaydı', fields: ['phone'], questions: [{ label: 'Kafa lambası getirecek misin?', type: 'choice', options: 'Evet, Hayır, Ödünç lazım', required: true }, { label: 'Sağlık durumunla ilgili bilmemiz gereken bir şey var mı?', type: 'long', options: '', required: false }] }],
       listings: [
         { id: 'l1', page: 'kuzey', title: 'Web geliştirici stajyeri', type: 'Staj', mode: 'Hibrit', city: 'Bursa', tags: ['tg1'], deadline: inDays(14, 23), ts: ago(180), applicants: 23, applied: false, saved: false, desc: 'Sipariş ve sadakat uygulamamızın web arayüzünde çalışacak, HTML, CSS ve JavaScript bilen stajyer arıyoruz. Haftada 3 gün ofiste.' },
         { id: 'l2', page: 'zirve', title: 'Veri analisti stajyeri', type: 'Staj', mode: 'Uzaktan', city: 'İstanbul', tags: ['tg2', 'tg1'], deadline: inDays(9, 23), ts: ago(900), applicants: 41, applied: false, saved: true, desc: 'Satış ve stok verilerini Python ile analiz edip haftalık rapor hazırlayacak öğrenci arkadaş arıyoruz.' },

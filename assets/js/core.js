@@ -68,6 +68,17 @@
     state.events.forEach((e) => { const x = se.find((y) => y.id === e.id); if (x && x.form && !e.form) { e.form = x.form; e.responses = x.responses; } });
     state.formV = 1;
   }
+  if (state.regV !== 1) {   // katılım istekleri: durum alanı, örnek bekleyen istekler, form şablonları
+    const se = window.SEED();
+    state.events.forEach((e) => {
+      e.responses = e.responses || [];
+      e.responses.forEach((r) => { if (!r.status) r.status = 'approved'; });
+      const x = se.events.find((y) => y.id === e.id);
+      if (x) (x.responses || []).filter((r) => r.status === 'pending' && !e.responses.some((m) => m.id === r.id || m.user === r.user) && r.user !== state.me).forEach((r) => e.responses.push({ ...r, a: { ...r.a } }));
+    });
+    if (!Array.isArray(state.formTemplates)) state.formTemplates = se.formTemplates || [];
+    state.regV = 1;
+  }
   // Profil görünürlüğü: "Sadece ben" yerine yalnızca yetkililer (moderatör, topluluk yöneticisi, sponsor)
   if (state.privacy && state.privacy.visibility === 'Sadece ben') state.privacy.visibility = 'Yetkililer';
   if (state.role === 'site') state.role = 'uye';
@@ -217,6 +228,9 @@
   const safeUrl = (u) => { try { const x = new URL(String(u || '').trim()); return x.protocol === 'https:' && x.hostname.includes('.') ? x.href : ''; } catch (e) { return ''; } };
   const FORM_FIELDS = { phone: 'Telefon', studentNo: 'Öğrenci numarası', dept: 'Okul / bölüm' };
   // Etkinliği düzenleyen toplulukların moderatör ve yöneticileri yanıtları görür
+  // Kontenjanı belirlenmiş etkinlikte katılım istekleri topluluk yöneticilerinin onayıyla kesinleşir
+  const needsApproval = (e) => !!e && +e.capacity > 0 && e.approval !== false;
+  const myRequest = (e) => ((e && e.responses) || []).find((x) => x.user === state.me) || null;
   const canSeeResponses = (e) => !!e && (state.role === 'moderator' || state.role === 'yonetici') && e.communities.some((id) => MANAGED.includes(id));
 
   /* ---------------- etiketler ----------------
@@ -455,7 +469,7 @@
   /* ---------------- dışa aktar ---------------- */
   window.Core = {
     state, save, reset, mode, KEYS, buildWorkspace, $, $$, esc, setHTML, replaceHTML, appendHTML, lower, num, uid, initials, timeAgo, fmt, daysLeft,
-    ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand, isSite, canMessage, manages, canPostIn, safeUrl, FORM_FIELDS, canSeeResponses, tagLimit, userTags, myTags, checkTagLoad, sync,
+    ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand, isSite, canMessage, manages, canPostIn, safeUrl, FORM_FIELDS, canSeeResponses, needsApproval, myRequest, tagLimit, userTags, myTags, checkTagLoad, sync,
     U, C, P, E, N, me, entity, avatar, safePhoto, verified, icon, sceneSVG, media, readApps, writeApps
   };
   syncApps();

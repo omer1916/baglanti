@@ -1452,3 +1452,27 @@ label.btn { cursor: pointer; }
 
 /* Uzun içerikli pencerede satırlar sıkışmasın (ör. gönderi türü sekmeleri) */
 .modal:not(.lightbox) .modal-body { grid-auto-rows: max-content; align-content: start; }
+
+/* Kontenjan çubuğu: onaylananlar dolu, bekleyen istekler taralı */
+.cap-bar { display: grid; gap: 6px; min-width: 0; }
+.cap-bar .progress { position: relative; height: 8px; }
+.cap-bar .progress > span { transition: width .5s var(--ease-out, ease); }
+.cap-bar .progress > i { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--warning) 70%, transparent) 0 3px, transparent 3px 6px); }
+.cap-meta { display: flex; justify-content: space-between; gap: 4px 10px; flex-wrap: wrap; font-size: 12.5px; }
+.cap-meta b, .list-item .grow .cap-meta b { display: inline; font-size: inherit; font-weight: 700; }
+.cap-meta .wait { color: var(--warning); }
+.btn-wait { background: var(--warning-soft); color: var(--warning); border-color: transparent; }
+.btn-wait:disabled { opacity: 1; }
+.reg-row { align-items: center; gap: 14px; }
+.reg-row .cap-bar { max-width: 420px; }
+.tpl-ic { background: color-mix(in srgb, var(--purple, #9970F5) 14%, transparent); color: var(--purple, #9970F5); }
+.tpl-save { gap: 8px; flex-wrap: wrap; }
+.tpl-save .input { flex: 1; min-width: 180px; }
+.resp-table td .btn-row { gap: 6px; }
+.reg-filter { padding: 12px 20px 2px; }
+.reg-filter .chips { flex-wrap: wrap; }
+@media (max-width: 560px) {
+  .reg-row { flex-wrap: wrap; align-items: flex-start; }
+  .reg-row > .grow { flex: 1 1 calc(100% - 72px); }
+  .reg-row > .btn { margin-left: auto; }
+}

@@ -44,15 +44,29 @@
   const evMedia = (e, cls = '') => media(K.safePhoto(e.cover) ? { src: e.cover, alt: e.title + ' fotoğrafı' } : { scene: e.scene }, cls);
   function rsvpButtons(ev, small = true) {
     const sz = small ? ' btn-sm' : '';
-    const past = ev.start < Date.now();
-    if (past) return `<span class="badge">Tamamlandı</span>`;
-    const full = ev.going >= ev.capacity && !ev.attending;
-    // Kayıt formunu gönderen kişi katılımı bu butonla değiştiremez (yanıtını formdan günceller)
-    if (ev.form && (ev.responses || []).some((x) => x.user === state.me)) return `<div class="btn-row"><button class="btn${sz} btn-success" disabled title="Kayıt formunu gönderdin">${icon('check', 'ico-sm')}Kaydın alındı</button></div>`;
+    if (ev.start < Date.now()) return `<span class="badge">Tamamlandı</span>`;
+    const full = +ev.capacity > 0 && ev.going >= ev.capacity && !ev.attending;
+    const req = K.myRequest(ev);
+    const appr = K.needsApproval(ev);
+    const star = `<button class="btn${sz} ${ev.interested ? 'btn-soft' : ''}" data-action="rsvp" data-id="${ev.id}" data-kind="interested" aria-pressed="${ev.interested}">${icon('star', 'ico-sm')}${ev.interested ? 'İlgileniyorsun' : 'İlgileniyorum'}</button>`;
+    // Onay bekleyen istek: formla gönderildiyse formdan güncellenir; formsuz istek bu düğmeyle geri çekilir
+    if (req && req.status === 'pending') return `<div class="btn-row"><button class="btn${sz} btn-wait" ${ev.form ? 'disabled title="Kayıt formunu gönderdin; topluluk onayı bekleniyor"' : `data-action="rsvp" data-id="${ev.id}" data-kind="going" title="İsteği geri çekmek için dokun"`}>${icon('clock', 'ico-sm')}Onay bekliyor</button>${ev.form ? '' : star}</div>`;
+    if (req && req.status === 'rejected') return `<div class="btn-row"><button class="btn${sz}" disabled>${icon('x', 'ico-sm')}İsteğin onaylanmadı</button></div>`;
+    // Kayıt formunu gönderen kişi katılımı bu düğmeyle değiştiremez (yanıtını formdan günceller)
+    if (ev.form && req) return `<div class="btn-row"><button class="btn${sz} btn-success" disabled title="Kayıt formunu gönderdin">${icon('check', 'ico-sm')}${appr ? 'Kaydın onaylandı' : 'Kaydın alındı'}</button></div>`;
     return `<div class="btn-row">
       <button class="btn${sz} ${ev.attending ? 'btn-success' : 'btn-primary'}" data-action="rsvp" data-id="${ev.id}" data-kind="going" aria-pressed="${ev.attending}" ${full ? 'disabled' : ''}>${ev.attending ? icon('check', 'ico-sm') + 'Katılıyorsun' : full ? 'Kontenjan dolu' : 'Katılıyorum'}</button>
-      <button class="btn${sz} ${ev.interested ? 'btn-soft' : ''}" data-action="rsvp" data-id="${ev.id}" data-kind="interested" aria-pressed="${ev.interested}">${icon('star', 'ico-sm')}${ev.interested ? 'İlgileniyorsun' : 'İlgileniyorum'}</button>
+      ${star}
     </div>`;
+  }
+  // Kontenjan çubuğu: onaylanan katılımcılarla dolar; yetkililer bekleyen istekleri taralı olarak görür
+  function capBar(e) {
+    if (!(+e.capacity > 0)) return `<span class="small muted">${num(e.going)} katılımcı · kontenjan sınırı yok</span>`;
+    const pct = Math.min(100, e.going / e.capacity * 100);
+    const pend = K.canSeeResponses(e) ? (e.responses || []).filter((r) => r.status === 'pending').length : 0;
+    const pp = Math.min(100 - pct, pend / e.capacity * 100);
+    const left = Math.max(0, e.capacity - e.going);
+    return `<div class="cap-bar"><div class="progress" role="progressbar" aria-label="Kontenjan doluluğu" aria-valuemin="0" aria-valuemax="${e.capacity}" aria-valuenow="${Math.min(e.going, e.capacity)}"><span style="width:${pct}%"></span>${pp > 0 ? `<i style="left:${pct}%;width:${pp}%"></i>` : ''}</div><div class="cap-meta"><span><b>${num(e.going)}</b> / ${num(e.capacity)} ${K.needsApproval(e) ? 'onaylı katılımcı' : 'katılımcı'}</span><span class="muted">${left ? `${num(left)} yer kaldı` : 'Kontenjan doldu'}${pend ? ` · <b class="wait">${pend} istek bekliyor</b>` : ''}</span></div></div>`;
   }
   function eventOrganizers(ev) {
     return ev.communities.map((id) => C(id)).filter(Boolean).map((c) => `<a href="#/topluluk/${c.id}">${esc(c.name)}</a>`).join(' + ');
@@ -453,7 +467,7 @@
     return {
       title: 'Topluluklar',
       html: `
-      <div class="page-head"><div><h1>Topluluklar ve gruplar</h1><p>Ortak ilgi alanları etrafında içerik, tartışma ve etkinlik alanları.</p></div>${K.isAdmin() ? `<button class="btn btn-primary" data-action="new-group">${icon('plus')}Grup oluştur</button>` : ''}</div>
+      <div class="page-head"><div><h1>Topluluklar</h1><p>Ortak ilgi alanları etrafında içerik, tartışma ve etkinlik alanları.</p></div>${K.isAdmin() ? `<button class="btn btn-primary" data-action="new-group">${icon('plus')}Grup oluştur</button>` : ''}</div>
       <section class="card" style="overflow:hidden">${tabs([['uyelik', 'Üye olduklarım'], ['kesfet', 'Keşfet'], ...(K.isManager() ? [['yonetilen', 'Yönettiklerim']] : [])], tab, '#/topluluklar')}</section>
       ${list.length ? `<div class="grid-cards">${list.map(card).join('')}</div>` : `<div class="card">${empty('users', 'Burada henüz bir şey yok', 'Keşfet sekmesinden ilgi alanına uygun gruplara katıl.')}</div>`}
       <div class="callout pad-x">${icon('info')}<span><b>Grup türleri:</b> Herkese açık gruplara doğrudan katılınır, özel gruplar yönetici onayı ister, gizli gruplar yalnızca davetle görünür.</span></div>`
@@ -546,8 +560,8 @@
             <div class="meta-line">${icon('calendar')}${fmt.full(e.start)} · ${fmt.time(e.start)}</div>
             <div class="meta-line">${icon('pin')}${esc(e.location)}</div>
             <div class="meta-line">${icon('users')}<span>${eventOrganizers(e)}</span></div>
-            <div class="progress" aria-label="Kontenjan doluluğu"><span style="width:${Math.min(100, e.going / e.capacity * 100)}%"></span></div>
-            <div class="row-between" style="flex-wrap:wrap"><span class="small muted">${num(e.going)} / ${num(e.capacity)} katılımcı</span>${rsvpButtons(e)}</div>
+            ${capBar(e)}
+            <div class="row" style="justify-content:flex-end">${rsvpButtons(e)}</div>
           </div></article>`).join('')}</div>` : `<div class="card">${empty('calendar', 'Etkinlik bulunamadı', 'Başka bir sekme ya da kategori seç.')}</div>`}`
     };
   };
@@ -568,19 +582,31 @@
     if (!e.form) return '';
     const mine = myResponse(e);
     const past = e.start < Date.now();
-    return `<section class="card card-pad stack"><div class="row-between" style="flex-wrap:wrap;gap:10px"><div><h2 style="font-size:16px">Kayıt formu</h2><p class="small muted" style="margin:0">${mine ? `Formu doldurdun · ${timeAgo(mine.ts)}` : past ? 'Etkinlik tamamlandı; kayıtlar kapandı.' : 'Katılmak için kısa bir form doldurman gerekiyor.'}</p></div>${past ? '' : `<button class="btn ${mine ? '' : 'btn-primary'}" data-action="form-open" data-id="${e.id}">${icon(mine ? 'edit' : 'file', 'ico-sm')}${mine ? 'Yanıtını güncelle' : 'Formu doldur'}</button>`}</div></section>`;
+    const full = !mine && +e.capacity > 0 && e.going >= e.capacity;
+    const st = mine && K.needsApproval(e) ? ({ pending: ' · onay bekliyor', approved: ' · onaylandı', rejected: ' · onaylanmadı' })[mine.status || 'approved'] : '';
+    return `<section class="card card-pad stack"><div class="row-between" style="flex-wrap:wrap;gap:10px"><div><h2 style="font-size:16px">Kayıt formu</h2><p class="small muted" style="margin:0">${mine ? `Formu doldurdun · ${timeAgo(mine.ts)}${st}` : past ? 'Etkinlik tamamlandı; kayıtlar kapandı.' : full ? 'Kontenjan doldu; yeni kayıt alınmıyor.' : K.needsApproval(e) ? 'Katılmak için kısa bir form doldur; topluluk onaylayınca kaydın kesinleşir.' : 'Katılmak için kısa bir form doldurman gerekiyor.'}</p></div>${past || full || (mine && mine.status === 'rejected') ? '' : `<button class="btn ${mine ? '' : 'btn-primary'}" data-action="form-open" data-id="${e.id}">${icon(mine ? 'edit' : 'file', 'ico-sm')}${mine ? 'Yanıtını güncelle' : 'Formu doldur'}</button>`}</div></section>`;
   }
   function formColumns(e) {
-    return [['name', 'Ad soyad'], ['email', 'E-posta'], ...e.form.fields.filter((k) => K.FORM_FIELDS[k]).map((k) => [k, K.FORM_FIELDS[k]]), ...e.form.questions.map((q) => [q.id, q.label])];
+    return [['name', 'Ad soyad'], ['email', 'E-posta'], ...(e.form ? [...e.form.fields.filter((k) => K.FORM_FIELDS[k]).map((k) => [k, K.FORM_FIELDS[k]]), ...e.form.questions.map((q) => [q.id, q.label])] : [])];
   }
+  const REG = { pending: ['amber', 'Bekliyor'], approved: ['green', 'Onaylandı'], rejected: ['', 'Reddedildi'] };
   function eventResponses(e) {
-    if (!e.form || !K.canSeeResponses(e)) return '';
-    const rs = (e.responses || []).slice().sort((a, b) => b.ts - a.ts);
+    const appr = K.needsApproval(e);
+    if (!(e.form || appr) || !K.canSeeResponses(e)) return '';
+    const all = (e.responses || []).slice().sort((a, b) => b.ts - a.ts);
+    const cnt = { pending: 0, approved: 0, rejected: 0 }; all.forEach((r) => { cnt[r.status || 'approved'] = (cnt[r.status || 'approved'] || 0) + 1; });
+    const f = appr && ['pending', 'approved', 'rejected'].includes(UI.regFilter) ? UI.regFilter : 'all';
+    const rs = f === 'all' ? all : all.filter((r) => (r.status || 'approved') === f);
+    const past = e.start < Date.now();
     const cols = formColumns(e);
-    return `<section class="card"><div class="card-head" style="flex-wrap:wrap;gap:10px"><div><h2>Kayıt yanıtları <span class="muted">(${rs.length})</span></h2><span class="small muted">Yalnızca düzenleyen topluluğun moderatör ve yöneticileri görür</span></div>${rs.length ? `<button class="btn btn-sm" data-action="form-export" data-id="${e.id}">${icon('download', 'ico-sm')}Excel’e indir</button>` : ''}</div>
-      ${rs.length ? `<div class="table-wrap"><table class="resp-table"><thead><tr>${cols.map(([, l]) => `<th>${esc(l)}</th>`).join('')}<th>Gönderim</th></tr></thead><tbody>${rs.map((r) => `<tr>${cols.map(([k]) => `<td>${esc(r.a[k] || '—')}</td>`).join('')}<td class="muted">${timeAgo(r.ts)}</td></tr>`).join('')}</tbody></table></div>` : `<div class="card-pad muted small">Henüz yanıt yok. Form doldurulunca burada listelenir.</div>`}</section>`;
+    const acts = (r) => { const st = r.status || 'approved'; return `<div class="btn-row" style="flex-wrap:nowrap">${st !== 'approved' ? `<button class="btn btn-sm btn-primary" data-action="reg-ok" data-e="${e.id}" data-r="${r.id}">${icon('check', 'ico-sm')}Onayla</button>` : ''}${st !== 'rejected' ? `<button class="btn btn-sm" data-action="reg-no" data-e="${e.id}" data-r="${r.id}">${st === 'approved' ? 'Kaydı iptal et' : 'Reddet'}</button>` : ''}</div>`; };
+    const showAct = appr && !past;
+    return `<section class="card" id="kayitlar"><div class="card-head" style="flex-wrap:wrap;gap:10px"><div><h2>${appr ? 'Katılım istekleri' : 'Kayıt yanıtları'} <span class="muted">(${all.length})</span></h2><span class="small muted">${appr ? 'Onayladıkça kontenjan çubuğu dolar. ' : ''}Yalnızca düzenleyen topluluğun moderatör ve yöneticileri görür</span></div><div class="btn-row">${showAct && cnt.pending ? `<button class="btn btn-sm btn-primary" data-action="reg-ok-all" data-e="${e.id}">${icon('check', 'ico-sm')}Bekleyenleri onayla</button>` : ''}${all.length ? `<button class="btn btn-sm" data-action="form-export" data-id="${e.id}">${icon('download', 'ico-sm')}Excel’e indir</button>` : ''}</div></div>
+      ${appr && all.length ? `<div class="reg-filter">${chips([['all', `Tümü · ${all.length}`], ['pending', `Bekleyen · ${cnt.pending}`], ['approved', `Onaylanan · ${cnt.approved}`], ['rejected', `Reddedilen · ${cnt.rejected}`]], f, 'reg-filter')}</div>` : ''}
+      ${rs.length ? `<div class="table-wrap"><table class="resp-table"><thead><tr>${appr ? '<th>Durum</th>' : ''}${showAct ? '<th>İşlem</th>' : ''}${cols.map(([, l]) => `<th>${esc(l)}</th>`).join('')}<th>Gönderim</th></tr></thead><tbody>${rs.map((r) => `<tr>${appr ? `<td><span class="badge ${REG[r.status || 'approved'][0]}">${REG[r.status || 'approved'][1]}</span></td>` : ''}${showAct ? `<td>${acts(r)}</td>` : ''}${cols.map(([k]) => `<td>${esc(r.a[k] || '—')}</td>`).join('')}<td class="muted">${timeAgo(r.ts)}</td></tr>`).join('')}</tbody></table></div>` : `<div class="card-pad muted small">${all.length ? 'Bu filtrede kayıt yok.' : appr ? 'Henüz katılım isteği yok. “Katılıyorum” diyenler burada onayına düşer.' : 'Henüz yanıt yok. Form doldurulunca burada listelenir.'}</div>`}</section>`;
   }
   V.formColumns = formColumns;
+  V.capBar = capBar;
 
   V.etkinlik = (r) => {
     const e = E(r.id);
@@ -605,8 +631,8 @@
       ${eventFormCard(e)}
       ${eventResponses(e)}
       <section class="card card-pad stack">
-        <div class="row-between"><h2 style="font-size:16px">Katılımcılar</h2><span class="small muted">${num(e.going)} / ${num(e.capacity)}</span></div>
-        <div class="progress"><span style="width:${Math.min(100, e.going / e.capacity * 100)}%"></span></div>
+        <div class="row-between" style="flex-wrap:wrap;gap:8px"><h2 style="font-size:16px">Katılımcılar</h2>${K.canSeeResponses(e) ? `<div class="btn-row"><button class="btn btn-sm btn-ghost" data-action="cap-edit" data-id="${e.id}">${icon('edit', 'ico-sm')}Kontenjan</button><a class="btn btn-sm" href="#/yonetim?tab=formlar&ev=${e.id}">${icon('users', 'ico-sm')}Katılımcı listesi</a></div>` : ''}</div>
+        ${capBar(e)}
         <div class="row"><div class="av-stack">${attendees.map((u) => avatar({ ...u, kind: 'user' }, 'sm')).join('')}</div><span class="small muted">${esc(attendees[0].name)}, ${esc(attendees[1].name)} ve ${num(Math.max(0, e.going - 2))} kişi daha</span></div>
       </section>
       ${e.sponsors.length ? `<section class="card"><div class="card-head"><h2>Sponsorlar</h2></div><div class="list" style="margin-top:6px">${e.sponsors.map(P).map((p) => `<a class="list-item" href="#/sayfa/${p.id}">${avatar({ ...p, kind: 'page' }, 'md')}<span class="grow"><b>${esc(p.name)} ${verified(p.verified)}</b><span>${esc(p.category)}</span></span>${icon('chevronRight')}</a>`).join('')}</div></section>` : ''}
@@ -1012,7 +1038,7 @@
     }
     const admin = K.isAdmin();
     const tab = r.q.get('tab') || 'genel';
-    const T = [['genel', 'Genel bakış'], ['moderasyon', 'Moderasyon'], ['uyelik', 'Üyelik istekleri'], ...(admin ? [['ayarlar', 'Topluluk ayarları'], ['etiketler', 'Etiketler'], ['moderatorler', 'Moderatörler'], ['departmanlar', 'Departmanlar & konular']] : []), ['kayitlar', 'Denetim kayıtları']];
+    const T = [['genel', 'Genel bakış'], ['moderasyon', 'Moderasyon'], ['uyelik', 'Üyelik istekleri'], ['formlar', 'Formlar & kayıtlar'], ...(admin ? [['ayarlar', 'Topluluk ayarları'], ['etiketler', 'Etiketler'], ['moderatorler', 'Moderatörler'], ['departmanlar', 'Departmanlar & konular']] : []), ['kayitlar', 'Denetim kayıtları']];
     const comm = C(UI.adminComm);
     const commSel = `<label class="sr-only" for="admin-comm">Topluluk</label><select class="select" id="admin-comm" data-change="admin-comm" style="width:auto">${K.MANAGED.map((id) => `<option value="${id}" ${UI.adminComm === id ? 'selected' : ''}>${esc(C(id).name)}</option>`).join('')}</select>`;
     let body = '';
@@ -1096,6 +1122,23 @@
         <section class="card"><div class="card-head"><h2>Topluluklarının etiketleri</h2><span class="small muted">Rengi değiştirmek için renk kutusuna tıkla</span></div>
           <div class="list" style="margin-top:6px">${mine.length ? mine.map((t) => `<div class="list-item">${tagChip(t)}<span class="grow small muted">${esc(C(t.community).name)} · ${usage(t)} ilan · ${state.followedTags.includes(t.id) ? 'takip ediyorsun' : ''}</span><label class="color-edit" title="Rengi değiştir"><input type="color" value="${esc(t.color)}" data-change="tag-color" data-id="${esc(t.id)}" aria-label="${esc(t.name)} rengini değiştir"></label><button class="icon-btn" data-action="tag-del" data-id="${esc(t.id)}" aria-label="${esc(t.name)} etiketini sil">${icon('trash')}</button></div>`).join('') : '<div class="list-item muted">Henüz etiket yok.</div>'}</div></section>
         ${others.length ? `<section class="card card-pad stack"><h3 class="card-title">Diğer toplulukların etiketleri</h3><div class="tag-row">${others.map(tagChip).join('')}</div></section>` : ''}`;
+    } else if (tab === 'formlar') {
+      const evId = r.q.get('ev'); const ev = evId && /^[a-z0-9_-]{1,40}$/i.test(evId) ? E(evId) : null;
+      if (ev && K.canSeeResponses(ev)) {
+        body = `<div class="row pad-x" style="gap:8px;flex-wrap:wrap"><a class="btn btn-sm btn-ghost" href="#/yonetim?tab=formlar">${icon('chevronLeft', 'ico-sm')}Tüm etkinlikler</a><a class="btn btn-sm" href="#/etkinlik/${ev.id}">Etkinlik sayfası</a></div>
+          <section class="card card-pad stack"><div class="row" style="gap:12px;align-items:center">${dateBlock(ev.start)}<div class="grow" style="min-width:0"><h2 style="font-size:17px">${esc(ev.title)}</h2><span class="small muted">${fmt.time(ev.start)} · ${esc(ev.location)}</span></div><button class="btn btn-sm btn-ghost" data-action="cap-edit" data-id="${ev.id}">${icon('edit', 'ico-sm')}Kontenjan</button></div>${capBar(ev)}</section>
+          ${eventResponses(ev) || `<div class="card">${empty('users', 'Bu etkinlikte onay gerekmiyor', 'Kontenjan ve kayıt formu yok; “Katılıyorum” diyenler doğrudan katılımcı sayılır. Kontenjan belirlersen istekler burada onayına düşer.', `<button class="btn btn-primary" data-action="cap-edit" data-id="${ev.id}">Kontenjan belirle</button>`)}</div>`}`;
+      } else {
+        const now = Date.now();
+        const evs = state.events.filter((x) => x.communities.includes(comm.id)).sort((a, b) => ((a.start < now) - (b.start < now)) || (a.start < now ? b.start - a.start : a.start - b.start));
+        const tpls = (state.formTemplates || []).filter((t) => t.community === comm.id);
+        const row = (x) => { const pend = (x.responses || []).filter((y) => y.status === 'pending').length; return `<div class="list-item reg-row">${dateBlock(x.start)}<div class="grow stack" style="gap:6px;min-width:0"><div class="row" style="gap:6px;flex-wrap:wrap"><b>${esc(x.title)}</b>${x.start < now ? '<span class="badge">Geçmiş</span>' : ''}${x.form ? '<span class="badge purple">Kayıt formu</span>' : ''}${pend ? `<span class="badge amber">${pend} bekleyen</span>` : ''}</div>${capBar(x)}</div><a class="btn btn-sm" href="#/yonetim?tab=formlar&ev=${x.id}">Kayıtları yönet</a></div>`; };
+        body = `<div class="row pad-x">${commSel}</div>
+          <section class="card"><div class="card-head" style="flex-wrap:wrap;gap:8px"><div><h2>Etkinlik kayıtları</h2><span class="small muted">Katılım isteklerini onayla, kayıtları takip et, Excel’e indir</span></div></div>
+            <div class="list" style="margin-top:6px">${evs.length ? evs.map(row).join('') : `<div class="list-item muted small">${esc(comm.name)} için etkinlik yok.</div>`}</div></section>
+          <section class="card"><div class="card-head" style="flex-wrap:wrap;gap:8px"><div><h2>Form şablonları</h2><span class="small muted">Kaydettiğin şablonlar etkinlik oluştururken “Şablondan başlat” listesinde çıkar</span></div><button class="btn btn-sm btn-primary" data-action="tpl-new">${icon('plus', 'ico-sm')}Yeni şablon</button></div>
+            <div class="list" style="margin-top:6px">${tpls.length ? tpls.map((t) => `<div class="list-item"><span class="av av-md sq tpl-ic">${icon('file')}</span><span class="grow" style="min-width:0"><b>${esc(t.name)}</b><span>${t.questions.length} soru${t.fields.length ? ' · ' + t.fields.map((k) => esc(K.FORM_FIELDS[k] || '')).join(', ') : ''}</span></span><div class="btn-row"><button class="btn btn-sm" data-action="tpl-edit" data-id="${t.id}">${icon('edit', 'ico-sm')}Düzenle</button><button class="btn btn-sm btn-ghost" data-action="tpl-del" data-id="${t.id}" aria-label="${esc(t.name)} şablonunu sil">${icon('trash', 'ico-sm')}</button></div></div>`).join('') : `<div class="list-item muted small">Henüz kayıtlı şablon yok. Hazır şablonlar (kamp, atölye, gönüllülük) her zaman kullanılabilir.</div>`}</div></section>`;
+      }
     } else if (tab === 'ayarlar' && admin) {
       const on = comm.memberPosts !== false;
       body = `<div class="row pad-x">${commSel}</div>
