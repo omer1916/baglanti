@@ -43,7 +43,7 @@
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     return true;
   }
-  const unreadNotifs = () => state.notifications.filter((n) => !n.read).length;
+  const unreadNotifs = () => K.myNotifs().filter((n) => !n.read).length;
   const unreadMsgs = () => !K.canMessage() ? 0 : state.conversations.reduce((s, c) => s + (c.unread || 0), 0);
   function notify(type, text, link, extra = {}) {
     state.notifications.unshift({ id: uid('nt'), type, text, ts: Date.now(), read: false, link, ...extra });
@@ -717,10 +717,14 @@
   A['share-event'] = (el) => { copy(location.href.split('#')[0] + '#/etkinlik/' + el.dataset.id); toast('Etkinlik bağlantısı kopyalandı'); };
   A['share-need'] = (el) => { copy(location.href.split('#')[0] + '#/sponsorlar'); toast('İhtiyaç bağlantısı kopyalandı'); };
   A.support = (el) => {
-    const n = N(el.dataset.id);
-    const left = Math.max(1, n.goal - n.progress);
+    const n = N(el.dataset.id); if (!n || !K.isBrand()) return;
+    const pend = K.pendingPledges(n).reduce((t, p) => t + p.amount, 0);
+    const left = n.goal - n.progress - pend;
+    if (n.progress >= n.goal) return toast('Bu ihtiyaç tamamen karşılandı', 'info');
+    if (left <= 0) return toast('Bekleyen desteklerle hedef doluyor; topluluğun onayını bekle', 'info');
     openModal({ title: 'Destek ol', form: 'support', formAttrs: `data-id="${n.id}"`,
-      body: `<div class="callout">${icon('gift')}<span><b>${esc(n.title)}</b><br>${esc(C(n.community).name)} · ${num(n.progress)} / ${num(n.goal)} karşılandı</span></div>
+      body: `<div class="callout">${icon('gift')}<span><b>${esc(n.title)}</b><br>${esc(C(n.community).name)} · ${num(n.progress)} / ${num(n.goal)} karşılandı${pend ? ` · ${num(pend)} onay bekliyor` : ''}</span></div>
+        <p class="small muted" style="margin:0">Desteğin topluluk yöneticisine iletilir. Yönetici teslim aldığını onaylayınca karşılanma çubuğuna eklenir; istediğin zaman yeniden destek olabilirsin.</p>
         <div class="radio-list" role="radiogroup" aria-label="Destek türü">${['Ürün desteği', 'Mekân desteği', 'İndirim / kupon', 'Ulaşım desteği'].map((x, i) => `<label class="radio-item"><input type="radio" name="kind" value="${x}" ${i === 0 ? 'checked' : ''}>${x}</label>`).join('')}</div>
         <div class="field"><label for="sp-amt">Karşılanacak miktar (en fazla ${left})</label><input class="input" type="number" id="sp-amt" name="amount" min="1" max="${left}" value="${Math.min(left, 5)}" required></div>
         <div class="field"><label for="sp-note">Topluluğa not</label><textarea class="textarea" id="sp-note" name="note" style="min-height:80px" maxlength="400" placeholder="Teslimat ve iletişim bilgisi…"></textarea></div>`,
@@ -745,7 +749,7 @@
   A['conn-dismiss'] = (el) => { state.connections.suggestions = state.connections.suggestions.filter((s) => s.id !== el.dataset.id); refresh(); };
 
   A['notif-open'] = (el) => { const n = state.notifications.find((x) => x.id === el.dataset.id); n.read = true; save(); location.hash = n.link; if (location.hash === n.link) render(); };
-  A['notif-read-all'] = () => { state.notifications.forEach((n) => (n.read = true)); refresh(); toast('Tüm bildirimler okundu'); };
+  A['notif-read-all'] = () => { K.myNotifs().forEach((n) => (n.read = true)); refresh(); toast('Tüm bildirimler okundu'); };
 
   A['mod-act'] = (el) => { const r = state.reports.find((x) => x.id === el.dataset.id); r.status = el.dataset.do; state.audit.push({ ts: Date.now(), who: state.me, text: `${r.target}: ${r.status.toLocaleLowerCase('tr')} (${r.reason})` }); refresh(); toast(`Şikâyet sonuçlandı: ${r.status}`); };
   // Lider onaylarken üyeye kendi topluluğunun etiketlerinden atar
@@ -1026,12 +1030,64 @@
     closeModal(); save(); renderShell(parseHash()); toast('Bildirimin alındı. İnceleme sonucunu sana ileteceğiz.');
   };
   F.support = (f) => {
-    const n = N(f.dataset.id);
-    const amt = Math.max(1, Math.min(n.goal - n.progress, +f.amount.value || 1));
+    const n = N(f.dataset.id); if (!n || !K.isBrand()) return closeModal();
+    const left = n.goal - n.progress - K.pendingPledges(n).reduce((t, p) => t + p.amount, 0);
+    const want = Math.floor(+f.amount.value);
+    if (!(want >= 1)) return toast('En az 1 adet yaz.', 'info');
+    if (want > left) return toast(left > 0 ? `En fazla ${left} adet destek verebilirsin.` : 'Bekleyen desteklerle hedef doluyor.', 'info');
+    const kinds = ['Ürün desteği', 'Mekân desteği', 'İndirim / kupon', 'Ulaşım desteği'];
+    const kind = kinds.includes(f.kind.value) ? f.kind.value : kinds[0];
+    const page = P(K.BRAND_PAGE);
+    n.pledges = n.pledges || [];
+    n.pledges.push({ id: uid('pl'), page: K.BRAND_PAGE, amount: want, kind, note: f.note.value.trim().slice(0, 400), ts: Date.now(), status: 'pending' });
+    notify('sponsor', `<b>${esc(page.name)}</b> “${esc(n.title)}” ihtiyacına ${want} adet destek gönderdi (${esc(kind)}). Teslim aldığında onayla.`, '#/yonetim?tab=destekler', { community: n.community, for: ['yonetici'] });
+    closeModal(); refresh(); toast(`Desteğin iletildi: ${want} adet · ${C(n.community).name} yöneticisi teslim alınca onaylayacak`);
+  };
+  // Sponsor desteği: yönetici teslim aldığını onaylar; çubuk ve kota yalnızca onayla ilerler
+  const findPledge = (el) => { const n = N(el.dataset.need); const p = n && (n.pledges || []).find((x) => x.id === el.dataset.id); return n && p && p.status === 'pending' && K.canApproveSupport(n) ? { n, p } : null; };
+  A['pledge-ok'] = (el) => {
+    const x = findPledge(el); if (!x) return; const { n, p } = x;
+    const amt = Math.max(0, Math.min(p.amount, n.goal - n.progress));
+    p.status = 'approved'; p.approved = amt; p.decided = Date.now();
     n.progress += amt;
-    if (!n.supporters.includes(K.BRAND_PAGE)) n.supporters.push(K.BRAND_PAGE);
-    notify('sponsor', `<b>Kuzey Kahve</b> “${esc(n.title)}” ihtiyacına destek oldu (${esc(f.kind.value)})`, '#/sponsorlar');
-    closeModal(); refresh(); toast(`Desteğin iletildi: ${amt} adet · ${C(n.community).name} bilgilendirildi`);
+    if (!n.supporters.includes(p.page)) n.supporters.push(p.page);
+    state.audit.push({ ts: Date.now(), who: state.me, text: `${P(p.page)?.name || 'Sponsor'} desteği onaylandı: ${n.title} · ${amt} adet` });
+    notify('sponsor', `<b>${esc(C(n.community).name)}</b> desteğini teslim aldı ve onayladı: “${esc(n.title)}” · ${amt} adet`, '#/sponsorlar?tab=destekler', { for: ['marka'] });
+    refresh(); toast(amt < p.amount ? `${amt} adet onaylandı (hedef doldu)` : `${amt} adet destek onaylandı · çubuk güncellendi`);
+  };
+  A['pledge-no'] = (el) => {
+    const x = findPledge(el); if (!x) return; const { n, p } = x;
+    confirmModal({ title: 'Desteği reddet', text: `<b>${esc(P(p.page)?.name || 'Sponsor')}</b> desteği (${p.amount} adet) reddedilsin mi? Karşılanma çubuğu değişmez, sponsora bildirim gider.`, ok: 'Reddet', danger: true, onOk: () => {
+      p.status = 'rejected'; p.decided = Date.now();
+      state.audit.push({ ts: Date.now(), who: state.me, text: `${P(p.page)?.name || 'Sponsor'} desteği reddedildi: ${n.title}` });
+      notify('sponsor', `<b>${esc(C(n.community).name)}</b> “${esc(n.title)}” için gönderdiğin desteği onaylamadı`, '#/sponsorlar?tab=destekler', { for: ['marka'] });
+      refresh(); toast('Destek reddedildi');
+    } });
+  };
+  // Geri bildirim: moderatör ve topluluk yöneticisi → site yönetimi; site yönetimi yanıtlar
+  const FB_CATS = ['Öneri', 'Hata bildirimi', 'Şikâyet', 'Diğer'];
+  F['feedback-send'] = (f) => {
+    if (!K.isManager()) return toast('Geri bildirim yalnızca moderatör ve topluluk yöneticilerine açık', 'info');
+    const subject = f.subject.value.trim(), text = f.text.value.trim();
+    if (subject.length < 3) return toast('Kısa bir başlık yaz.', 'info');
+    if (text.length < 10) return toast('Mesajını biraz daha açık yaz (en az 10 karakter).', 'info');
+    const comm = K.MANAGED.includes(f.comm.value) ? f.comm.value : '';
+    const fb = { id: uid('fb'), from: state.me, role: state.role, community: comm, category: FB_CATS.includes(f.cat.value) ? f.cat.value : 'Diğer', subject: subject.slice(0, 80), text: text.slice(0, 1500), ts: Date.now(), status: 'open', reply: '', notified: true };
+    state.feedback = state.feedback || []; state.feedback.push(fb);
+    notify('request', `<b>${esc(me().name)}</b> (${esc(K.ROLES[state.role].short)}) geri bildirim gönderdi: ${esc(fb.subject)}`, '#/site?tab=geri', { site: true });
+    refresh(); toast('Geri bildirimin site yönetimine iletildi');
+  };
+  F['feedback-reply'] = (f) => {
+    if (!K.isSite()) return;
+    const fb = (state.feedback || []).find((x) => x.id === f.dataset.id); if (!fb) return;
+    const status = ['open', 'reviewing', 'resolved'].includes(f.status.value) ? f.status.value : fb.status;
+    const reply = f.reply.value.trim().slice(0, 1500);
+    if (status === fb.status && reply === (fb.reply || '')) return toast('Değişiklik yok', 'info');
+    const newReply = reply && reply !== fb.reply;
+    fb.status = status; fb.reply = reply; fb.updated = Date.now(); fb.by = (window.Admin.session() || {}).name || 'Site yönetimi';
+    const label = { open: 'yeni', reviewing: 'inceleniyor', resolved: 'çözüldü' }[status];
+    notify('request', newReply ? `Site yönetimi geri bildirimine yanıt verdi: <b>${esc(fb.subject)}</b>` : `Geri bildirimin <b>${esc(fb.subject)}</b> · durum: ${label}`, '#/yonetim?tab=geribildirim', { for: ['moderator', 'yonetici'] });
+    refresh(); toast(newReply ? 'Yanıt gönderildi' : 'Durum güncellendi');
   };
   F.profile = (f) => { const m = me(); const dept = f.dept ? f.dept.value.trim() : null; if (dept !== null && dept.length < 3 && state.role === 'uye') return toast('Okulunu ve bölümünü yaz', 'info'); m.name = f.name.value.trim() || m.name; m.city = f.city.value.trim(); m.bio = f.bio.value.trim(); if (dept !== null) m.dept = dept; if (K.mode === 'account') window.Auth.updateProfile({ name: m.name, city: m.city, dept: m.dept }); closeModal(); refresh(); toast('Profil güncellendi'); };
   F.password = async (f) => {

@@ -105,6 +105,14 @@
     const e2 = (state.events || []).find((e) => e.id === 'e2'); if (e2 && !e2.audience) e2.audience = 'uyeler';
     state.followV = 1;
   }
+  if (state.supportV !== 1) {   // sponsor destekleri: yönetici teslim alıp onaylayınca çubuğa eklenir
+    const se = window.SEED();
+    (state.needs || []).forEach((n) => { n.pledges = n.pledges || []; const x = se.needs.find((y) => y.id === n.id); if (x && x.pledges) x.pledges.forEach((p) => { if (!n.pledges.some((q) => q.id === p.id)) n.pledges.push({ ...p }); }); });
+    se.notifications.filter((n) => n.for && !state.notifications.some((m) => m.id === n.id)).forEach((n) => state.notifications.push({ ...n }));
+    state.notifications.forEach((n) => { if (n.id === 'nt3' && /üyelik isteği gönderdi/.test(n.text)) n.text = '<b>Mert Arslan</b> seni takip etmeye başladı'; });
+    state.supportV = 1;
+  }
+  if (!Array.isArray(state.feedback)) state.feedback = window.SEED().feedback || [];   // yöneticiden site yönetimine geri bildirim
   if (state.tagLimitV !== 2) {   // etiket sınırı 8 oldu
     state.tagLimit = 8;
     if (state.tagAlerts) state.tagAlerts = state.tagAlerts.filter((a) => a.status !== 'open' || a.count > 8);
@@ -241,6 +249,10 @@
   const canMessage = () => state.role !== 'uye';
   const isBrand = () => state.role === 'marka';
   // Etkinlik katılım kapsamı: 'herkes' ya da yalnızca düzenleyen toplulukların üyeleri
+  // Bildirimin hedef rolü (yoksa herkese): sponsor desteği yöneticiye, onay sonucu sponsora gider
+  const myNotifs = () => state.notifications.filter((n) => (!n.for || n.for.includes(state.role)) && (!n.site || isSite()));
+  const pendingPledges = (n) => (n.pledges || []).filter((p) => p.status === 'pending');
+  const canApproveSupport = (n) => !!n && isAdmin() && MANAGED.includes(n.community);
   const membersOnly = (e) => !!e && e.audience === 'uyeler';
   const canJoinEvent = (e) => !membersOnly(e) || e.communities.some((id) => state.communities[id] && state.communities[id].joined) || (isManager() && e.communities.some((id) => MANAGED.includes(id)));
   // Site yöneticisi demo rolü değil: ayrı yönetici girişiyle (#/admin) açılan oturum
@@ -456,6 +468,11 @@
         state.notifications.unshift({ id: 'nt-r-' + a.id, type: 'request', text: `<b>${esc(a.name)}</b> mezun olarak katılmak istiyor; doğrulaman bekleniyor`, ts: a.ts, read: false, link: '#/site' });
         changed = true;
       });
+      (state.feedback || []).filter((f) => f.status === 'open' && !f.notified).forEach((f) => {
+        f.notified = true;
+        state.notifications.unshift({ id: 'nt-fb-' + f.id, type: 'request', text: `<b>${esc(U(f.from)?.name || 'Bir topluluk yetkilisi')}</b> geri bildirim gönderdi: ${esc(f.subject)}`, ts: f.ts, read: false, link: '#/site?tab=geri', site: true });
+        changed = true;
+      });
       state.tagAlerts.filter((a) => a.status === 'open' && !a.notified && U(a.user)).forEach((a) => {
         a.notified = true;
         state.notifications.unshift({ id: 'nt-' + a.id, type: 'request', text: `<b>${esc(U(a.user).name)}</b> hesabında ${a.count} etiket birikti (sınır ${tagLimit()})`, ts: a.ts, read: false, link: '#/site?tab=etiket' });
@@ -495,7 +512,7 @@
   /* ---------------- dışa aktar ---------------- */
   window.Core = {
     state, save, reset, mode, KEYS, buildWorkspace, $, $$, esc, setHTML, replaceHTML, appendHTML, lower, num, uid, initials, timeAgo, fmt, daysLeft,
-    ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand, isSite, canMessage, manages, canPostIn, safeUrl, FORM_FIELDS, canSeeResponses, needsApproval, myRequest, membersOnly, canJoinEvent, tagLimit, userTags, myTags, checkTagLoad, sync,
+    ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand, isSite, canMessage, manages, canPostIn, safeUrl, FORM_FIELDS, canSeeResponses, needsApproval, myRequest, membersOnly, canJoinEvent, myNotifs, pendingPledges, canApproveSupport, tagLimit, userTags, myTags, checkTagLoad, sync,
     U, C, P, E, N, me, entity, avatar, safePhoto, verified, icon, sceneSVG, media, readApps, writeApps
   };
   syncApps();

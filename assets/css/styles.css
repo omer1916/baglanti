@@ -1480,3 +1480,15 @@ label.btn { cursor: pointer; }
 .role-bar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; font-size:13px; font-weight:600; }
 .role-bar .xs { flex-basis:100%; font-weight:400; }
 .select.role-sel { width:auto; min-height:32px; padding:2px 30px 2px 10px; font-size:13px; }
+
+/* Sponsor destekleri: yönetici onayı */
+.pledge-list { display:grid; gap:8px; }
+.pledge-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 12px; border:1px solid var(--border); border-radius:12px; font-size:13px; }
+.pledge-row .grow { min-width:160px; }
+.card > .pledge-list { padding:0 16px 16px; }
+
+/* Geri bildirim */
+.fb-reply { display:flex; gap:8px; align-items:flex-start; padding:10px 12px; border-radius:12px; background:var(--surface-2, rgba(67,126,245,.08)); font-size:13px; }
+.fb-form { display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:start; }
+.fb-form .textarea { min-height:44px; }
+@media (max-width:640px) { .fb-form { grid-template-columns:1fr; } }

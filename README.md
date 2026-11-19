@@ -59,6 +59,8 @@ GitHub Pages özel HTTP başlığı ayarlamaya izin vermez. `frame-ancestors`, `
 | — | Profil belgeleri | `#/profil?tab=belgeler`: sertifika, proje ve CV için PDF yükleme (yalnızca PDF, içerik `%PDF-` ile doğrulanır, en fazla 1,5 MB), açma ve silme |
 | 11 | Topluluk türleri | Herkese açık, özel ve gizli topluluk; üyelik isteği; kurallar |
 | 12 | Sponsor sayfaları | `#/sayfa/kuzey`: sponsor rolünde istatistik, yayın takvimi ve sayfa rolleri |
+| — | Sponsor destek onayı | Sponsor “Destek ol” der, topluluk yöneticisine bildirim gider; yönetici teslim alınca `#/yonetim?tab=destekler`ten onaylar. Karşılanma çubuğu ve kota yalnızca onaylanan destekle ilerler; sponsor tekrar destek verebilir |
+| — | Geri bildirim | Moderatör ve topluluk yöneticisi `#/yonetim?tab=geribildirim`den site yönetimine yazar; site yönetimi `#/site?tab=geri`den durum günceller ve yanıtlar |
 | 13 | Hikâyeler | Akışın üstündeki topluluk hikâyeleri (24 saat, sessize al, gizle) |
 | 14 | Mesajlaşma | `#/mesajlar`: bire bir ve topluluk sohbetleri, dosya veya görsel gönderme. Üye (bireysel kullanıcı) rolünde şimdilik kapalı |
 | 15 | Bildirim merkezi | Okundu/okunmadı, tür filtresi, sıklık ve sessiz saat ayarları |

@@ -147,10 +147,13 @@
         { id: 's5', community: 'foto', label: 'Fotoğraf', seen: true, muted: false, items: [{ scene: 'photo', caption: 'Kış sergisi hazırlıkları', ts: ago(700), views: 88 }] }
       ],
 
+      feedback: [
+        { id: 'fb1', from: 'u3', role: 'moderator', community: 'doga', category: 'Öneri', subject: 'Kayıt formuna dosya alanı', text: 'Kış kampı kayıtlarında sağlık raporu istiyoruz. Formda dosya yükleme alanı olursa üyelerden ayrıca e-posta ile istemek zorunda kalmayız.', ts: ago(600), status: 'open', reply: '' }
+      ],
       needs: [
-        { id: 'n1', community: 'doga', title: '40 adet uyku tulumu', category: 'Ürün', desc: 'Kış kampına ilk kez katılacak üyeler için -10°C konforlu uyku tulumu.', goal: 40, progress: 26, deadline: inDays(10), supporters: ['zirve'] },
+        { id: 'n1', community: 'doga', title: '40 adet uyku tulumu', category: 'Ürün', desc: 'Kış kampına ilk kez katılacak üyeler için -10°C konforlu uyku tulumu.', goal: 40, progress: 26, deadline: inDays(10), supporters: ['zirve'], pledges: [{ id: 'pl1', page: 'zirve', amount: 6, kind: 'Ürün desteği', note: 'Cuma günü dernek adresine kargoyla teslim edilecek.', ts: ago(90), status: 'pending' }] },
         { id: 'n2', community: 'muzik', title: 'Taşınabilir ses sistemi', category: 'Ekipman', desc: 'Açık sahne gecelerinde kullanılacak 2 hoparlör ve mikser.', goal: 1, progress: 0, deadline: inDays(14), supporters: [] },
-        { id: 'n3', community: 'kodkahve', title: 'Meetup mekânı ve ikram', category: 'Mekân', desc: 'Ayda bir 60 kişilik buluşma için mekân ve kahve ikramı.', goal: 12, progress: 9, deadline: inDays(30), supporters: ['kuzey'] },
+        { id: 'n3', community: 'kodkahve', title: 'Meetup mekânı ve ikram', category: 'Mekân', desc: 'Ayda bir 60 kişilik buluşma için mekân ve kahve ikramı.', goal: 12, progress: 9, deadline: inDays(30), supporters: ['kuzey'], pledges: [{ id: 'pl2', page: 'kuzey', amount: 2, kind: 'Mekân desteği', note: 'Ocak ve şubat buluşmaları için salon ayırdık.', ts: ago(300), status: 'pending' }] },
         { id: 'n4', community: 'gonullu', title: '300 kışlık mont', category: 'Ürün', desc: 'Köy okullarındaki öğrenciler için kışlık mont.', goal: 300, progress: 184, deadline: inDays(20), supporters: [] },
         { id: 'n5', community: 'foto', title: 'Sergi baskı desteği', category: 'Baskı', desc: 'Kış sergisi için 30 adet 50×70 fine-art baskı.', goal: 30, progress: 12, deadline: inDays(18), supporters: ['kitabevi'] }
       ],
@@ -166,7 +169,9 @@
       notifications: [
         { id: 'nt1', type: 'like', text: '<b>Ayşe Kaya</b> gönderini beğendi', ts: ago(2), read: false, link: '#/profil', who: 'u3' },
         { id: 'nt2', type: 'community', text: '<b>Doğa ve Kamp</b> topluluğuna yeni gönderi eklendi', ts: ago(15), read: false, link: '#/topluluk/doga', community: 'doga' },
-        { id: 'nt3', type: 'request', text: '<b>Mert Arslan</b> üyelik isteği gönderdi', ts: ago(60), read: false, link: '#/uyeler', who: 'u4' },
+        { id: 'nt3', type: 'request', text: '<b>Mert Arslan</b> seni takip etmeye başladı', ts: ago(60), read: false, link: '#/uyeler', who: 'u4' },
+        { id: 'nt-pl1', type: 'sponsor', text: '<b>Zirve Outdoor</b> “40 adet uyku tulumu” ihtiyacına 6 adet destek gönderdi. Teslim aldığında onayla.', ts: ago(90), read: false, link: '#/yonetim?tab=destekler', community: 'doga', for: ['yonetici'] },
+        { id: 'nt-pl2', type: 'sponsor', text: '<b>Kuzey Kahve</b> “Meetup mekânı ve ikram” ihtiyacına 2 adet destek gönderdi. Teslim aldığında onayla.', ts: ago(300), read: false, link: '#/yonetim?tab=destekler', community: 'kodkahve', for: ['yonetici'] },
         { id: 'nt4', type: 'event', text: 'Etkinlik hatırlatması: <b>Açık Sahne Gecesi</b> yaklaşıyor', ts: ago(1440), read: true, link: '#/etkinlik/e3' },
         { id: 'nt5', type: 'sponsor', text: '<b>Zirve Outdoor</b> “40 adet uyku tulumu” ihtiyacına destek oldu', ts: ago(2000), read: true, link: '#/sponsorlar' },
         { id: 'nt7', type: 'event', text: '<b>Uludağ Kış Kampı</b> ortak etkinliğine katılımın onaylandı', ts: ago(4300), read: true, link: '#/etkinlik/e1' }
