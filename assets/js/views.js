@@ -478,12 +478,12 @@
   V.topluluk = (r) => {
     const c = C(r.id);
     if (!c) return V.notfound();
-    const tab = r.q.get('tab') || 'gonderiler';
+    const tab = (r.q.get('tab') === 'departmanlar' ? '' : r.q.get('tab')) || 'gonderiler';   // kaldırılan sekmenin eski bağlantıları
     const base = '#/topluluk/' + c.id;
     const canSee = c.type === 'Herkese açık' || c.joined;
     const manage = K.isManager() && K.MANAGED.includes(c.id);
     let body = '';
-    if (!canSee && ['gonderiler', 'medya', 'departmanlar'].includes(tab)) {
+    if (!canSee && ['gonderiler', 'medya'].includes(tab)) {
       body = `<div class="card">${empty('lock', 'Bu grup ' + lower(c.type), 'Gönderileri görmek için üye olman gerekiyor.', joinButton(c))}</div>`;
     } else if (tab === 'gonderiler') {
       const posts = state.posts.filter((p) => p.community === c.id);
@@ -507,8 +507,6 @@
     } else if (tab === 'medya') {
       const items = galleryItems().filter((g) => g.community === c.id);
       body = items.length ? `<div class="gallery">${items.map((g) => galleryTile(g, items)).join('')}</div>` : `<div class="card">${empty('image', 'Medya arşivi boş', 'Paylaşılan fotoğraf ve videolar burada toplanır.')}</div>`;
-    } else if (tab === 'departmanlar') {
-      body = `<section class="card">${c.departments.map((dp) => `<div class="list-item" style="align-items:flex-start;flex-direction:column;gap:8px"><b>${icon('layers', 'ico-sm')} ${esc(dp.name)}</b><div class="stack" style="width:100%;gap:6px">${dp.topics.map((t) => `<div class="row-between small"><span>${icon('hash', 'ico-sm')} ${esc(t.t)}</span><span class="badge ${t.open ? 'green' : ''}">${t.open ? 'Açık konu' : 'Kapalı'}</span></div>`).join('')}</div></div>`).join('')}</section>${manage && K.isAdmin() ? `<a class="btn pad-x" href="#/yonetim?tab=departmanlar">Departmanları yönet</a>` : ''}`;
     } else if (tab === 'sponsorlar') {
       const sp = c.sponsors.map(P).filter(Boolean);
       const needs = state.needs.filter((n) => n.community === c.id);
@@ -528,7 +526,7 @@
               <div class="popover" data-popover="cm-${c.id}" hidden><button data-action="copy-link" data-href="${base}">${icon('link')}Bağlantıyı kopyala</button><button data-action="report" data-kind="Topluluk" data-id="${c.id}">${icon('flag')}Topluluğu bildir</button>${manage ? `<hr>${K.isAdmin() ? `<button data-action="comm-settings" data-id="${c.id}">${icon('settings')}Topluluk ayarları</button>` : ''}<a href="#/yonetim">${icon('shield')}Yönetim paneli</a>` : ''}</div></div>
           </div>
         </div>
-        ${tabs([['gonderiler', 'Gönderiler'], ['hakkinda', 'Hakkında'], ['etkinlikler', 'Etkinlikler'], ['medya', 'Medya'], ['departmanlar', 'Departmanlar'], ['sponsorlar', 'Sponsorlar']], tab, base)}
+        ${tabs([['gonderiler', 'Gönderiler'], ['hakkinda', 'Hakkında'], ['etkinlikler', 'Etkinlikler'], ['medya', 'Medya'], ['sponsorlar', 'Sponsorlar']], tab, base)}
       </section>
       ${body}`
     };
@@ -1037,8 +1035,8 @@
       return { title: 'Yönetim', html: `<div class="page-head"><div><h1>Yönetim paneli</h1><p>Moderatör ve topluluk yöneticilerine özel alan.</p></div></div><div class="card">${empty('shield', 'Bu alan için yetkin yok', 'Demoda rolünü değiştirerek paneli inceleyebilirsin.', `<div class="btn-row" style="justify-content:center"><button class="btn btn-primary" data-action="set-role" data-role="yonetici">Yönetici olarak gör</button><button class="btn" data-action="set-role" data-role="moderator">Moderatör olarak gör</button></div>`)}</div>` };
     }
     const admin = K.isAdmin();
-    const tab = r.q.get('tab') || 'genel';
-    const T = [['genel', 'Genel bakış'], ['moderasyon', 'Moderasyon'], ['uyelik', 'Üyelik istekleri'], ['formlar', 'Formlar & kayıtlar'], ...(admin ? [['ayarlar', 'Topluluk ayarları'], ['etiketler', 'Etiketler'], ['moderatorler', 'Moderatörler'], ['departmanlar', 'Departmanlar & konular']] : []), ['kayitlar', 'Denetim kayıtları']];
+    const tab = (r.q.get('tab') === 'departmanlar' ? '' : r.q.get('tab')) || 'genel';
+    const T = [['genel', 'Genel bakış'], ['moderasyon', 'Moderasyon'], ['uyelik', 'Üyelik istekleri'], ['formlar', 'Formlar & kayıtlar'], ...(admin ? [['ayarlar', 'Topluluk ayarları'], ['etiketler', 'Etiketler'], ['moderatorler', 'Moderatörler']] : []), ['kayitlar', 'Denetim kayıtları']];
     const comm = C(UI.adminComm);
     const commSel = `<label class="sr-only" for="admin-comm">Topluluk</label><select class="select" id="admin-comm" data-change="admin-comm" style="width:auto">${K.MANAGED.map((id) => `<option value="${id}" ${UI.adminComm === id ? 'selected' : ''}>${esc(C(id).name)}</option>`).join('')}</select>`;
     let body = '';
@@ -1097,12 +1095,6 @@
       body = `<div class="row pad-x">${commSel}</div>
         <section class="card"><div class="card-head"><h2>${esc(comm.name)} · ekip</h2></div><div class="list" style="margin-top:6px">${mods.map((u) => `<div class="list-item">${avatar({ ...u, kind: 'user' }, 'md')}<span class="grow"><b>${esc(u.name)}</b><span>${comm.admins.includes(u.id) ? 'Yönetici' : 'Moderatör'}</span></span><div class="btn-row">${comm.admins.includes(u.id) ? '<span class="badge amber">Yönetici</span>' : `<button class="btn btn-sm" data-action="mod-remove" data-id="${u.id}">Yetkiyi kaldır</button>`}</div></div>`).join('')}</div></section>
         <section class="card card-pad stack"><h2 style="font-size:16px">Moderatör ata</h2><form class="row" style="flex-wrap:wrap" data-form="assign-mod"><label class="sr-only" for="mod-user">Üye</label><select class="select grow" id="mod-user" name="user" style="min-width:200px">${cands.map((u) => `<option value="${u.id}">${esc(u.name)}</option>`).join('')}</select><button class="btn btn-primary">${icon('shield', 'ico-sm')}Moderatör yap</button></form></section>`;
-    } else if (tab === 'departmanlar') {
-      body = `<div class="row pad-x">${commSel}</div>
-        ${comm.departments.map((dp, di) => `<section class="card"><div class="card-head"><h2>${icon('layers', 'ico-sm')} ${esc(dp.name)}</h2><span class="small muted">${dp.topics.length} konu</span></div>
-          <div class="list" style="margin-top:6px">${dp.topics.map((t, ti) => `<div class="list-item" style="flex-wrap:nowrap"><span class="grow small">${icon('hash', 'ico-sm')} ${esc(t.t)}</span><span class="badge ${t.open ? 'green' : ''}">${t.open ? 'Açık' : 'Kapalı'}</span><button class="btn btn-sm" data-action="topic-toggle" data-d="${di}" data-t="${ti}">${t.open ? 'Konuyu kapat' : 'Konuyu aç'}</button></div>`).join('')}
-          <form class="list-item" data-form="add-topic" data-d="${di}" style="flex-wrap:nowrap"><label class="sr-only" for="nt-${di}">Yeni konu</label><input class="input" id="nt-${di}" name="t" placeholder="Yeni konu başlığı" required maxlength="60" autocomplete="off"><button class="btn btn-sm btn-soft">Konu aç</button></form></div></section>`).join('')}
-        <section class="card card-pad stack"><h2 style="font-size:16px">Yeni departman</h2><form class="row" data-form="add-dept"><label class="sr-only" for="nd">Departman adı</label><input class="input" id="nd" name="name" placeholder="Örn. Sosyal medya ekibi" required maxlength="60" autocomplete="off"><button class="btn btn-primary">Ekle</button></form></section>`;
     } else if (tab === 'etiketler' && admin) {
       const SW = ['#437EF5', '#9970F5', '#E0579A', '#F46767', '#F08A24', '#D9A400', '#2FA36B', '#14A3B8'];
       const mine = state.tags.filter((t) => K.MANAGED.includes(t.community));

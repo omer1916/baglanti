@@ -803,7 +803,6 @@
   };
 
   A['mod-remove'] = (el) => { const c = C(UI.adminComm); c.moderators = c.moderators.filter((x) => x !== el.dataset.id); state.audit.push({ ts: Date.now(), who: state.me, text: `${U(el.dataset.id).name} moderatörlükten alındı (${c.name})` }); refresh(); toast('Moderatör yetkisi kaldırıldı'); };
-  A['topic-toggle'] = (el) => { const t = C(UI.adminComm).departments[+el.dataset.d].topics[+el.dataset.t]; t.open = !t.open; refresh(); toast(t.open ? 'Konu açıldı' : 'Konu kapatıldı'); };
 
   A.unblock = (el) => { state.privacy.blocked.splice(+el.dataset.i, 1); refresh(); toast('Engel kaldırıldı'); };
   A['block-user'] = (el) => confirmModal({ title: 'Kullanıcıyı engelle', text: `<b>${esc(el.dataset.name)}</b> seni bulamayacak, mesaj gönderemeyecek ve içeriklerini görmeyeceksin. Ayarlardan geri alabilirsin.`, ok: 'Engelle', danger: true, onOk: () => { state.privacy.blocked.push(el.dataset.name); refresh(); toast('Kullanıcı engellendi'); } });
@@ -1092,8 +1091,6 @@
   };
   F['block-add'] = (f) => { const n = f.name.value.trim(); if (!n) return; state.privacy.blocked.push(n); refresh(); toast('Kullanıcı engellendi'); };
   F['assign-mod'] = (f) => { const c = C(UI.adminComm); const id = f.user.value; if (!c.moderators.includes(id)) c.moderators.push(id); state.audit.push({ ts: Date.now(), who: state.me, text: `${U(id).name} moderatör olarak atandı (${c.name})` }); refresh(); toast(`${U(id).name} moderatör olarak atandı`); };
-  F['add-topic'] = (f) => { const t = f.t.value.trim(); if (!t) return; C(UI.adminComm).departments[+f.dataset.d].topics.push({ t, open: true }); refresh(); toast('Konu açıldı'); };
-  F['add-dept'] = (f) => { const n = f.name.value.trim(); if (!n) return; C(UI.adminComm).departments.push({ id: uid('d'), name: n, topics: [] }); refresh(); toast('Departman eklendi'); };
   F.chat = (f) => {
     if (noMsg()) return;
     const conv = state.conversations.find((c) => c.id === f.dataset.id);

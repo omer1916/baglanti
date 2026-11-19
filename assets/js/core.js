@@ -205,7 +205,7 @@
   const ROLES = {
     uye: { label: 'Bireysel kullanıcı', short: 'Üye', desc: 'İçeriklere erişir, etkinliklere katılır, üye olduğu gruplarla senkron kalır.' },
     moderator: { label: 'Topluluk moderatörü', short: 'Moderatör', desc: 'İçerik performansını ve etkileşimi takip eder, şikâyetleri inceler.' },
-    yonetici: { label: 'Topluluk yöneticisi', short: 'Yönetici', desc: 'Kuralları uygular; üyeleri, etkinlikleri, departmanları ve moderatörleri yönetir.' },
+    yonetici: { label: 'Topluluk yöneticisi', short: 'Yönetici', desc: 'Kuralları uygular; üyeleri, etkinlikleri, etiketleri ve moderatörleri yönetir.' },
     marka: { label: 'Sponsor', short: 'Sponsor', desc: 'Topluluk sponsorluğunu üstlenir, toplulukların ihtiyaçlarını karşılar.' },
     site: { label: 'Site yöneticisi', short: 'Site yön.', desc: 'Mezun başvurularını doğrular, etiket uyarılarını inceler.' }
   };

@@ -57,7 +57,7 @@ GitHub Pages özel HTTP başlığı ayarlamaya izin vermez. `frame-ancestors`, `
 | — | Etiketler | `#/yonetim?tab=etiketler`: topluluk yöneticisi etiket oluşturur, yazı rengini hazır renklerden ya da renk seçiciden belirler, rengi sonradan değiştirir veya siler |
 | — | İş & staj ilanları | `#/ilanlar`: sponsorlar etiket seçerek iş, staj, yarı zamanlı ve gönüllü ilanı verir; üyeler tür, etiket, çalışma şekli ve aramayla filtreler, etiket takip eder, kaydeder ve başvurur. İlanlar akışa karışmaz |
 | — | Profil belgeleri | `#/profil?tab=belgeler`: sertifika, proje ve CV için PDF yükleme (yalnızca PDF, içerik `%PDF-` ile doğrulanır, en fazla 1,5 MB), açma ve silme |
-| 11 | Gruplar | Herkese açık, özel ve gizli grup; üyelik isteği; kurallar; departmanlar |
+| 11 | Gruplar | Herkese açık, özel ve gizli grup; üyelik isteği; kurallar |
 | 12 | Sponsor sayfaları | `#/sayfa/kuzey`: sponsor rolünde istatistik, yayın takvimi ve sayfa rolleri |
 | 13 | Hikâyeler / dikey video | Akışın üstündeki topluluk hikâyeleri (24 saat, sessize al, gizle) |
 | 14 | Mesajlaşma | `#/mesajlar`: bire bir ve grup sohbetleri, dosya veya görsel gönderme. Üye (bireysel kullanıcı) rolünde şimdilik kapalı |
