@@ -207,6 +207,9 @@
   const canMessage = () => state.role !== 'uye';
   const isBrand = () => state.role === 'marka';
   // Site yöneticisi demo rolü değil: ayrı yönetici girişiyle (#/admin) açılan oturum
+  // Topluluk ayarı: üyeler toplulukta paylaşım yapabilir mi (yönetici ve moderatörler her zaman yapabilir)
+  const manages = (id) => isManager() && MANAGED.includes(id);
+  const canPostIn = (c) => !!c && c.joined && (c.memberPosts !== false || manages(c.id));
   const isSite = () => !!(window.Admin && window.Admin.session());
 
   /* ---------------- etkinlik kayıt formu ---------------- */
@@ -452,7 +455,7 @@
   /* ---------------- dışa aktar ---------------- */
   window.Core = {
     state, save, reset, mode, KEYS, buildWorkspace, $, $$, esc, setHTML, replaceHTML, appendHTML, lower, num, uid, initials, timeAgo, fmt, daysLeft,
-    ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand, isSite, canMessage, safeUrl, FORM_FIELDS, canSeeResponses, tagLimit, userTags, myTags, checkTagLoad, sync,
+    ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand, isSite, canMessage, manages, canPostIn, safeUrl, FORM_FIELDS, canSeeResponses, tagLimit, userTags, myTags, checkTagLoad, sync,
     U, C, P, E, N, me, entity, avatar, safePhoto, verified, icon, sceneSVG, media, readApps, writeApps
   };
   syncApps();

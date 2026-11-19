@@ -87,7 +87,7 @@
             <button data-action="save" data-id="${p.id}">${icon('bookmark')}${p.saved ? 'Kaydedilenlerden çıkar' : 'Gönderiyi kaydet'}</button>
             <button data-action="copy-link" data-id="${p.id}">${icon('link')}Bağlantıyı kopyala</button>
             ${mine ? `<hr><button data-action="edit-post" data-id="${p.id}">${icon('edit')}Düzenle</button><button class="danger" data-action="delete-post" data-id="${p.id}">${icon('trash')}Sil</button>` : `<button data-action="hide-post" data-id="${p.id}">${icon('eyeOff')}Gönderiyi gizle</button><button data-action="report" data-kind="Gönderi" data-id="${p.id}">${icon('flag')}Bildir</button>`}
-            ${canModerate(p) && !mine ? `<hr><div class="menu-label">Moderasyon</div><button class="danger" data-action="mod-remove-post" data-id="${p.id}">${icon('shield')}İçeriği kaldır</button>` : ''}
+            ${canModerate(p) && !mine ? `<hr><div class="menu-label">Moderasyon</div><button class="danger" data-action="mod-remove-post" data-id="${p.id}">${icon('trash')}Gönderiyi kaldır</button>` : ''}
           </div>
         </div>
       </header>
@@ -474,7 +474,7 @@
     } else if (tab === 'gonderiler') {
       const posts = state.posts.filter((p) => p.community === c.id);
       body = `${c.pinned ? `<div class="pinned">${icon('pin')}<div><b>Sabitlenmiş duyuru</b><p class="small">${esc(c.pinned)}</p></div></div>` : ''}
-        ${c.joined ? `<section class="card edge composer"><div class="row">${avatar({ ...me(), kind: 'user' }, 'md')}<button class="composer-input" data-action="compose" data-community="${c.id}">${esc(c.name)} grubunda paylaş…</button></div></section>` : ''}
+        ${K.canPostIn(c) ? `<section class="card edge composer"><div class="row">${avatar({ ...me(), kind: 'user' }, 'md')}<button class="composer-input" data-action="compose" data-community="${c.id}">${esc(c.name)} grubunda paylaş…</button></div></section>` : c.joined ? `<div class="callout">${icon('lock')}<span>Bu toplulukta yalnızca yönetici ve moderatörler paylaşım yapabilir.</span></div>` : ''}
         ${posts.length ? posts.map(postCard).join('') : `<div class="card">${empty('layers', 'Henüz gönderi yok', 'İlk paylaşımı sen yap.')}</div>`}`;
     } else if (tab === 'hakkinda') {
       const mods = c.moderators.map((id) => U(id)).filter(Boolean);
@@ -511,7 +511,7 @@
           <div class="grow"><h1>${esc(c.name)}</h1><p class="muted small">${esc(c.city)} · ${num(c.members)} üye · ${esc(c.type)} ${c.kind === 'grup' ? 'grup' : 'topluluk'}</p></div>
           <div class="profile-actions">${joinButton(c)}${K.canMessage() ? `<a class="btn" href="#/mesajlar">${icon('message', 'ico-sm')}Mesaj</a>` : ''}
             <div class="menu-wrap"><button class="btn" data-action="toggle-menu" data-menu="cm-${c.id}" aria-label="Diğer seçenekler" aria-haspopup="true" aria-expanded="false">${icon('more')}</button>
-              <div class="popover" data-popover="cm-${c.id}" hidden><button data-action="copy-link" data-href="${base}">${icon('link')}Bağlantıyı kopyala</button><button data-action="report" data-kind="Topluluk" data-id="${c.id}">${icon('flag')}Topluluğu bildir</button>${manage ? `<hr><a href="#/yonetim">${icon('shield')}Yönetim paneli</a>` : ''}</div></div>
+              <div class="popover" data-popover="cm-${c.id}" hidden><button data-action="copy-link" data-href="${base}">${icon('link')}Bağlantıyı kopyala</button><button data-action="report" data-kind="Topluluk" data-id="${c.id}">${icon('flag')}Topluluğu bildir</button>${manage ? `<hr>${K.isAdmin() ? `<button data-action="comm-settings" data-id="${c.id}">${icon('settings')}Topluluk ayarları</button>` : ''}<a href="#/yonetim">${icon('shield')}Yönetim paneli</a>` : ''}</div></div>
           </div>
         </div>
         ${tabs([['gonderiler', 'Gönderiler'], ['hakkinda', 'Hakkında'], ['etkinlikler', 'Etkinlikler'], ['medya', 'Medya'], ['departmanlar', 'Departmanlar'], ['sponsorlar', 'Sponsorlar']], tab, base)}
@@ -535,7 +535,7 @@
     return {
       title: 'Etkinlikler',
       html: `
-      <div class="page-head"><div><h1>Etkinlikler</h1><p>Topluluk etkinlikleri, ortak etkinlikler ve hatırlatmalar.</p></div>${K.isAdmin() ? `<button class="btn btn-primary" data-action="compose" data-type="event">${icon('plus')}Etkinlik oluştur</button>` : ''}</div>
+      <div class="page-head"><div><h1>Etkinlikler</h1><p>Topluluk etkinlikleri, ortak etkinlikler ve hatırlatmalar.</p></div>${K.isManager() ? `<button class="btn btn-primary" data-action="compose" data-type="event">${icon('plus')}Etkinlik oluştur</button>` : ''}</div>
       <section class="card" style="overflow:hidden">${tabs([['yaklasan', 'Yaklaşan'], ['katildiklarim', 'Katıldıklarım'], ['ortak', 'Ortak etkinlikler'], ['gecmis', 'Geçmiş']], tab, '#/etkinlikler')}</section>
       ${chips(cats.map((c) => [c, c]), UI.eventCat, 'event-cat')}
       ${evs.length ? `<div class="stack">${evs.map((e) => `<article class="card event-card">
@@ -1012,7 +1012,7 @@
     }
     const admin = K.isAdmin();
     const tab = r.q.get('tab') || 'genel';
-    const T = [['genel', 'Genel bakış'], ['moderasyon', 'Moderasyon'], ['uyelik', 'Üyelik istekleri'], ...(admin ? [['etiketler', 'Etiketler'], ['moderatorler', 'Moderatörler'], ['departmanlar', 'Departmanlar & konular']] : []), ['kayitlar', 'Denetim kayıtları']];
+    const T = [['genel', 'Genel bakış'], ['moderasyon', 'Moderasyon'], ['uyelik', 'Üyelik istekleri'], ...(admin ? [['ayarlar', 'Topluluk ayarları'], ['etiketler', 'Etiketler'], ['moderatorler', 'Moderatörler'], ['departmanlar', 'Departmanlar & konular']] : []), ['kayitlar', 'Denetim kayıtları']];
     const comm = C(UI.adminComm);
     const commSel = `<label class="sr-only" for="admin-comm">Topluluk</label><select class="select" id="admin-comm" data-change="admin-comm" style="width:auto">${K.MANAGED.map((id) => `<option value="${id}" ${UI.adminComm === id ? 'selected' : ''}>${esc(C(id).name)}</option>`).join('')}</select>`;
     let body = '';
@@ -1096,6 +1096,13 @@
         <section class="card"><div class="card-head"><h2>Topluluklarının etiketleri</h2><span class="small muted">Rengi değiştirmek için renk kutusuna tıkla</span></div>
           <div class="list" style="margin-top:6px">${mine.length ? mine.map((t) => `<div class="list-item">${tagChip(t)}<span class="grow small muted">${esc(C(t.community).name)} · ${usage(t)} ilan · ${state.followedTags.includes(t.id) ? 'takip ediyorsun' : ''}</span><label class="color-edit" title="Rengi değiştir"><input type="color" value="${esc(t.color)}" data-change="tag-color" data-id="${esc(t.id)}" aria-label="${esc(t.name)} rengini değiştir"></label><button class="icon-btn" data-action="tag-del" data-id="${esc(t.id)}" aria-label="${esc(t.name)} etiketini sil">${icon('trash')}</button></div>`).join('') : '<div class="list-item muted">Henüz etiket yok.</div>'}</div></section>
         ${others.length ? `<section class="card card-pad stack"><h3 class="card-title">Diğer toplulukların etiketleri</h3><div class="tag-row">${others.map(tagChip).join('')}</div></section>` : ''}`;
+    } else if (tab === 'ayarlar' && admin) {
+      const on = comm.memberPosts !== false;
+      body = `<div class="row pad-x">${commSel}</div>
+        <section class="card card-pad stack"><h2 style="font-size:16px">${esc(comm.name)} · paylaşım izinleri</h2>
+          <div class="setting-row"><div><b>Üyeler toplulukta gönderi paylaşabilir</b><span class="muted">Kapatırsan toplulukta yalnızca sen ve moderatörler paylaşım yapar; üyeler gönderileri görmeye, beğenmeye ve yorumlamaya devam eder.</span></div><label class="switch"><input type="checkbox" data-change="comm-setting" data-key="memberPosts" ${on ? 'checked' : ''} aria-label="Üyeler toplulukta gönderi paylaşabilir"><span></span></label></div>
+        </section>
+        <section class="card card-pad stack"><h2 style="font-size:16px">Üye gönderilerini kaldırma</h2><p class="small muted" style="margin:0">Toplulukta kurallara uymayan bir gönderiyi, gönderinin <b>⋯</b> menüsünden <b>Gönderiyi kaldır</b> ile silebilirsin. Moderatörler de kaldırabilir; her işlem denetim kayıtlarına yazılır.</p><a class="btn btn-sm" style="justify-self:start;align-self:flex-start" href="#/topluluk/${comm.id}">${icon('arrowRight', 'ico-sm')}Topluluğun gönderilerine git</a></section>`;
     } else if (tab === 'kayitlar') {
       body = `<section class="card"><div class="card-head"><h2>Denetim kayıtları</h2><span class="small muted">Tüm moderasyon işlemleri izlenebilir</span></div><div class="list" style="margin-top:6px">${state.audit.slice().sort((a, b) => b.ts - a.ts).map((a) => `<div class="list-item">${avatar({ ...U(a.who), kind: 'user' }, 'sm')}<span class="grow"><b class="small">${esc(a.text)}</b><span>${esc(a.by || U(a.who).name)} · ${timeAgo(a.ts)}</span></span></div>`).join('')}</div></section>`;
     }

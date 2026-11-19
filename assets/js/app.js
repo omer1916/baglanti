@@ -190,6 +190,7 @@
       const type = allowed.includes(o.type) ? o.type : 'post';
       let target = o.community || '';
       if (type !== 'post' && !K.MANAGED.includes(target)) target = K.MANAGED[0];
+      if (type === 'post' && target && !K.canPostIn(C(target))) target = '';
       cs = { type, text: '', media: [], location: '', feeling: '', visibility: type === 'announcement' ? 'Topluluk üyeleri' : 'Herkese açık', target, showLoc: false, showFeel: !!o.feeling, ev: { title: '', date: '', time: '19:00', location: '', link: '', capacity: 50, partners: [], cover: '', formMode: 'none', formLink: '', form: { fields: ['phone'], questions: [] } }, need: { title: '', category: 'Ürün', goal: 10, deadline: '' } };
     }
     renderComposer();
@@ -205,7 +206,7 @@
     const who = composerIdentity();
     const max = 1000;
     const targets = cs.type === 'post'
-      ? [['', K.isBrand() ? 'Sayfamda' : 'Profilimde'], ...Object.values(state.communities).filter((c) => c.joined).map((c) => [c.id, c.name])]
+      ? [['', K.isBrand() ? 'Sayfamda' : 'Profilimde'], ...Object.values(state.communities).filter((c) => K.canPostIn(c)).map((c) => [c.id, c.name])]
       : K.MANAGED.map((id) => [id, C(id).name]);
     const otherComms = Object.values(state.communities).filter((c) => c.id !== cs.target && c.type !== 'Gizli');
     const ph = { post: 'Aklından neler geçiyor?', event: 'Etkinliği kısaca anlat…', announcement: 'Duyurunu yaz…', sponsor: 'Topluluğun neye ihtiyaç duyuyor, neden?' }[cs.type];
@@ -295,6 +296,7 @@
       Object.assign(p, { text, media: cs.media, visibility: cs.visibility, location: cs.location.trim(), feeling: cs.feeling, edited: true });
       closeModal(); refresh(); return toast('Gönderi güncellendi');
     }
+    if (!cs.editId && cs.type === 'post' && cs.target && !K.canPostIn(C(cs.target))) return toast('Bu toplulukta yalnızca yönetici ve moderatörler paylaşım yapabilir.', 'info');
     const post = { id: uid('p'), author: K.isBrand() ? { kind: 'page', id: K.BRAND_PAGE } : cs.type === 'post' ? { kind: 'user', id: state.me } : { kind: 'community', id: cs.target }, community: cs.target || null, ts: Date.now(), visibility: cs.visibility, type: cs.type, text, media: cs.media, location: cs.location.trim(), feeling: cs.feeling, likes: 0, liked: false, saved: false, shares: 0, comments: [] };
     if (cs.type === 'event') {
       const ev = cs.ev;
@@ -489,7 +491,8 @@
   A['unhide-post'] = (el) => { state.hiddenPosts = state.hiddenPosts.filter((x) => x !== el.dataset.id); rerenderPost(el.dataset.id); };
   A['edit-post'] = (el) => openComposer({ editId: el.dataset.id });
   A['delete-post'] = (el) => confirmModal({ title: 'Gönderiyi sil', text: 'Bu gönderi kalıcı olarak silinecek. Bu işlem geri alınamaz.', ok: 'Sil', danger: true, onOk: () => { state.posts = state.posts.filter((p) => p.id !== el.dataset.id); refresh(); toast('Gönderi silindi'); } });
-  A['mod-remove-post'] = (el) => confirmModal({ title: 'İçeriği kaldır', text: 'Gönderi kural ihlali nedeniyle kaldırılacak ve paylaşan kişiye bildirim gidecek. İşlem denetim kayıtlarına eklenir.', ok: 'Kaldır', danger: true, onOk: () => { state.posts = state.posts.filter((p) => p.id !== el.dataset.id); state.audit.push({ ts: Date.now(), who: state.me, text: 'Gönderi moderasyon tarafından kaldırıldı' }); refresh(); toast('İçerik kaldırıldı'); } });
+  A['comm-settings'] = (el) => { if (!K.isAdmin() || !K.MANAGED.includes(el.dataset.id)) return; UI.adminComm = el.dataset.id; location.hash = '#/yonetim?tab=ayarlar'; };
+  A['mod-remove-post'] = (el) => confirmModal({ title: 'Gönderiyi kaldır', text: 'Gönderi topluluktan kalıcı olarak kaldırılacak ve paylaşan kişiye bildirim gidecek. İşlem denetim kayıtlarına eklenir.', ok: 'Gönderiyi kaldır', danger: true, onOk: () => { const p = state.posts.find((x) => x.id === el.dataset.id); if (!p || !p.community || !K.manages(p.community)) return; const who = entity(p.author)?.name || 'Bir üye'; state.posts = state.posts.filter((x) => x !== p); state.audit.push({ ts: Date.now(), who: state.me, text: `${who} kişisinin gönderisi kaldırıldı (${C(p.community).name})` }); refresh(); toast('Gönderi kaldırıldı'); } });
   A.report = (el) => {
     const reasons = ['Spam veya yanıltıcı', 'Taciz / nefret söylemi', 'Sahte hesap', 'Telif ihlali', 'Kişisel veri paylaşımı', 'Diğer'];
     openModal({ title: `${esc(el.dataset.kind)} bildir`, form: 'report', formAttrs: `data-kind="${esc(el.dataset.kind)}" data-id="${esc(el.dataset.id)}"`,
@@ -1020,6 +1023,12 @@
     const file = photoFile(el); if (!file || !cs) return;
     try { cs.ev.cover = await cleanImage(file, 1600, true); } catch (e) { return toast('Görsel okunamadı', 'info'); }
     renderComposer();
+  };
+  CH['comm-setting'] = (el) => {
+    const c = C(UI.adminComm); if (!K.isAdmin() || !c || !K.MANAGED.includes(c.id) || el.dataset.key !== 'memberPosts') return;
+    c.memberPosts = el.checked;
+    state.audit.push({ ts: Date.now(), who: state.me, text: `${c.name}: üye paylaşımı ${el.checked ? 'açıldı' : 'kapatıldı'}` });
+    save(); toast(el.checked ? 'Üyeler artık toplulukta paylaşım yapabilir' : 'Toplulukta yalnızca yönetici ve moderatörler paylaşım yapabilir');
   };
   CH['cs-form-tpl'] = (el) => { const t = FORM_TPL[el.value]; if (!t) return; cs.ev.form = { fields: t.fields.slice(), questions: t.questions.map((q) => ({ ...q })) }; renderComposer(); toast(`“${t.name}” şablonu eklendi; soruları düzenleyebilirsin`); };
   CH['rg-grad'] = (el) => { const g = !!el.value; const cl = $('#rg-club-label'); if (cl) setHTML(cl, g ? 'Kulüp <span class="muted">(isteğe bağlı)</span>' : 'Kulüp'); const s = $('#rg-studentNo'); if (s) s.closest('.field').hidden = g; const y = $('#rg-gradYear-box'); if (y) y.hidden = !g; const n = $('#rg-grad-note'); if (n) n.hidden = !g; };
