@@ -47,18 +47,18 @@ GitHub Pages özel HTTP başlığı ayarlamaya izin vermez. `frame-ancestors`, `
 | Slayt | Konu | Sitede nerede |
 |---|---|---|
 | 1, 3 | Vizyon ve değer önerisi | Tanıtım sayfası (`#/hosgeldin`) |
-| 4 | Hedef kullanıcılar (üye, moderatör, yönetici, marka) | Rol seçimi; her rolün menüsü ve yetkileri farklı |
-| 5 | Site haritası | Sol menü: akış, keşfet, topluluklar, etkinlikler, sponsorlar, medya, üyeler. Bildirimler (yönetici, moderatör ve markada mesajlar da) üst çubukta; hesapla ilgili her şey profil fotoğrafı menüsünde |
+| 4 | Hedef kullanıcılar (üye, moderatör, yönetici, sponsor) | Rol seçimi; her rolün menüsü ve yetkileri farklı |
+| 5 | Site haritası | Sol menü: akış, keşfet, topluluklar, etkinlikler, sponsorlar, medya, üyeler. Bildirimler (yönetici, moderatör ve sponsorda mesajlar da) üst çubukta; hesapla ilgili her şey profil fotoğrafı menüsünde |
 | 6 | Haber akışı (3 kolon) | Ana sayfa: sol menü, ortada akış, sağda “Senin için” |
 | 7 | Gönderi kartı | Beğen, paylaş, kaydet, gizle, bildir; kendi gönderinde düzenle ve sil. Gönderilere yorum yazma kapalı |
 | 8 | Gönderi oluşturma | “Oluştur” penceresi: karakter sınırı, medya önizleme, konum, duygu, görünürlük, taslak |
 | 9 | Topluluk profili | `#/topluluk/doga`: kapak, sekmeler, sabitlenmiş duyuru |
 | 10 | Üyeler ve bağlantılar | `#/uyeler`: gelen istekler, gönderilen istekler, öneriler, üye listesi. Kayıtta kulüp seçilir; başvuru `#/yonetim?tab=uyelik` listesine üyenin bilgileriyle düşer, yönetici onaylar veya reddeder, üyeye sonuç bildirimi gider |
 | — | Etiketler | `#/yonetim?tab=etiketler`: topluluk yöneticisi etiket oluşturur, yazı rengini hazır renklerden ya da renk seçiciden belirler, rengi sonradan değiştirir veya siler |
-| — | İş & staj ilanları | `#/ilanlar`: markalar etiket seçerek iş, staj, yarı zamanlı ve gönüllü ilanı verir; üyeler tür, etiket, çalışma şekli ve aramayla filtreler, etiket takip eder, kaydeder ve başvurur. İlanlar akışa karışmaz |
+| — | İş & staj ilanları | `#/ilanlar`: sponsorlar etiket seçerek iş, staj, yarı zamanlı ve gönüllü ilanı verir; üyeler tür, etiket, çalışma şekli ve aramayla filtreler, etiket takip eder, kaydeder ve başvurur. İlanlar akışa karışmaz |
 | — | Profil belgeleri | `#/profil?tab=belgeler`: sertifika, proje ve CV için PDF yükleme (yalnızca PDF, içerik `%PDF-` ile doğrulanır, en fazla 1,5 MB), açma ve silme |
 | 11 | Gruplar | Herkese açık, özel ve gizli grup; üyelik isteği; kurallar; departmanlar |
-| 12 | Sayfalar ve işletmeler | `#/sayfa/kuzey`: marka rolünde istatistik, yayın takvimi ve sayfa rolleri |
+| 12 | Sponsor sayfaları | `#/sayfa/kuzey`: sponsor rolünde istatistik, yayın takvimi ve sayfa rolleri |
 | 13 | Hikâyeler / dikey video | Akışın üstündeki topluluk hikâyeleri (24 saat, sessize al, gizle) |
 | 14 | Mesajlaşma | `#/mesajlar`: bire bir ve grup sohbetleri, dosya veya görsel gönderme. Üye (bireysel kullanıcı) rolünde şimdilik kapalı |
 | 15 | Bildirim merkezi | Okundu/okunmadı, tür filtresi, sıklık ve sessiz saat ayarları |

@@ -149,7 +149,7 @@
     uye: { label: 'Bireysel kullanıcı', short: 'Üye', desc: 'İçeriklere erişir, etkinliklere katılır, üye olduğu gruplarla senkron kalır.' },
     moderator: { label: 'Topluluk moderatörü', short: 'Moderatör', desc: 'İçerik performansını ve etkileşimi takip eder, şikâyetleri inceler.' },
     yonetici: { label: 'Topluluk yöneticisi', short: 'Yönetici', desc: 'Kuralları uygular; üyeleri, etkinlikleri, departmanları ve moderatörleri yönetir.' },
-    marka: { label: 'Marka / işletme', short: 'Marka', desc: 'Topluluk sponsorluğunu üstlenir, toplulukların ihtiyaçlarını karşılar.' }
+    marka: { label: 'Sponsor', short: 'Sponsor', desc: 'Topluluk sponsorluğunu üstlenir, toplulukların ihtiyaçlarını karşılar.' }
   };
   const MANAGED = ['doga', 'kodkahve'];
   const BRAND_PAGE = 'kuzey';

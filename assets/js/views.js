@@ -144,7 +144,7 @@
     ['Bağlantı nedir?', 'Toplulukların etkinlik duyurularını, sosyal içeriklerini ve sponsor ihtiyaçlarını paylaştığı; üyelerin keşfettiği ve katıldığı bir topluluk platformudur.'],
     ['Bir gruba nasıl katılırım?', 'Herkese açık gruplara “Katıl” ile hemen üye olursun. Özel gruplar yönetici onayı ister; gizli gruplar yalnızca davetle görünür.'],
     ['Ortak etkinlik nedir?', 'Birden fazla topluluğun birlikte düzenlediği etkinliklerdir. Her iki topluluğun üyeleri de etkinliği akışında görür ve katılabilir.'],
-    ['Sponsor ihtiyacı nasıl yayınlanır?', 'Topluluk yöneticileri gönderi oluştururken “Sponsor ihtiyacı” türünü seçer; hedef miktar ve son tarih belirtir. Markalar “Destek ol” ile katkı sunar.'],
+    ['Sponsor ihtiyacı nasıl yayınlanır?', 'Topluluk yöneticileri gönderi oluştururken “Sponsor ihtiyacı” türünü seçer; hedef miktar ve son tarih belirtir. Sponsorlar “Destek ol” ile katkı sunar.'],
     ['Gönderimi kimler görebilir?', 'Her gönderide görünürlüğü sen seçersin: Herkese açık, Topluluk üyeleri, Arkadaşlar veya Sadece ben. Yayınladıktan sonra düzenleyebilir ya da silebilirsin.'],
     ['Uygunsuz bir içeriği nasıl bildiririm?', 'Gönderinin ⋯ menüsünden “Bildir”i seç. Bildirimler öncelik ve risk sınıfına göre moderatör kuyruğuna düşer; sonuç sana bildirilir.'],
     ['Bildirimleri nasıl azaltırım?', 'Bildirimler sayfasından tür bazında kapatabilir, sıklığı günlük/haftalık özete çevirebilir ve sessiz saatleri açabilirsin.'],
@@ -198,7 +198,7 @@
             ${[['megaphone', 'Etkinlik duyurularını paylaş', 'Metin, fotoğraf, video ve bağlantı paylaşımı. Etkinlik ve sponsor duyuruları.', 'g0'],
                ['compass', 'Etkinlikleri keşfet', 'Kişiler, sayfalar, gruplar ve yeni konular tek arama noktasında.', 'g5'],
                ['users', 'Topluluklar arası bağ kur', 'Kulübüne katıl, etkinliklere birlikte git, birden fazla topluluğun ortak etkinliklerinde buluş.', 'g2'],
-               ['briefcase', 'İş ve staj fırsatlarını yakala', 'Markaların ilanlarını ilgi alanı etiketleriyle süz; sana uygun olanlar öne çıksın.', 'g1']]
+               ['briefcase', 'İş ve staj fırsatlarını yakala', 'Sponsorların ilanlarını ilgi alanı etiketleriyle süz; sana uygun olanlar öne çıksın.', 'g1']]
               .map(([ic, t, d, g]) => `<li><span class="l-feat-ico ${g}">${icon(ic)}</span><div><h3>${t}</h3><p>${d}</p></div></li>`).join('')}
           </ul>
         </section>
@@ -216,7 +216,7 @@
           <ol class="l-timeline">
             <li><h3>Kulübünü seç</h3><p>Kayıt olurken kulübünü seç; başvurun yöneticiye gider, onaylanınca üyesin.</p></li>
             <li><h3>Etkinlikleri takip et</h3><p>Kişiselleştirilmiş akışta duyuruları gör, katılımını bildir, hatırlatma al.</p></li>
-            <li><h3>Sponsorla buluş</h3><p>Topluluklar ihtiyaçlarını yayınlar, markalar destek olur ve ilan verir.</p></li>
+            <li><h3>Sponsorla buluş</h3><p>Topluluklar ihtiyaçlarını yayınlar, sponsorlar destek olur ve ilan verir.</p></li>
           </ol>
         </section>
 
@@ -602,9 +602,9 @@
     return {
       title: 'Sponsorlar',
       html: `
-      <div class="page-head"><div><h1>Sponsorlar ve sayfalar</h1><p>Topluluklar ihtiyaçlarını yayınlar, markalar ve işletmeler destek olur.</p></div>${K.isAdmin() ? `<button class="btn btn-primary" data-action="compose" data-type="sponsor">${icon('plus')}İhtiyaç yayınla</button>` : ''}</div>
+      <div class="page-head"><div><h1>Sponsorlar ve sayfalar</h1><p>Topluluklar ihtiyaçlarını yayınlar, sponsorlar destek olur.</p></div>${K.isAdmin() ? `<button class="btn btn-primary" data-action="compose" data-type="sponsor">${icon('plus')}İhtiyaç yayınla</button>` : ''}</div>
       ${K.isBrand() ? `<div class="callout">${icon('building')}<span><b>Kuzey Kahve</b> sayfası adına görüntülüyorsun. “Destek ol” ile toplulukların ihtiyaçlarını karşılayabilirsin.</span></div>` : ''}
-      <section class="card" style="overflow:hidden">${tabs([['ihtiyaclar', 'Açık ihtiyaçlar'], ['markalar', 'Sponsor markalar'], ...(K.isBrand() ? [['destekler', 'Desteklerim']] : [])], tab, '#/sponsorlar')}</section>
+      <section class="card" style="overflow:hidden">${tabs([['ihtiyaclar', 'Açık ihtiyaçlar'], ['markalar', 'Sponsorlar'], ...(K.isBrand() ? [['destekler', 'Desteklerim']] : [])], tab, '#/sponsorlar')}</section>
       ${tab === 'markalar'
         ? `<div class="grid-cards">${pages.map((p) => `<article class="card ccard">${media({ scene: p.scene })}<div class="ccard-body">${avatar({ ...p, kind: 'page' }, 'lg')}<h3><a href="#/sayfa/${p.id}">${esc(p.name)}</a> ${verified(p.verified)}</h3><span class="small muted">${esc(p.category)} · ${num(p.followers)} takipçi</span><p class="small muted">${esc(p.desc)}</p></div><div class="ccard-foot"><button class="btn btn-sm ${p.following ? 'btn-success' : 'btn-soft'}" data-action="follow-page" data-id="${p.id}">${p.following ? 'Takip ediliyor' : 'Takip et'}</button><a class="btn btn-sm" href="#/sayfa/${p.id}">Sayfa</a></div></article>`).join('')}</div>`
         : `${chips(cats.map((c) => [c, c]), UI.sponsorCat, 'sponsor-cat')}
@@ -625,7 +625,7 @@
       body = (own ? `<section class="card edge composer"><div class="row">${avatar({ ...p, kind: 'page' }, 'md')}<button class="composer-input" data-action="compose">${esc(p.name)} olarak paylaş…</button></div></section>` : '') + (posts.length ? posts.map(postCard).join('') : `<div class="card">${empty('layers', 'Henüz gönderi yok', 'Sayfa paylaşımları burada görünür.')}</div>`);
     } else if (tab === 'hakkinda') {
       const sponsored = Object.values(state.communities).filter((c) => c.sponsors.includes(p.id));
-      body = `<section class="card card-pad stack-lg"><div class="stack"><h2 style="font-size:16px">Hakkında</h2><p>${esc(p.desc)}</p><div class="meta-line">${icon('tag')}${esc(p.category)}</div><div class="meta-line">${icon('pin')}${esc(p.city)}</div><div class="meta-line">${icon('badgeCheck')}${p.verified ? 'Doğrulanmış işletme' : 'Doğrulama bekliyor'}</div></div>
+      body = `<section class="card card-pad stack-lg"><div class="stack"><h2 style="font-size:16px">Hakkında</h2><p>${esc(p.desc)}</p><div class="meta-line">${icon('tag')}${esc(p.category)}</div><div class="meta-line">${icon('pin')}${esc(p.city)}</div><div class="meta-line">${icon('badgeCheck')}${p.verified ? 'Doğrulanmış sponsor' : 'Doğrulama bekliyor'}</div></div>
         <div class="stack"><h3 style="font-size:15px">Sponsor olduğu topluluklar</h3>${sponsored.length ? sponsored.map((c) => `<a class="row" href="#/topluluk/${c.id}">${avatar({ ...c, kind: 'community' }, 'sm')}<b class="small">${esc(c.name)}</b></a>`).join('') : '<span class="muted small">Henüz yok.</span>'}</div></section>`;
     } else if (tab === 'medya') {
       body = `<div class="gallery">${[p.scene, 'coffee', 'music', 'code', 'city', 'photo'].map((s, i) => `<button class="tile" data-action="lightbox-scene" data-scene="${s}" aria-label="Görseli büyüt">${media({ scene: s })}</button>`).join('')}</div>`;
@@ -881,10 +881,10 @@
     const tagFollow = `<h2 style="font-size:16px;margin-bottom:4px">Etiket takibi</h2><p class="small muted" style="margin-bottom:10px">Takip ettiğin etiketlerdeki ilanlar “Sana uygun” olarak işaretlenir.</p><div class="list">${state.tags.map((t) => { const on = state.followedTags.includes(t.id); return `<div class="list-item" style="padding:6px 0">${tagChip(t)}<span class="grow"></span><button class="btn btn-sm ${on ? 'btn-soft' : ''}" data-action="tag-follow" data-id="${esc(t.id)}" aria-pressed="${on}">${on ? 'Takipte' : 'Takip et'}</button></div>`; }).join('')}</div>`;
     return {
       title: 'İş & staj ilanları',
-      html: `<div class="page-head"><div><h1>İş ve staj ilanları</h1><p>Sponsor markaların iş, staj ve gönüllülük ilanları. Etiket seçerek sana uygun olanları bul.</p></div>${brand ? `<button class="btn btn-primary" data-action="job-new">${icon('plus', 'ico-sm')}İlan ver</button>` : ''}</div>
+      html: `<div class="page-head"><div><h1>İş ve staj ilanları</h1><p>Sponsorların iş, staj ve gönüllülük ilanları. Etiket seçerek sana uygun olanları bul.</p></div>${brand ? `<button class="btn btn-primary" data-action="job-new">${icon('plus', 'ico-sm')}İlan ver</button>` : ''}</div>
         <section class="card" style="overflow:hidden">${tabs(T3, tab, '#/ilanlar')}</section>
         <section class="card card-pad stack job-filters" aria-label="İlan filtreleri">
-          <form class="top-search job-search" role="search" data-form="jobs-search"><span aria-hidden="true">${icon('search')}</span><input type="search" name="q" value="${esc(J.q)}" placeholder="Pozisyon, marka veya şehir ara" aria-label="İlanlarda ara" autocomplete="off"></form>
+          <form class="top-search job-search" role="search" data-form="jobs-search"><span aria-hidden="true">${icon('search')}</span><input type="search" name="q" value="${esc(J.q)}" placeholder="Pozisyon, sponsor veya şehir ara" aria-label="İlanlarda ara" autocomplete="off"></form>
           ${chips([['Tümü', 'Tüm türler'], ...JOB_TYPES.map((t) => [t, t])], J.type, 'jobs-type')}
           <div><div class="xs muted" style="margin-bottom:6px">Etiketler <span>(birden fazla seçebilirsin)</span></div><div class="tag-row">${state.tags.map((t) => tagChip(t, `data-action="jobs-tag" data-value="${esc(t.id)}" aria-pressed="${J.tags.includes(t.id)}"`)).join('')}</div></div>
           <div class="row" style="gap:10px;flex-wrap:wrap">
