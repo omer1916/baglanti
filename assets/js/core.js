@@ -15,7 +15,7 @@
     s.onboarded = true;
     s.role = (acc && acc.role) || 'uye';
     if (acc && !acc.seeded) {
-      Object.assign(s.users.u0, { name: acc.name, handle: acc.username, city: acc.city || 'Bursa', bio: 'Bağlantı’ya yeni katıldım.', joined: String(new Date(acc.created).getFullYear()) });
+      Object.assign(s.users.u0, { name: acc.name, handle: acc.username, city: acc.city || 'Bursa', dept: acc.dept || '', bio: 'Bağlantı’ya yeni katıldım.', joined: String(new Date(acc.created).getFullYear()) });
       s.posts = s.posts.filter((p) => !(p.author.kind === 'user' && p.author.id === 'u0'));
       s.posts.forEach((p) => { p.comments = p.comments.filter((c) => c.user !== 'u0'); });
       s.docs = s.docs.filter((d) => d.owner !== 'u0');
@@ -50,6 +50,17 @@
   if (!state.memberRequests) state.memberRequests = [{ user: 'u4', community: 'kodkahve', ts: Date.now() - 50 * 60000 }, { user: 'u8', community: 'doga', ts: Date.now() - 300 * 60000 }];
   const RQ = { u4: ['Uludağ Üni. · Bilgisayar Müh.', '032190045'], u8: ['Bursa Teknik Üni. · Peyzaj Mimarlığı', '22051017'] };
   state.memberRequests.forEach((x) => { if (!x.dept && RQ[x.user]) [x.dept, x.studentNo] = RQ[x.user]; });
+  // Profillerde okul / bölüm gösteriliyor: eski kayıtlara ekle (kendi hesabın kayıttaki bilgiden gelir)
+  if (state.deptV !== 1) {
+    const sd = window.SEED().users;
+    let acc = null; if (mode === 'account') { try { acc = JSON.parse(localStorage.getItem(KEYS.auth)).account; } catch (e) { /* yok */ } }
+    Object.values(state.users).forEach((u) => {
+      if (u.dept !== undefined) return;
+      if (u.id === 'u0' && acc && !acc.seeded) u.dept = acc.dept || '';
+      else if (sd[u.id] && sd[u.id].dept) u.dept = sd[u.id].dept;
+    });
+    state.deptV = 1;
+  }
 
   let warnedQuota = false;
   function save(quiet) {
@@ -257,7 +268,8 @@
     briefcase: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>',
     tag: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>',
     sparkle: '<path d="M12 3c.6 4.5 2.5 6.4 7 7-4.5.6-6.4 2.5-7 7-.6-4.5-2.5-6.4-7-7 4.5-.6 6.4-2.5 7-7z"/>',
-    building: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M10 21v-3h4v3"/>'
+    building: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M10 21v-3h4v3"/>',
+    school: '<path d="M22 9 12 4 2 9l10 5 10-5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5M22 9v6"/>'
   };
   function icon(name, cls = '') { return `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-hidden="true">${IC[name] || ''}</svg>`; }
 

@@ -18,16 +18,16 @@
       me: 'u0',
 
       users: {
-        u0: { id: 'u0', name: 'Selin Koç', handle: 'selinkoc', city: 'Bursa', hue: 0, bio: 'Doğa yürüyüşü, fotoğraf ve iyi kahve. Hafta sonları rotadayım.', joined: '2024' },
-        u1: { id: 'u1', name: 'Deniz Yılmaz', handle: 'denizy', city: 'Bursa', hue: 1, bio: 'Kod & Kahve topluluk yöneticisi.' },
-        u2: { id: 'u2', name: 'Ece Demir', handle: 'ecedemir', city: 'Bursa', hue: 2, bio: 'Doğa fotoğrafçısı.' },
-        u3: { id: 'u3', name: 'Ayşe Kaya', handle: 'aysekaya', city: 'Bursa', hue: 3, bio: 'Doğa ve Kamp grubu moderatörü.', title: 'X Topluluğu Moderatörü' },
-        u4: { id: 'u4', name: 'Mert Arslan', handle: 'mertarslan', city: 'İstanbul', hue: 4, bio: 'Bisiklet ve şehir rotaları.' },
-        u5: { id: 'u5', name: 'Can Öztürk', handle: 'canozturk', city: 'Bursa', hue: 5, bio: 'Müzik atölyesi gitaristi.' },
-        u6: { id: 'u6', name: 'Zeynep Aydın', handle: 'zeynepaydin', city: 'İzmir', hue: 1, bio: 'Gönüllü Eller koordinatörü.' },
-        u7: { id: 'u7', name: 'Burak Şahin', handle: 'buraksahin', city: 'Bursa', hue: 2, bio: 'Kampçı, ekipman meraklısı.' },
-        u8: { id: 'u8', name: 'Elif Çelik', handle: 'elifcelik', city: 'Ankara', hue: 3, bio: 'Fotoğraf kulübü üyesi.' },
-        u9: { id: 'u9', name: 'Kaan Erdem', handle: 'kaanerdem', city: 'Bursa', hue: 4, bio: 'Yazılım geliştirici.' }
+        u0: { id: 'u0', name: 'Selin Koç', handle: 'selinkoc', city: 'Bursa', hue: 0, bio: 'Doğa yürüyüşü, fotoğraf ve iyi kahve. Hafta sonları rotadayım.', joined: '2024', dept: 'Uludağ Üni. · İşletme' },
+        u1: { id: 'u1', name: 'Deniz Yılmaz', handle: 'denizy', city: 'Bursa', hue: 1, bio: 'Kod & Kahve topluluk yöneticisi.', dept: 'Bursa Teknik Üni. · Bilgisayar Müh.' },
+        u2: { id: 'u2', name: 'Ece Demir', handle: 'ecedemir', city: 'Bursa', hue: 2, bio: 'Doğa fotoğrafçısı.', dept: 'Uludağ Üni. · Biyoloji' },
+        u3: { id: 'u3', name: 'Ayşe Kaya', handle: 'aysekaya', city: 'Bursa', hue: 3, bio: 'Doğa ve Kamp grubu moderatörü.', title: 'X Topluluğu Moderatörü', dept: 'Uludağ Üni. · Orman Müh.' },
+        u4: { id: 'u4', name: 'Mert Arslan', handle: 'mertarslan', city: 'İstanbul', hue: 4, bio: 'Bisiklet ve şehir rotaları.', dept: 'Uludağ Üni. · Bilgisayar Müh.' },
+        u5: { id: 'u5', name: 'Can Öztürk', handle: 'canozturk', city: 'Bursa', hue: 5, bio: 'Müzik atölyesi gitaristi.', dept: 'Uludağ Üni. · Müzik Öğretmenliği' },
+        u6: { id: 'u6', name: 'Zeynep Aydın', handle: 'zeynepaydin', city: 'İzmir', hue: 1, bio: 'Gönüllü Eller koordinatörü.', dept: 'Ege Üni. · Sosyal Hizmet' },
+        u7: { id: 'u7', name: 'Burak Şahin', handle: 'buraksahin', city: 'Bursa', hue: 2, bio: 'Kampçı, ekipman meraklısı.', dept: 'Bursa Teknik Üni. · Makine Müh.' },
+        u8: { id: 'u8', name: 'Elif Çelik', handle: 'elifcelik', city: 'Ankara', hue: 3, bio: 'Fotoğraf kulübü üyesi.', dept: 'Bursa Teknik Üni. · Peyzaj Mimarlığı' },
+        u9: { id: 'u9', name: 'Kaan Erdem', handle: 'kaanerdem', city: 'Bursa', hue: 4, bio: 'Yazılım geliştirici.', dept: 'Uludağ Üni. · Yazılım Müh.' }
       },
 
       communities: {

@@ -252,6 +252,7 @@
     if (!auth.account) return;
     if (typeof p.name === 'string' && p.name.trim().length >= 3) auth.account.name = p.name.trim().slice(0, 40);
     if (typeof p.city === 'string') auth.account.city = p.city.trim().slice(0, 30);
+    if (typeof p.dept === 'string') auth.account.dept = p.dept.trim().slice(0, 60);
     writeAuth();
   }
   function record() {
