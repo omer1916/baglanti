@@ -40,6 +40,8 @@
   }
   const canModerate = (p) => K.isManager() && p.community && K.MANAGED.includes(p.community);
 
+  // Etkinliğin yüklenen fotoğrafı; yoksa kategori çizimi
+  const evMedia = (e, cls = '') => media(K.safePhoto(e.cover) ? { src: e.cover, alt: e.title + ' fotoğrafı' } : { scene: e.scene }, cls);
   function rsvpButtons(ev, small = true) {
     const sz = small ? ' btn-sm' : '';
     const past = ev.start < Date.now();
@@ -535,7 +537,7 @@
       <section class="card" style="overflow:hidden">${tabs([['yaklasan', 'Yaklaşan'], ['katildiklarim', 'Katıldıklarım'], ['ortak', 'Ortak etkinlikler'], ['gecmis', 'Geçmiş']], tab, '#/etkinlikler')}</section>
       ${chips(cats.map((c) => [c, c]), UI.eventCat, 'event-cat')}
       ${evs.length ? `<div class="stack">${evs.map((e) => `<article class="card event-card">
-          ${media({ scene: e.scene })}
+          ${evMedia(e)}
           <div class="event-card-body">
             <div class="row" style="gap:6px;flex-wrap:wrap"><span class="badge blue">${esc(e.category)}</span>${e.communities.length > 1 ? '<span class="badge cyan">Ortak etkinlik</span>' : ''}${e.sponsors.length ? `<span class="badge pink">${icon('gift', 'ico-sm')}Sponsorlu</span>` : ''}</div>
             <h3><a href="#/etkinlik/${e.id}">${esc(e.title)}</a></h3>
@@ -587,7 +589,7 @@
       title: e.title,
       html: `
       <section class="card edge profile-head">
-        ${media({ scene: e.scene }, 'profile-cover')}
+        ${evMedia(e, 'profile-cover')}
         <div class="card-pad stack">
           <div class="row" style="gap:6px;flex-wrap:wrap"><span class="badge blue">${esc(e.category)}</span>${e.communities.length > 1 ? '<span class="badge cyan">Ortak etkinlik</span>' : ''}</div>
           <h1 style="font-size:clamp(22px,3vw,28px)">${esc(e.title)}</h1>

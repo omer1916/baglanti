@@ -53,6 +53,16 @@
   if (!state.memberRequests) state.memberRequests = [{ user: 'u4', community: 'kodkahve', ts: Date.now() - 50 * 60000 }, { user: 'u8', community: 'doga', ts: Date.now() - 300 * 60000 }];
   const RQ = { u4: ['Uludağ Üni. · Bilgisayar Müh.', '032190045'], u8: ['Bursa Teknik Üni. · Peyzaj Mimarlığı', '22051017'] };
   state.memberRequests.forEach((x) => { if (!x.dept && RQ[x.user]) [x.dept, x.studentNo] = RQ[x.user]; });
+  if (state.formV2 !== 1) {   // alerji / beslenme sorusu formlardan kaldırıldı
+    state.events.forEach((e) => {
+      if (!e.form) return;
+      const gone = e.form.questions.filter((q) => /alerji/i.test(q.label)).map((q) => q.id);
+      if (!gone.length) return;
+      e.form.questions = e.form.questions.filter((q) => !gone.includes(q.id));
+      (e.responses || []).forEach((r) => gone.forEach((id) => delete r.a[id]));
+    });
+    state.formV2 = 1;
+  }
   if (state.formV !== 1) {   // örnek etkinliklere kayıt formu
     const se = window.SEED().events;
     state.events.forEach((e) => { const x = se.find((y) => y.id === e.id); if (x && x.form && !e.form) { e.form = x.form; e.responses = x.responses; } });

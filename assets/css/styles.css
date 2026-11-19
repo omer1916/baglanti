@@ -1439,3 +1439,12 @@ label.btn { cursor: pointer; }
 }
 .ev-form .seg { flex-wrap: wrap; overflow: visible; }
 .ev-form .seg button { flex: 1 1 auto; }
+
+/* Etkinlik fotoğrafı önizlemesi ve form kontrol ekranı */
+.ev-cover-prev { display: flex; flex-direction: column; gap: 8px; }
+.ev-cover-prev img { width: 100%; aspect-ratio: 16 / 7; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); }
+.review-list { grid-template-columns: 1fr; gap: 0; }
+.review-list dt { font-size: 13px; }
+.review-list > div { display: grid; grid-template-columns: minmax(120px, 38%) 1fr; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.review-list > div:last-child { border-bottom: 0; }
+.review-list dd { overflow-wrap: anywhere; font-weight: 600; }

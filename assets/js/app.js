@@ -177,7 +177,7 @@
 
   /* ---------- gönderi oluşturucu ---------- */
   let cs = null;
-  const ALLOWED = { uye: ['post'], moderator: ['post', 'announcement'], yonetici: ['post', 'event', 'announcement', 'sponsor'], marka: ['post'] };
+  const ALLOWED = { uye: ['post'], moderator: ['post', 'event', 'announcement'], yonetici: ['post', 'event', 'announcement', 'sponsor'], marka: ['post'] };
   const TYPE_LABEL = { post: 'Gönderi', event: 'Etkinlik', announcement: 'Duyuru', sponsor: 'Sponsor ihtiyacı' };
   const FEELINGS = ['😊 mutlu', '🤩 heyecanlı', '🙏 minnettar', '🏕️ kampta', '🎵 müzik dinliyor', '🚴 pedal çeviriyor', '☕ kahve molasında'];
 
@@ -190,7 +190,7 @@
       const type = allowed.includes(o.type) ? o.type : 'post';
       let target = o.community || '';
       if (type !== 'post' && !K.MANAGED.includes(target)) target = K.MANAGED[0];
-      cs = { type, text: '', media: [], location: '', feeling: '', visibility: type === 'announcement' ? 'Topluluk üyeleri' : 'Herkese açık', target, showLoc: false, showFeel: !!o.feeling, ev: { title: '', date: '', time: '19:00', location: '', link: '', capacity: 50, partners: [], formMode: 'none', formLink: '', form: { fields: ['phone'], questions: [] } }, need: { title: '', category: 'Ürün', goal: 10, deadline: '' } };
+      cs = { type, text: '', media: [], location: '', feeling: '', visibility: type === 'announcement' ? 'Topluluk üyeleri' : 'Herkese açık', target, showLoc: false, showFeel: !!o.feeling, ev: { title: '', date: '', time: '19:00', location: '', link: '', capacity: 50, partners: [], cover: '', formMode: 'none', formLink: '', form: { fields: ['phone'], questions: [] } }, need: { title: '', category: 'Ürün', goal: 10, deadline: '' } };
     }
     renderComposer();
     if (o.pick) setTimeout(() => $('#compose-file')?.click(), 50);
@@ -225,6 +225,7 @@
         <div class="field"><label for="ev-loc">Konum</label><input class="input" id="ev-loc" data-cs="ev.location" value="${esc(cs.ev.location)}" maxlength="80" placeholder="Mekân, ilçe"></div>
         <div class="field"><label for="ev-cap">Kontenjan</label><input class="input" type="number" min="1" id="ev-cap" data-cs="ev.capacity" value="${esc(cs.ev.capacity)}"></div>
         <div class="field full"><label for="ev-link">Konum ya da toplantı bağlantısı <span class="muted">(isteğe bağlı)</span></label><input class="input" type="url" id="ev-link" data-cs="ev.link" value="${esc(cs.ev.link)}" maxlength="300" inputmode="url" placeholder="https://maps.app.goo.gl/… ya da https://meet.google.com/…"><span class="xs muted">Konum ya da bağlantıdan en az birini yaz. Çevrimiçi etkinlikte konumu boş bırakabilirsin.</span></div>
+        <div class="field full"><span class="label">Etkinlik fotoğrafı <span class="muted">(isteğe bağlı)</span></span>${K.safePhoto(cs.ev.cover) ? `<div class="ev-cover-prev"><img src="${cs.ev.cover}" alt="Seçilen etkinlik fotoğrafı"><div class="btn-row"><label class="btn btn-sm">${icon('image', 'ico-sm')}Değiştir<input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" data-change="cs-ev-cover"></label><button type="button" class="btn btn-sm btn-ghost" data-action="cs-ev-cover-del">Kaldır</button></div></div>` : `<label class="btn btn-sm" style="align-self:flex-start">${icon('image', 'ico-sm')}Fotoğraf seç<input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" data-change="cs-ev-cover"></label><span class="xs muted">Seçmezsen kategoriye uygun bir çizim kullanılır. JPG, PNG ya da WebP · en fazla 10 MB.</span>`}</div>
         ${formBuilder()}
         <fieldset class="field full" style="border:0;padding:0;margin:0"><legend class="label" style="margin-bottom:6px">Ortak etkinlik (isteğe bağlı)</legend><div class="row" style="flex-wrap:wrap;gap:6px">${otherComms.map((c) => `<label class="chip" style="cursor:pointer"><input type="checkbox" data-cs-partner value="${c.id}" ${cs.ev.partners.includes(c.id) ? 'checked' : ''} style="accent-color:var(--brand-strong)">${esc(c.name)}</label>`).join('')}</div></fieldset>
       </div>` : ''}
@@ -255,7 +256,7 @@
   }
   // Etkinlik kayıt formu: sitede oluşturulan form ya da dışarıdaki hazır formun bağlantısı
   const FORM_TPL = {
-    kamp: { name: 'Kamp / gezi kaydı', fields: ['phone', 'dept'], questions: [{ label: 'Kamp deneyimin', type: 'choice', options: 'İlk kez, Birkaç kez, Deneyimliyim', required: true }, { label: 'Acil durumda aranacak kişi ve telefonu', type: 'text', required: true }, { label: 'Beslenme tercihi / alerji', type: 'text', required: false }] },
+    kamp: { name: 'Kamp / gezi kaydı', fields: ['phone', 'dept'], questions: [{ label: 'Kamp deneyimin', type: 'choice', options: 'İlk kez, Birkaç kez, Deneyimliyim', required: true }, { label: 'Acil durumda aranacak kişi ve telefonu', type: 'text', required: true }] },
     atolye: { name: 'Atölye / meetup kaydı', fields: ['studentNo', 'dept'], questions: [{ label: 'Seviyen', type: 'choice', options: 'Başlangıç, Orta, İleri', required: true }, { label: 'Etkinlikten beklentin', type: 'long', required: false }] },
     gonullu: { name: 'Gönüllü kaydı', fields: ['phone'], questions: [{ label: 'Hangi saatlerde yardım edebilirsin?', type: 'choice', options: 'Sabah, Öğleden sonra, Tüm gün', required: true }, { label: 'Daha önce gönüllü oldun mu?', type: 'choice', options: 'Evet, Hayır', required: false }] }
   };
@@ -309,7 +310,7 @@
         if (bad) return toast(`“${bad.label}” sorusuna en az iki seçenek yaz.`, 'info');
         form = { fields: ev.form.fields.filter((k) => K.FORM_FIELDS[k]), questions: qs };
       }
-      const e = { id: uid('e'), title: ev.title.trim(), communities: [cs.target, ...ev.partners], start, location: ev.location.trim() || (/maps|goo\.gl|yandex/.test(link) ? 'Haritadaki konum' : 'Çevrimiçi'), locLink: link, form, formLink, responses: [], category: C(cs.target).category, going: 1, capacity: Math.max(1, +ev.capacity || 50), attending: true, interested: false, sponsors: [], scene: C(cs.target).scene, desc: text || 'Ayrıntılar yakında.' };
+      const e = { id: uid('e'), title: ev.title.trim(), communities: [cs.target, ...ev.partners], start, cover: K.safePhoto(ev.cover), location: ev.location.trim() || (/maps|goo\.gl|yandex/.test(link) ? 'Haritadaki konum' : 'Çevrimiçi'), locLink: link, form, formLink, responses: [], category: C(cs.target).category, going: 1, capacity: Math.max(1, +ev.capacity || 50), attending: true, interested: false, sponsors: [], scene: C(cs.target).scene, desc: text || 'Ayrıntılar yakında.' };
       state.events.push(e);
       post.event = e.id;
       if (!post.text) post.text = `Yeni etkinlik: ${e.title}`;
@@ -453,6 +454,7 @@
 
   A.compose = (el) => openComposer({ type: el.dataset.type, community: el.dataset.community, pick: !!el.dataset.pick, feeling: !!el.dataset.feeling });
   A['cs-type'] = (el) => { cs.type = el.dataset.value; if (cs.type !== 'post' && !K.MANAGED.includes(cs.target)) cs.target = K.MANAGED[0]; if (cs.type === 'post') cs.target = ''; cs.visibility = cs.type === 'announcement' ? 'Topluluk üyeleri' : 'Herkese açık'; renderComposer(); };
+  A['cs-ev-cover-del'] = () => { cs.ev.cover = ''; renderComposer(); };
   A['cs-form'] = (el) => { cs.ev.formMode = el.dataset.value; renderComposer(); };
   A['cs-q-add'] = () => { if (cs.ev.form.questions.length >= 15) return; cs.ev.form.questions.push({ label: '', type: 'text', options: '', required: false }); renderComposer(); setTimeout(() => { const ins = $$('.q-row input[data-csq$=":label"]'); ins[ins.length - 1]?.focus(); }, 30); };
   A['cs-q-del'] = (el) => { cs.ev.form.questions.splice(+el.dataset.i, 1); renderComposer(); };
@@ -517,15 +519,17 @@
     refresh();
   };
   // Kayıt formunu doldurma
+  let formDraft = null;   // kontrol ekranından "Düzenle" ile dönülünce yazılanlar korunur
   A['form-open'] = (el) => {
     const e = E(el.dataset.id); if (!e || !e.form) return;
     const m = me(); const prev = (e.responses || []).find((x) => x.user === state.me);
-    const v = (k, d = '') => esc(prev ? (prev.a[k] || '') : d);
+    const src = formDraft && formDraft.id === e.id ? formDraft.a : prev ? prev.a : null;
+    const v = (k, d = '') => esc(src ? (src[k] || '') : d);
     const email = K.mode === 'account' ? (window.Auth.account()?.email || '') : '';
     const std = { phone: `<div class="field"><label for="ef-phone">Telefon *</label><input class="input" type="tel" id="ef-phone" name="phone" value="${v('phone')}" maxlength="20" autocomplete="tel" inputmode="tel"></div>`, studentNo: `<div class="field"><label for="ef-studentNo">Öğrenci numarası *</label><input class="input" id="ef-studentNo" name="studentNo" value="${v('studentNo')}" maxlength="15" autocomplete="off" inputmode="numeric"></div>`, dept: `<div class="field"><label for="ef-dept">Okul / bölüm *</label><input class="input" id="ef-dept" name="dept" value="${v('dept', m.dept || '')}" maxlength="60"></div>` };
     const qs = e.form.questions.map((q) => {
       const req = q.required ? ' *' : '';
-      if (q.type === 'choice') return `<fieldset class="field" style="border:0;padding:0;margin:0"><legend class="label" style="margin-bottom:6px">${esc(q.label)}${req}</legend><div class="radio-list">${q.options.map((o) => `<label class="radio-item"><input type="radio" name="${q.id}" value="${esc(o)}" ${prev && prev.a[q.id] === o ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}</div></fieldset>`;
+      if (q.type === 'choice') return `<fieldset class="field" style="border:0;padding:0;margin:0"><legend class="label" style="margin-bottom:6px">${esc(q.label)}${req}</legend><div class="radio-list">${q.options.map((o) => `<label class="radio-item"><input type="radio" name="${q.id}" value="${esc(o)}" ${src && src[q.id] === o ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}</div></fieldset>`;
       if (q.type === 'long') return `<div class="field"><label for="ef-${q.id}">${esc(q.label)}${req}</label><textarea class="textarea" id="ef-${q.id}" name="${q.id}" maxlength="600" rows="3">${v(q.id)}</textarea></div>`;
       return `<div class="field"><label for="ef-${q.id}">${esc(q.label)}${req}</label><input class="input" id="ef-${q.id}" name="${q.id}" value="${v(q.id)}" maxlength="200"></div>`;
     }).join('');
@@ -534,7 +538,18 @@
       <div class="field"><label for="ef-email">E-posta *</label><input class="input" type="email" id="ef-email" name="email" value="${v('email', email)}" maxlength="254" autocomplete="email" inputmode="email"></div>
       ${e.form.fields.filter((k) => std[k]).map((k) => std[k]).join('')}${qs}
       <p class="xs muted" style="margin:0">${icon('lock', 'ico-sm')} Yanıtların yalnızca etkinliği düzenleyen topluluğun moderatör ve yöneticileriyle paylaşılır.</p>`,
-      foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">${prev ? 'Güncelle' : 'Gönder ve katıl'}</button>` });
+      foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Devam et</button>` });
+  };
+  A['form-back'] = (el) => A['form-open'](el);
+  A['form-confirm'] = () => {
+    const d = formDraft; const e = d && E(d.id); if (!e || !e.form) return closeModal();
+    e.responses = e.responses || [];
+    const prev = e.responses.find((x) => x.user === state.me);
+    if (prev) Object.assign(prev, { a: d.a, ts: Date.now() });
+    else e.responses.push({ id: uid('r'), user: state.me, ts: Date.now(), a: d.a });
+    if (!e.attending) { e.attending = true; e.going++; e.interested = false; }
+    formDraft = null;
+    closeModal(); refresh(); toast(prev ? 'Yanıtın güncellendi' : 'Kaydın alındı · etkinlikten 1 gün önce hatırlatılacak');
   };
   // Yanıtları Excel'in açtığı CSV olarak indir (Türkçe Excel: noktalı virgül, UTF-8 BOM)
   A['form-export'] = (el) => {
@@ -800,12 +815,12 @@
       a[q.id] = q.type === 'choice' ? (q.options.includes(val(q.id)) ? val(q.id) : '') : val(q.id);
       if (q.required && !a[q.id]) return toast(`“${q.label}” sorusunu yanıtla.`, 'info');
     }
-    e.responses = e.responses || [];
-    const prev = e.responses.find((x) => x.user === state.me);
-    if (prev) Object.assign(prev, { a, ts: Date.now() });
-    else e.responses.push({ id: uid('r'), user: state.me, ts: Date.now(), a });
-    if (!e.attending) { e.attending = true; e.going++; e.interested = false; }
-    closeModal(); refresh(); toast(prev ? 'Yanıtın güncellendi' : 'Kaydın alındı · etkinlikten 1 gün önce hatırlatılacak');
+    // Kontrol ekranı: yanıtlar listelenir, kişi emin olunca gönderir
+    formDraft = { id: e.id, a };
+    const prev = (e.responses || []).some((x) => x.user === state.me);
+    const rows = V.formColumns(e).map(([k, l]) => `<div><dt>${esc(l)}</dt><dd>${esc(a[k] || '—')}</dd></div>`).join('');
+    openModal({ title: 'Bilgilerini kontrol et', body: `<div data-keep></div><p class="small muted"><b>${esc(e.title)}</b> · Göndermeden önce bilgilerinin doğru olduğundan emin ol.</p><dl class="app-info review-list">${rows}</dl>`,
+      foot: `<button type="button" class="btn" data-action="form-back" data-id="${e.id}">${icon('edit', 'ico-sm')}Düzenle</button><button type="button" class="btn btn-primary" data-action="form-confirm">${icon('check', 'ico-sm')}${prev ? 'Onayla ve güncelle' : 'Onayla ve gönder'}</button>` });
   };
   F['top-search'] = (f) => { const q = f.q.value.trim(); f.q.value = ''; f.q.blur(); UI.discover.q = q; location.hash = '#/kesfet' + (q ? '?q=' + encodeURIComponent(q) : ''); };
   F.discover = (f) => { f.querySelector('input').blur(); };
@@ -1000,6 +1015,11 @@
     } });
   };
   CH['rg-role'] = (el) => { const box = $('#rg-club-box'); if (box) box.hidden = el.value !== 'uye'; };
+  CH['cs-ev-cover'] = async (el) => {
+    const file = photoFile(el); if (!file || !cs) return;
+    try { cs.ev.cover = await cleanImage(file, 1600, true); } catch (e) { return toast('Görsel okunamadı', 'info'); }
+    renderComposer();
+  };
   CH['cs-form-tpl'] = (el) => { const t = FORM_TPL[el.value]; if (!t) return; cs.ev.form = { fields: t.fields.slice(), questions: t.questions.map((q) => ({ ...q })) }; renderComposer(); toast(`“${t.name}” şablonu eklendi; soruları düzenleyebilirsin`); };
   CH['rg-grad'] = (el) => { const g = !!el.value; const cl = $('#rg-club-label'); if (cl) setHTML(cl, g ? 'Kulüp <span class="muted">(isteğe bağlı)</span>' : 'Kulüp'); const s = $('#rg-studentNo'); if (s) s.closest('.field').hidden = g; const y = $('#rg-gradYear-box'); if (y) y.hidden = !g; const n = $('#rg-grad-note'); if (n) n.hidden = !g; };
   CH['tag-limit'] = (el) => { if (!K.isSite()) return; const n = +el.value; if (![5, 6, 8, 10, 12, 15].includes(n)) return; state.tagLimit = n; Object.values(state.users).forEach((u) => K.checkTagLoad(u.id)); K.sync(); refresh(); toast(`Etiket sınırı: ${n}`); };
@@ -1209,7 +1229,7 @@
     }
   });
 
-  els.modal.addEventListener('click', (e) => { if (e.target === els.modal) closeModal(); });
+  els.modal.addEventListener('click', (e) => { if (e.target === els.modal && !els.modal.querySelector('form, [data-keep]')) closeModal(); });
   els.modal.addEventListener('close', () => { cs = null; lb = null; els.modal.replaceChildren(); });
   els.story.addEventListener('close', () => { if (sv) closeStory(); });
   els.story.addEventListener('click', (e) => { if (e.target === els.story) closeStory(); });
