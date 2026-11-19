@@ -3,8 +3,6 @@
 “Proje ön sunum” dosyasındaki 22 slaytta anlatılan sosyal içerik ve topluluk platformunun çalışan web prototipi.
 Telefonda, tablette ve bilgisayarda çalışır. Kurulum ya da derleme adımı gerektirmez.
 
-**Canlı demo:** [https://omer1916.github.io/baglanti/](https://omer1916.github.io/baglanti/)
-
 ## Yerelde nasıl açılır?
 
 - **En kolayı:** `index.html` dosyasına çift tıklayın.
