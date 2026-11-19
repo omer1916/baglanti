@@ -127,7 +127,7 @@
         <div class="rail-list">${events.map((e) => `<a class="rail-item" href="#/etkinlik/${e.id}">${dateBlock(e.start)}<span class="grow"><b class="ellipsis">${esc(e.title)}</b><span>${fmt.time(e.start)} · ${num(e.going)} katılımcı</span></span></a>`).join('')}</div></section>
       <section class="card"><div class="card-head"><h2 class="card-title">Tanıyor olabileceğin kişiler</h2></div>
         <div class="rail-list">${people.map((s) => { const u = U(s.id); return `<div class="rail-item">${avatar({ ...u, kind: 'user' }, 'md')}<a class="grow" href="#/kisi/${u.id}"><b>${esc(u.name)}</b><span>${s.mutual} ortak bağlantı</span></a><button class="icon-btn" data-action="conn-add" data-id="${u.id}" aria-label="${esc(u.name)} ile bağlantı kur">${icon('userPlus')}</button></div>`; }).join('')}</div></section>
-      <p class="rail-foot">Bağlantı © 2026<br>Konsept prototip — veriler örnektir.</p>`;
+      <p class="rail-foot">Bağlantı © 2026</p>`;
   }
 
   function joinButton(c, small) {
@@ -225,7 +225,7 @@
           <div class="card faq">${FAQS.map(([q, a], i) => `<details ${i === 0 ? 'open' : ''}><summary>${q}${icon('chevronDown')}</summary><div class="answer">${a}</div></details>`).join('')}</div>
         </section>
 
-        <footer class="l-footer">Bağlantı · Sosyal içerik ve topluluk platformu — konsept prototip. Tüm kişi, kurum ve içerikler örnektir.</footer>
+        <footer class="l-footer">Bağlantı © 2026 · Sosyal içerik ve topluluk platformu</footer>
       </div>`
     };
   };
@@ -236,7 +236,6 @@
       <aside class="auth-side">
         <a class="brand" href="#/hosgeldin"><span class="brand-mark" aria-hidden="true"></span><span class="brand-text">Bağlantı<small>Etkinlik Portalı</small></span></a>
         <div class="auth-side-body">${side}</div>
-        <p class="auth-side-foot">Göstermelik hesap sistemi · bilgiler yalnızca bu tarayıcıda saklanır, hiçbir sunucuya gönderilmez.</p>
       </aside>
       <div class="auth-main"><div class="auth-card">${inner}</div></div>
     </div>`;
@@ -303,8 +302,7 @@
           ${pwField('rg-confirm', 'confirm', 'Şifre (tekrar)', 'new-password')}
           <div class="field"><label class="check" style="align-items:flex-start"><input type="checkbox" name="consent" id="rg-consent" aria-describedby="rg-consent-err"><span><b>Kullanım koşullarını</b> ve kişisel verilerin işlenmesine ilişkin aydınlatma metnini okudum, onaylıyorum.</span></label><span class="field-error" id="rg-consent-err" role="alert"></span></div>
           <button class="btn btn-primary btn-lg btn-block">Hesabı oluştur</button>
-        </form>
-        <p class="xs muted">${icon('lock', 'ico-sm')} Şifren düz metin olarak saklanmaz; tuzlu PBKDF2-SHA256 özeti (210.000 tur) tutulur.</p>`, authSideDefault())
+        </form>`, authSideDefault())
     };
   };
 
@@ -928,8 +926,7 @@
         <div><dt>Kayıt tarihi</dt><dd>${d(a.created)}</dd></div>
         <div><dt>Önceki giriş</dt><dd>${d(a.prevLogin)}</dd></div>
       </dl>
-      <p class="xs muted">${icon('lock', 'ico-sm')} Hesap kaydı ve verilerin yalnızca bu tarayıcıda saklanır. Şifre ${esc(a.algo)} özeti olarak tutulur.</p>
-      <div class="btn-row"><button class="btn btn-sm" data-action="show-record">${icon('file', 'ico-sm')}Saklanan kaydı göster</button><button class="btn btn-sm" data-action="logout">${icon('logout', 'ico-sm')}Çıkış yap</button></div>
+      <div class="btn-row"><button class="btn btn-sm" data-action="logout">${icon('logout', 'ico-sm')}Çıkış yap</button></div>
     </section>`;
   }
   V.ayarlar = () => {
@@ -958,7 +955,7 @@
             ${state.devices.map((d) => `<div class="setting-row"><div class="row" style="gap:10px">${icon('devices')}<div><b>${esc(d.name)}</b><span class="muted">${esc(d.place)}</span></div></div>${d.current ? '<span class="badge green">Bu cihaz</span>' : `<button class="btn btn-sm" data-action="device-logout" data-id="${d.id}">Oturumu kapat</button>`}</div>`).join('')}</section>
           <section class="card card-pad"><h2 style="font-size:16px;margin-bottom:6px">${icon('download')} Veri kontrolleri</h2>
             <div class="setting-row"><div><b>Verilerini indir</b><span class="muted">Gönderi, mesaj ve profil bilgilerin (JSON)</span></div><button class="btn btn-sm" data-action="download-data">İndir</button></div>
-            ${window.Auth.mode === 'account' && window.Auth.account() ? `<div class="setting-row"><div><b>Hesabını sil</b><span class="muted">Hesap kaydı ve tüm verilerin bu tarayıcıdan kalıcı olarak silinir</span></div><button class="btn btn-sm btn-danger" data-action="close-account">Hesabı sil</button></div>` : `<div class="setting-row"><div><b>Hesabını kapat</b><span class="muted">Demo modunda kapatılacak hesap yok</span></div><button class="btn btn-sm btn-danger" data-action="close-account">Hesabı kapat</button></div>`}</section>
+            ${window.Auth.mode === 'account' && window.Auth.account() ? `<div class="setting-row"><div><b>Hesabını sil</b><span class="muted">Hesabın ve tüm verilerin kalıcı olarak silinir</span></div><button class="btn btn-sm btn-danger" data-action="close-account">Hesabı sil</button></div>` : `<div class="setting-row"><div><b>Hesabını kapat</b><span class="muted">Demo modunda kapatılacak hesap yok</span></div><button class="btn btn-sm btn-danger" data-action="close-account">Hesabı kapat</button></div>`}</section>
           <section class="card card-pad"><h2 style="font-size:16px;margin-bottom:6px">${icon('sun')} Görünüm ve demo</h2>
             <div class="setting-row"><div><b>Koyu tema</b><span class="muted">Sistem ayarından bağımsız</span></div><label class="switch"><input type="checkbox" data-change="theme" ${state.theme === 'dark' ? 'checked' : ''} aria-label="Koyu tema"><span></span></label></div>
             <div class="setting-row"><div><b>Bildirim tercihleri</b><span class="muted">Tür, sıklık, sessiz saatler</span></div><a class="btn btn-sm" href="#/bildirimler">Aç</a></div>

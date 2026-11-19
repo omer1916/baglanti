@@ -206,7 +206,7 @@
     auth.account = null; writeAuth();
     ls.del(KEYS.account); clearSession();
     ls.set(KEYS.active, 'demo');
-    flash('Hesabın ve tüm verilerin bu tarayıcıdan silindi.');
+    flash('Hesabın ve tüm verilerin silindi.');
     go('#/hosgeldin');
   }
   function switchToDemo(role) {
