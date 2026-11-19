@@ -832,7 +832,7 @@
   const IMG_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
   const VID_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
   const readURL = (file) => new Promise((res, rej) => { const rd = new FileReader(); rd.onload = () => res(rd.result); rd.onerror = rej; rd.readAsDataURL(file); });
-  async function cleanImage(file, max = 1600) {
+  async function cleanImage(file, max = 1600, jpeg = false) {
     const url = URL.createObjectURL(file);
     try {
       const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
@@ -840,7 +840,7 @@
       const c = document.createElement('canvas');
       c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      return c.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.86);
+      return c.toDataURL(file.type === 'image/png' && !jpeg ? 'image/png' : 'image/jpeg', 0.86);
     } finally { URL.revokeObjectURL(url); }
   }
   const safeName = (n) => String(n || 'dosya').replace(/[\u0000-\u001f]/g, '').slice(0, 80);
@@ -873,11 +873,18 @@
     toast('Profil fotoğrafı güncellendi');
   };
   A['pp-del'] = () => { const m = me(); delete m.photo; save(); refresh(); const row = $('#pp-row'); if (row) replaceHTML(row.closest('.field'), ppRow(m)); toast('Profil fotoğrafı kaldırıldı'); };
+  CH['user-cover'] = async (el) => {
+    const file = photoFile(el); if (!file) return;
+    const m = me(); if (K.isBrand()) return;
+    try { m.cover = await cleanImage(file, 1600, true); } catch (e) { return toast('Görsel okunamadı', 'info'); }
+    save(); refresh(); toast('Kapak fotoğrafı güncellendi');
+  };
+  A['user-cover-del'] = () => { const m = me(); delete m.cover; save(); refresh(); toast('Kapak fotoğrafı kaldırıldı'); };
   CH['comm-photo'] = async (el) => {
     const c = C(el.dataset.id); if (!canManage(c)) return;
     const file = photoFile(el); if (!file) return;
     const cover = el.dataset.kind === 'cover';
-    try { c[cover ? 'cover' : 'photo'] = cover ? await cleanImage(file, 1600) : await squareImage(file); } catch (e) { return toast('Görsel okunamadı', 'info'); }
+    try { c[cover ? 'cover' : 'photo'] = cover ? await cleanImage(file, 1600, true) : await squareImage(file); } catch (e) { return toast('Görsel okunamadı', 'info'); }
     state.audit.push({ ts: Date.now(), who: state.me, text: `${c.name} ${cover ? 'kapak fotoğrafı' : 'logosu'} güncellendi` });
     save(); refresh(); toast(cover ? 'Kapak fotoğrafı güncellendi' : 'Logo güncellendi');
   };

@@ -814,7 +814,7 @@
     return {
       title: u.name,
       html: `<section class="card edge profile-head">
-        <div class="scene profile-cover g${(u.hue || 0) % 6}"></div>
+        <div class="cover-wrap">${K.safePhoto(u.cover) ? media({ src: u.cover, alt: u.name + ' kapak fotoğrafı' }, 'profile-cover') : `<div class="scene profile-cover g${(u.hue || 0) % 6}"></div>`}${self && !K.isBrand() ? `<div class="cover-tools"><label class="btn btn-sm cover-btn">${icon('image', 'ico-sm')}${K.safePhoto(u.cover) ? 'Kapağı değiştir' : 'Kapak fotoğrafı ekle'}<input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" data-change="user-cover"></label>${K.safePhoto(u.cover) ? '<button class="btn btn-sm cover-btn" data-action="user-cover-del">Kaldır</button>' : ''}</div>` : ''}</div>
         <div class="profile-info">
           <div class="av-wrap">${avatar({ ...u, kind: 'user' }, 'xl')}${self ? `<label class="av-edit" title="Profil fotoğrafı">${icon('image', 'ico-sm')}<span class="sr-only">Profil fotoğrafını değiştir</span><input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" data-change="pp-file"></label>` : ''}</div>
           <div class="grow"><h1>${esc(u.name)}</h1><p class="muted small">@${esc(u.handle)} · ${esc(u.city)} · ${posts.length} gönderi · ${self ? cn.friends.length : 12 + u.hue} bağlantı</p></div>
