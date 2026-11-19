@@ -1475,3 +1475,8 @@ label.btn { cursor: pointer; }
   .reg-row > .grow { flex: 1 1 calc(100% - 72px); }
   .reg-row > .btn { margin-left: auto; }
 }
+
+/* Üye listesi: yetki verme */
+.role-bar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; font-size:13px; font-weight:600; }
+.role-bar .xs { flex-basis:100%; font-weight:400; }
+.select.role-sel { width:auto; min-height:32px; padding:2px 30px 2px 10px; font-size:13px; }

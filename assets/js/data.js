@@ -115,7 +115,7 @@
           { id: 'r7', user: 'u3', ts: ago(45), status: 'pending', a: { name: 'Ayşe Kaya', email: 'ayse@ornek.com', phone: '0537 555 66 77', dept: 'Uludağ Üni. · Turizm İşletmeciliği', q1: 'İlk kez' } },
           { id: 'r8', user: 'u9', ts: ago(130), status: 'pending', a: { name: 'Kaan Erdem', email: 'kaan@ornek.com', phone: '0538 666 77 88', dept: 'Uludağ Üni. · Yazılım Müh.', q1: 'Birkaç kez' } }
         ] },
-        { id: 'e2', title: 'Aralık Meetup: Web’de Erişilebilirlik', communities: ['kodkahve'], start: inDays(9, 19), location: 'Kuzey Kahve, Nilüfer', category: 'Teknoloji', going: 41, capacity: 60, attending: false, interested: true, sponsors: ['kuzey'], scene: 'code', desc: 'Klavye ile gezinme, kontrast ve ekran okuyucu testleri üzerine iki kısa konuşma ve soru-cevap.', form: { fields: ['studentNo', 'dept'], questions: [{ id: 'q1', label: 'En çok hangi konuşmayı merak ediyorsun?', type: 'choice', options: ['Klavye ile gezinme', 'Kontrast ve renk', 'Ekran okuyucu testleri'], required: true }] }, responses: [
+        { id: 'e2', title: 'Aralık Meetup: Web’de Erişilebilirlik', communities: ['kodkahve'], audience: 'uyeler', start: inDays(9, 19), location: 'Kuzey Kahve, Nilüfer', category: 'Teknoloji', going: 41, capacity: 60, attending: false, interested: true, sponsors: ['kuzey'], scene: 'code', desc: 'Klavye ile gezinme, kontrast ve ekran okuyucu testleri üzerine iki kısa konuşma ve soru-cevap.', form: { fields: ['studentNo', 'dept'], questions: [{ id: 'q1', label: 'En çok hangi konuşmayı merak ediyorsun?', type: 'choice', options: ['Klavye ile gezinme', 'Kontrast ve renk', 'Ekran okuyucu testleri'], required: true }] }, responses: [
           { id: 'r5', user: 'u9', ts: ago(400), a: { name: 'Kaan Erdem', email: 'kaan@ornek.com', studentNo: '21360859', dept: 'Uludağ Üni. · Yazılım Müh.', q1: 'Ekran okuyucu testleri' } },
           { id: 'r6', user: 'u4', ts: ago(1900), a: { name: 'Mert Arslan', email: 'mert@ornek.com', studentNo: '032190045', dept: 'Uludağ Üni. · Bilgisayar Müh.', q1: 'Klavye ile gezinme' } },
           { id: 'r9', user: 'u5', ts: ago(60), status: 'pending', a: { name: 'Can Öztürk', email: 'can@ornek.com', studentNo: '21110423', dept: 'Bursa Teknik Üni. · Elektrik Müh.', q1: 'Kontrast ve renk' } },
@@ -204,10 +204,11 @@
       notifSettings: { like: true, community: true, event: true, request: true, sponsor: true, frequency: 'Anında', quiet: false },
 
       connections: {
-        incoming: [{ kind: 'community', id: 'foto', mutual: 12, note: 'Topluluk davetiyesi' }, { kind: 'user', id: 'u4', mutual: 5, note: 'Bağlantı isteği' }, { kind: 'user', id: 'u3', mutual: 8, note: 'X Topluluğu Moderatörü' }],
-        sent: [{ kind: 'user', id: 'u8', mutual: 3 }, { kind: 'community', id: 'gonullu', mutual: 2 }],
+        incoming: [{ kind: 'community', id: 'foto', mutual: 12, note: 'Topluluk davetiyesi' }],
+        sent: [{ kind: 'community', id: 'gonullu', mutual: 2 }],
         suggestions: [{ id: 'u5', mutual: 9 }, { id: 'u6', mutual: 4 }, { id: 'u7', mutual: 11 }, { id: 'u9', mutual: 6 }],
-        friends: ['u1', 'u2']
+        friends: ['u1', 'u2', 'u8'],
+        followers: ['u1', 'u2', 'u4', 'u3']
       },
 
       reports: [

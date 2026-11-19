@@ -59,7 +59,7 @@
       ['sponsorlar', '#/sponsorlar', 'gift', 'Sponsorlar & sayfalar'],
       ['ilanlar', '#/ilanlar', 'briefcase', 'İş & staj ilanları'],
       ['medya', '#/medya', 'image', 'Medya arşivi'],
-      ['uyeler', '#/uyeler', 'userPlus', 'Üyeler & bağlantılar', state.connections.incoming.length]
+      ['uyeler', '#/uyeler', 'userPlus', 'Kişiler', state.connections.incoming.length]
     ];
   }
   function renderShell(r) {
@@ -215,7 +215,7 @@
       let target = o.community || '';
       if (type !== 'post' && !K.MANAGED.includes(target)) target = K.MANAGED[0];
       if (type === 'post' && target && !K.canPostIn(C(target))) target = '';
-      cs = { type, text: '', media: [], location: '', feeling: '', visibility: type === 'announcement' ? 'Topluluk üyeleri' : 'Herkese açık', target, showLoc: false, showFeel: !!o.feeling, ev: { title: '', date: '', time: '19:00', location: '', link: '', capacity: '', partners: [], cover: '', formMode: 'none', formLink: '', form: { fields: ['phone'], questions: [] } }, need: { title: '', category: 'Ürün', goal: 10, deadline: '' } };
+      cs = { type, text: '', media: [], location: '', feeling: '', visibility: type === 'announcement' ? 'Topluluk üyeleri' : 'Herkese açık', target, showLoc: false, showFeel: !!o.feeling, ev: { title: '', date: '', time: '19:00', location: '', link: '', capacity: '', audience: 'herkes', partners: [], cover: '', formMode: 'none', formLink: '', form: { fields: ['phone'], questions: [] } }, need: { title: '', category: 'Ürün', goal: 10, deadline: '' } };
     }
     renderComposer();
     if (o.pick) setTimeout(() => $('#compose-file')?.click(), 50);
@@ -249,6 +249,7 @@
         <div class="field"><label for="ev-time">Saat</label><input class="input" type="time" id="ev-time" data-cs="ev.time" value="${esc(cs.ev.time)}"></div>
         <div class="field"><label for="ev-loc">Konum</label><input class="input" id="ev-loc" data-cs="ev.location" value="${esc(cs.ev.location)}" maxlength="80" placeholder="Mekân, ilçe"></div>
         <div class="field"><label for="ev-cap">Kontenjan <span class="muted">(isteğe bağlı)</span></label><input class="input" type="number" min="1" max="100000" id="ev-cap" data-cs="ev.capacity" value="${esc(cs.ev.capacity)}" placeholder="Sınırsız" inputmode="numeric"><span class="xs muted">Girersen katılım istekleri onayınla kesinleşir; doluluk çubuğu onayladıkça dolar.</span></div>
+        <div class="field"><label for="ev-aud">Kimler katılabilir? *</label><select class="select" id="ev-aud" data-cs="ev.audience">${[['herkes', 'Herkes'], ['uyeler', 'Yalnızca topluluk üyeleri']].map(([v, l]) => `<option value="${v}" ${cs.ev.audience === v ? 'selected' : ''}>${l}</option>`).join('')}</select><span class="xs muted">Etkinlik kartında herkese gösterilir; üyelere özelse diğerleri katılamaz.</span></div>
         <div class="field full"><label for="ev-link">Konum ya da toplantı bağlantısı <span class="muted">(isteğe bağlı)</span></label><input class="input" type="url" id="ev-link" data-cs="ev.link" value="${esc(cs.ev.link)}" maxlength="300" inputmode="url" placeholder="https://maps.app.goo.gl/… ya da https://meet.google.com/…"><span class="xs muted">Konum ya da bağlantıdan en az birini yaz. Çevrimiçi etkinlikte konumu boş bırakabilirsin.</span></div>
         <div class="field full"><span class="label">Etkinlik fotoğrafı <span class="muted">(isteğe bağlı)</span></span>${K.safePhoto(cs.ev.cover) ? `<div class="ev-cover-prev"><img src="${cs.ev.cover}" alt="Seçilen etkinlik fotoğrafı"><div class="btn-row"><label class="btn btn-sm">${icon('image', 'ico-sm')}Değiştir<input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" data-change="cs-ev-cover"></label><button type="button" class="btn btn-sm btn-ghost" data-action="cs-ev-cover-del">Kaldır</button></div></div>` : `<label class="btn btn-sm" style="align-self:flex-start">${icon('image', 'ico-sm')}Fotoğraf seç<input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" data-change="cs-ev-cover"></label><span class="xs muted">Seçmezsen kategoriye uygun bir çizim kullanılır. JPG, PNG ya da WebP · en fazla 10 MB.</span>`}</div>
         ${formBuilder()}
@@ -351,7 +352,7 @@
         if (cf.error) return toast(cf.error, 'info');
         form = cf.form;
       }
-      const e = { id: uid('e'), title: ev.title.trim(), communities: [cs.target, ...ev.partners], start, cover: K.safePhoto(ev.cover), location: ev.location.trim() || (/maps|goo\.gl|yandex/.test(link) ? 'Haritadaki konum' : 'Çevrimiçi'), locLink: link, form, formLink, responses: [], category: C(cs.target).category, going: 1, capacity: +ev.capacity > 0 ? Math.min(100000, Math.floor(+ev.capacity)) : 0, attending: true, interested: false, sponsors: [], scene: C(cs.target).scene, desc: text || 'Ayrıntılar yakında.' };
+      const e = { id: uid('e'), title: ev.title.trim(), communities: [cs.target, ...ev.partners], start, cover: K.safePhoto(ev.cover), location: ev.location.trim() || (/maps|goo\.gl|yandex/.test(link) ? 'Haritadaki konum' : 'Çevrimiçi'), locLink: link, form, formLink, responses: [], category: C(cs.target).category, going: 1, capacity: +ev.capacity > 0 ? Math.min(100000, Math.floor(+ev.capacity)) : 0, audience: ev.audience === 'uyeler' ? 'uyeler' : 'herkes', attending: true, interested: false, sponsors: [], scene: C(cs.target).scene, desc: text || 'Ayrıntılar yakında.' };
       state.events.push(e);
       post.event = e.id;
       if (!post.text) post.text = `Yeni etkinlik: ${e.title}`;
@@ -517,7 +518,7 @@
     const isFriend = (id) => state.connections.friends.includes(id);
     openModal({
       title: `Beğenenler <span class="muted small">${num(p.likes)}</span>`,
-      body: `<ul class="likers">${shown.map((u) => `<li><a class="liker" href="#/kisi/${u.id}" data-action="close-modal">${avatar({ ...u, kind: 'user' }, 'md')}<span class="grow"><b>${u.id === state.me ? 'Sen' : esc(u.name)}</b><span>@${esc(u.handle)} · ${esc(u.city || '')}${u.id !== state.me && isFriend(u.id) ? ' · Bağlantın' : ''}</span></span><span class="like-dot" aria-hidden="true">${icon('heart')}</span></a></li>`).join('')}</ul>
+      body: `<ul class="likers">${shown.map((u) => `<li><a class="liker" href="#/kisi/${u.id}" data-action="close-modal">${avatar({ ...u, kind: 'user' }, 'md')}<span class="grow"><b>${u.id === state.me ? 'Sen' : esc(u.name)}</b><span>@${esc(u.handle)} · ${esc(u.city || '')}${u.id !== state.me && isFriend(u.id) ? ' · Takip ediyorsun' : ''}</span></span><span class="like-dot" aria-hidden="true">${icon('heart')}</span></a></li>`).join('')}</ul>
         ${rest > 0 ? `<p class="small muted likers-more">ve ${num(rest)} kişi daha beğendi</p>` : ''}`,
       foot: '<button class="btn btn-primary" data-action="close-modal">Kapat</button>'
     });
@@ -557,6 +558,7 @@
     const e = E(el.dataset.id); if (!e) return;
     if (el.dataset.kind !== 'going') { e.interested = !e.interested; toast(e.interested ? 'İlgilendiğin etkinliklere eklendi' : 'İlgi kaldırıldı'); return refresh(); }
     if (e.start < Date.now()) return toast('Etkinlik tamamlandı', 'info');
+    if (!e.attending && !K.myRequest(e) && !K.canJoinEvent(e)) return toast(`Bu etkinlik yalnızca ${e.communities.map((id) => C(id)?.name).filter(Boolean).join(' ve ')} üyelerine açık`, 'info');
     const req = K.myRequest(e);
     const full = +e.capacity > 0 && e.going >= e.capacity;
     if (e.form && req) return toast(req.status === 'pending' ? 'Kaydın onay bekliyor' : req.status === 'rejected' ? 'Bu etkinlik için kaydın onaylanmadı' : 'Kayıt formunu gönderdin; katılımın kayıtlı', 'info');
@@ -665,7 +667,7 @@
   A['reg-filter'] = (el) => { UI.regFilter = el.dataset.value; render({ keepScroll: true }); };
   A['cap-edit'] = (el) => {
     const e = E(el.dataset.id); if (!e || !K.canSeeResponses(e)) return;
-    openModal({ title: 'Kontenjan', form: 'cap-edit', formAttrs: `data-id="${e.id}"`, body: `<div class="field"><label for="cap-n">${esc(e.title)} · kontenjan</label><input class="input" type="number" id="cap-n" name="cap" min="1" max="100000" value="${+e.capacity > 0 ? +e.capacity : ''}" placeholder="Sınırsız" inputmode="numeric"><span class="xs muted">Şu an ${e.going} onaylı katılımcı var; kontenjan bundan az olamaz. Boş bırakırsan sınır kalkar ve katılım onaysız kesinleşir.</span></div>`,
+    openModal({ title: 'Katılım ayarları', form: 'cap-edit', formAttrs: `data-id="${e.id}"`, body: `<div class="field"><label for="cap-aud">Kimler katılabilir?</label><select class="select" id="cap-aud" name="aud">${[['herkes', 'Herkes'], ['uyeler', 'Yalnızca topluluk üyeleri']].map(([v, l]) => `<option value="${v}" ${(e.audience || 'herkes') === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div><div class="field"><label for="cap-n">${esc(e.title)} · kontenjan</label><input class="input" type="number" id="cap-n" name="cap" min="1" max="100000" value="${+e.capacity > 0 ? +e.capacity : ''}" placeholder="Sınırsız" inputmode="numeric"><span class="xs muted">Şu an ${e.going} onaylı katılımcı var; kontenjan bundan az olamaz. Boş bırakırsan sınır kalkar ve katılım onaysız kesinleşir.</span></div>`,
       foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Kaydet</button>` });
   };
   // Form şablonları
@@ -725,10 +727,21 @@
       foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Desteği gönder</button>` });
   };
 
-  A['conn-accept'] = (el) => { const x = state.connections.incoming.splice(+el.dataset.i, 1)[0]; if (x.kind === 'user') state.connections.friends.push(x.id); else { C(x.id).joined = true; C(x.id).members++; } refresh(); toast(x.kind === 'user' ? 'Bağlantı isteği onaylandı' : 'Topluluk davetini kabul ettin'); };
+  A['conn-accept'] = (el) => { const x = state.connections.incoming.splice(+el.dataset.i, 1)[0]; if (x.kind === 'user') state.connections.friends.push(x.id); else { C(x.id).joined = true; C(x.id).members++; } refresh(); toast(x.kind === 'user' ? 'İstek onaylandı' : 'Topluluk davetini kabul ettin'); };
   A['conn-decline'] = (el) => { state.connections.incoming.splice(+el.dataset.i, 1); refresh(); toast('İstek silindi'); };
   A['conn-withdraw'] = (el) => { state.connections.sent.splice(+el.dataset.i, 1); refresh(); toast('İstek geri çekildi'); };
-  A['conn-add'] = (el) => { const id = el.dataset.id; const cn = state.connections; if (cn.friends.includes(id) || cn.sent.some((x) => x.id === id)) return toast('Zaten bağlantı isteği gönderdin', 'info'); const sg = cn.suggestions.find((s) => s.id === id); cn.suggestions = cn.suggestions.filter((s) => s.id !== id); cn.sent.unshift({ kind: 'user', id, mutual: sg ? sg.mutual : 1 }); refresh(); toast(`${U(id).name} kişisine bağlantı isteği gönderildi`); };
+  // Takip: tek yönlü, anında; tekrar dokununca takibi bırakır
+  A.follow = (el) => {
+    const id = el.dataset.id; const u = U(id); if (!u || id === state.me) return;
+    const cn = state.connections;
+    if (cn.friends.includes(id)) return confirmModal({ title: 'Takibi bırak', text: `<b>${esc(u.name)}</b> kişisini takip etmeyi bırakmak istiyor musun? Gönderileri artık “Takip” akışında görünmez.`, ok: 'Takibi bırak', danger: true, onOk: () => { cn.friends = cn.friends.filter((x) => x !== id); refresh(); toast(`${u.name} takipten çıkarıldı`); } });
+    cn.friends.push(id); cn.suggestions = cn.suggestions.filter((s) => s.id !== id);
+    refresh(); toast(`${u.name} takip ediliyor`);
+  };
+  A['follower-remove'] = (el) => {
+    const id = el.dataset.id; const u = U(id); if (!u) return;
+    confirmModal({ title: 'Takipçiyi çıkar', text: `<b>${esc(u.name)}</b> takipçilerinden çıkarılsın mı? Kendisine bildirim gitmez.`, ok: 'Çıkar', danger: true, onOk: () => { state.connections.followers = (state.connections.followers || []).filter((x) => x !== id); refresh(); toast('Takipçi çıkarıldı'); } });
+  };
   A['conn-dismiss'] = (el) => { state.connections.suggestions = state.connections.suggestions.filter((s) => s.id !== el.dataset.id); refresh(); };
 
   A['notif-open'] = (el) => { const n = state.notifications.find((x) => x.id === el.dataset.id); n.read = true; save(); location.hash = n.link; if (location.hash === n.link) render(); };
@@ -1171,9 +1184,13 @@
     if (v !== '' && (!Number.isFinite(n) || n < 1 || n > 100000)) return toast('1 ile 100.000 arasında bir sayı yaz.', 'info');
     if (n && n < e.going) return toast(`Kontenjan ${e.going} onaylı katılımcıdan az olamaz.`, 'info');
     if (!n && (e.responses || []).some((r) => r.status === 'pending')) return toast('Sınırı kaldırmadan önce bekleyen istekleri sonuçlandır.', 'info');
-    e.capacity = n;
-    state.audit.push({ ts: Date.now(), who: state.me, text: `${e.title}: kontenjan ${n ? n : 'sınırsız'} yapıldı` });
-    closeModal(); refresh(); toast(n ? `Kontenjan ${n} olarak kaydedildi` : 'Kontenjan sınırı kaldırıldı');
+    const aud = f.elements.aud && f.elements.aud.value === 'uyeler' ? 'uyeler' : 'herkes';
+    const changed = [];
+    if (n !== (+e.capacity || 0)) changed.push(`kontenjan ${n ? n : 'sınırsız'}`);
+    if (aud !== (e.audience || 'herkes')) changed.push(aud === 'uyeler' ? 'yalnızca üyelere açık' : 'herkese açık');
+    e.capacity = n; e.audience = aud;
+    if (changed.length) state.audit.push({ ts: Date.now(), who: state.me, text: `${e.title}: ${changed.join(', ')} yapıldı` });
+    closeModal(); refresh(); toast(changed.length ? 'Katılım ayarları kaydedildi' : 'Değişiklik yok');
   };
   CH['tp-tpl'] = (el) => { const t = FORM_TPL[el.value]; if (!t || !tp) return; tp.form = { fields: t.fields.slice(), questions: t.questions.map((q) => ({ ...q })) }; if (!tp.name.trim()) tp.name = t.name; renderTpl(); };
   F['tpl-save'] = () => {
@@ -1191,6 +1208,16 @@
   CH['notif-setting'] = (el) => { state.notifSettings[el.dataset.key] = el.checked; save(); toast(el.checked ? 'Bildirim türü açıldı' : 'Bildirim türü sessize alındı'); };
   CH['notif-freq'] = (el) => { state.notifSettings.frequency = el.value; save(); toast(`Bildirim sıklığı: ${el.value}`); };
   CH['notif-quiet'] = (el) => { state.notifSettings.quiet = el.checked; save(); toast(el.checked ? 'Sessiz saatler açık' : 'Sessiz saatler kapalı'); };
+  CH['member-role'] = (el) => {
+    if (!K.isAdmin()) return;
+    const c = C(UI.adminComm); const id = el.dataset.id; const u = U(id);
+    if (!c || !u || id === state.me || c.admins.includes(id)) return;
+    const mod = el.value === 'moderator';
+    if (mod === c.moderators.includes(id)) return;
+    c.moderators = c.moderators.filter((x) => x !== id); if (mod) c.moderators.push(id);
+    state.audit.push({ ts: Date.now(), who: state.me, text: `${u.name} ${mod ? 'moderatör olarak atandı' : 'moderatörlükten alındı'} (${c.name})` });
+    render({ keepScroll: true }); toast(mod ? `${u.name}, ${c.name} moderatörü oldu` : `${u.name} artık üye`);
+  };
   CH['privacy-vis'] = (el) => { state.privacy.visibility = el.value; save(); toast(`Profil görünürlüğü: ${el.value}`); };
   CH['privacy-toggle'] = (el) => { state.privacy[el.dataset.key] = el.checked; refresh(); toast('Ayar kaydedildi'); };
   CH.theme = (el) => { state.theme = el.checked ? 'dark' : 'light'; applyTheme(); save(); };

@@ -93,6 +93,18 @@
     const u3 = state.users && state.users.u3; if (u3 && /grubu/.test(u3.bio || '')) u3.bio = se.users.u3.bio;
     state.noGroupV = 1;
   }
+  if (state.followV !== 1) {   // bağlantı istekleri yerine takip: takipçiler + takip edilenler, geri alınabilir
+    const cn = state.connections || (state.connections = { incoming: [], sent: [], suggestions: [], friends: [] });
+    cn.friends = cn.friends || []; cn.incoming = cn.incoming || []; cn.sent = cn.sent || []; cn.suggestions = cn.suggestions || [];
+    const fol = new Set(cn.followers || []);
+    cn.friends.forEach((id) => fol.add(id));
+    cn.incoming.filter((x) => x.kind === 'user').forEach((x) => fol.add(x.id));
+    cn.followers = [...fol];
+    cn.sent.filter((x) => x.kind === 'user').forEach((x) => { if (!cn.friends.includes(x.id)) cn.friends.push(x.id); });
+    cn.incoming = cn.incoming.filter((x) => x.kind !== 'user'); cn.sent = cn.sent.filter((x) => x.kind !== 'user');
+    const e2 = (state.events || []).find((e) => e.id === 'e2'); if (e2 && !e2.audience) e2.audience = 'uyeler';
+    state.followV = 1;
+  }
   if (state.tagLimitV !== 2) {   // etiket sınırı 8 oldu
     state.tagLimit = 8;
     if (state.tagAlerts) state.tagAlerts = state.tagAlerts.filter((a) => a.status !== 'open' || a.count > 8);
@@ -228,6 +240,9 @@
   // Üyeler şimdilik kimseye mesaj gönderemez (rahatsız edici / siyasi içerik riskine karşı)
   const canMessage = () => state.role !== 'uye';
   const isBrand = () => state.role === 'marka';
+  // Etkinlik katılım kapsamı: 'herkes' ya da yalnızca düzenleyen toplulukların üyeleri
+  const membersOnly = (e) => !!e && e.audience === 'uyeler';
+  const canJoinEvent = (e) => !membersOnly(e) || e.communities.some((id) => state.communities[id] && state.communities[id].joined) || (isManager() && e.communities.some((id) => MANAGED.includes(id)));
   // Site yöneticisi demo rolü değil: ayrı yönetici girişiyle (#/admin) açılan oturum
   // Topluluk ayarı: üyeler toplulukta paylaşım yapabilir mi (yönetici ve moderatörler her zaman yapabilir)
   const manages = (id) => isManager() && MANAGED.includes(id);
@@ -480,7 +495,7 @@
   /* ---------------- dışa aktar ---------------- */
   window.Core = {
     state, save, reset, mode, KEYS, buildWorkspace, $, $$, esc, setHTML, replaceHTML, appendHTML, lower, num, uid, initials, timeAgo, fmt, daysLeft,
-    ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand, isSite, canMessage, manages, canPostIn, safeUrl, FORM_FIELDS, canSeeResponses, needsApproval, myRequest, tagLimit, userTags, myTags, checkTagLoad, sync,
+    ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand, isSite, canMessage, manages, canPostIn, safeUrl, FORM_FIELDS, canSeeResponses, needsApproval, myRequest, membersOnly, canJoinEvent, tagLimit, userTags, myTags, checkTagLoad, sync,
     U, C, P, E, N, me, entity, avatar, safePhoto, verified, icon, sceneSVG, media, readApps, writeApps
   };
   syncApps();

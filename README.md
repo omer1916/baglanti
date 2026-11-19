@@ -53,7 +53,7 @@ GitHub Pages özel HTTP başlığı ayarlamaya izin vermez. `frame-ancestors`, `
 | 7 | Gönderi kartı | Beğen, paylaş, kaydet, gizle, bildir; kendi gönderinde düzenle ve sil. Gönderilere yorum yazma kapalı |
 | 8 | Gönderi oluşturma | “Oluştur” penceresi: karakter sınırı, medya önizleme, konum, duygu, görünürlük, taslak |
 | 9 | Topluluk profili | `#/topluluk/doga`: kapak, sekmeler, sabitlenmiş duyuru |
-| 10 | Üyeler ve bağlantılar | `#/uyeler`: gelen istekler, gönderilen istekler, öneriler, üye listesi. Kayıtta kulüp seçilir; başvuru `#/yonetim?tab=uyelik` listesine üyenin bilgileriyle düşer, yönetici onaylar veya reddeder, üyeye sonuç bildirimi gider |
+| 10 | Kişiler ve takip | `#/uyeler`: takipçiler, takip edilenler (Instagram gibi tek yönlü, istenince bırakılır), topluluk davetleri, kişi önerileri (yalnızca bireysel kullanıcılar), üye listesi; yönetici üye listesinden moderatör yetkisi verir. Kayıtta kulüp seçilir; başvuru `#/yonetim?tab=uyelik` listesine üyenin bilgileriyle düşer, yönetici onaylar veya reddeder, üyeye sonuç bildirimi gider |
 | — | Etiketler | `#/yonetim?tab=etiketler`: topluluk yöneticisi etiket oluşturur, yazı rengini hazır renklerden ya da renk seçiciden belirler, rengi sonradan değiştirir veya siler |
 | — | İş & staj ilanları | `#/ilanlar`: sponsorlar etiket seçerek iş, staj, yarı zamanlı ve gönüllü ilanı verir; üyeler tür, etiket, çalışma şekli ve aramayla filtreler, etiket takip eder, kaydeder ve başvurur. İlanlar akışa karışmaz |
 | — | Profil belgeleri | `#/profil?tab=belgeler`: sertifika, proje ve CV için PDF yükleme (yalnızca PDF, içerik `%PDF-` ile doğrulanır, en fazla 1,5 MB), açma ve silme |

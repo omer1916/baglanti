@@ -42,6 +42,14 @@
 
   // Etkinliğin yüklenen fotoğrafı; yoksa kategori çizimi
   const evMedia = (e, cls = '') => media(K.safePhoto(e.cover) ? { src: e.cover, alt: e.title + ' fotoğrafı' } : { scene: e.scene }, cls);
+  // Instagram tarzı takip düğmesi: Takip et / Geri takip et / Takip ediliyor (dokununca bırakılır)
+  function followBtn(id, small = true) {
+    const u = U(id); if (!u || id === state.me) return '';
+    const cn = state.connections; const sz = small ? ' btn-sm' : '';
+    if (cn.friends.includes(id)) return `<button class="btn${sz}" data-action="follow" data-id="${id}" aria-pressed="true" title="Takibi bırakmak için dokun">Takip ediliyor</button>`;
+    return `<button class="btn${sz} btn-primary" data-action="follow" data-id="${id}" aria-pressed="false">${(cn.followers || []).includes(id) ? 'Geri takip et' : 'Takip et'}</button>`;
+  }
+  const audienceBadge = (e) => K.membersOnly(e) ? `<span class="badge amber">${icon('lock', 'ico-sm')}Yalnızca topluluk üyeleri</span>` : `<span class="badge green">${icon('globe', 'ico-sm')}Herkes katılabilir</span>`;
   function rsvpButtons(ev, small = true) {
     const sz = small ? ' btn-sm' : '';
     if (ev.start < Date.now()) return `<span class="badge">Tamamlandı</span>`;
@@ -54,6 +62,7 @@
     if (req && req.status === 'rejected') return `<div class="btn-row"><button class="btn${sz}" disabled>${icon('x', 'ico-sm')}İsteğin onaylanmadı</button></div>`;
     // Kayıt formunu gönderen kişi katılımı bu düğmeyle değiştiremez (yanıtını formdan günceller)
     if (ev.form && req) return `<div class="btn-row"><button class="btn${sz} btn-success" disabled title="Kayıt formunu gönderdin">${icon('check', 'ico-sm')}${appr ? 'Kaydın onaylandı' : 'Kaydın alındı'}</button></div>`;
+    if (!ev.attending && !K.canJoinEvent(ev)) return `<div class="btn-row"><button class="btn${sz}" disabled title="Bu etkinliğe yalnızca düzenleyen topluluğun üyeleri katılabilir">${icon('lock', 'ico-sm')}Yalnızca üyeler</button>${star}</div>`;
     return `<div class="btn-row">
       <button class="btn${sz} ${ev.attending ? 'btn-success' : 'btn-primary'}" data-action="rsvp" data-id="${ev.id}" data-kind="going" aria-pressed="${ev.attending}" ${full ? 'disabled' : ''}>${ev.attending ? icon('check', 'ico-sm') + 'Katılıyorsun' : full ? 'Kontenjan dolu' : 'Katılıyorum'}</button>
       ${star}
@@ -136,15 +145,15 @@
   function rail() {
     const groups = Object.values(state.communities).filter((c) => !c.joined && c.type !== 'Gizli').slice(0, 3);
     const events = state.events.filter((e) => e.start > Date.now()).sort((a, b) => a.start - b.start).slice(0, 3);
-    const people = state.connections.suggestions.slice(0, 3);
+    const people = state.connections.suggestions.filter((s) => !state.connections.friends.includes(s.id) && U(s.id)).slice(0, 3);
     return `
       <section class="card"><div class="card-head"><h2 class="card-title">Senin için · Önerilen topluluklar</h2></div>
         <div class="rail-list">${groups.map((c) => `<div class="rail-item">${avatar({ ...c, kind: 'community' }, 'md')}<a class="grow" href="#/topluluk/${c.id}"><b class="ellipsis">${esc(c.name)}</b><span>${num(c.members)} üye · ${esc(c.type)}</span></a>${joinButton(c, true)}</div>`).join('')}</div>
         <div style="padding:0 16px 14px"><a class="link small" href="#/topluluklar?tab=kesfet">Tümünü gör</a></div></section>
       <section class="card"><div class="card-head"><h2 class="card-title">Yaklaşan etkinlikler</h2></div>
         <div class="rail-list">${events.map((e) => `<a class="rail-item" href="#/etkinlik/${e.id}">${dateBlock(e.start)}<span class="grow"><b class="ellipsis">${esc(e.title)}</b><span>${fmt.time(e.start)} · ${num(e.going)} katılımcı</span></span></a>`).join('')}</div></section>
-      <section class="card"><div class="card-head"><h2 class="card-title">Tanıyor olabileceğin kişiler</h2></div>
-        <div class="rail-list">${people.map((s) => { const u = U(s.id); return `<div class="rail-item">${avatar({ ...u, kind: 'user' }, 'md')}<a class="grow" href="#/kisi/${u.id}"><b>${esc(u.name)}</b><span>${s.mutual} ortak bağlantı</span></a><button class="icon-btn" data-action="conn-add" data-id="${u.id}" aria-label="${esc(u.name)} ile bağlantı kur">${icon('userPlus')}</button></div>`; }).join('')}</div></section>
+      ${state.role === 'uye' && people.length ? `<section class="card"><div class="card-head"><h2 class="card-title">Tanıyor olabileceğin kişiler</h2></div>
+        <div class="rail-list">${people.map((s) => { const u = U(s.id); return `<div class="rail-item">${avatar({ ...u, kind: 'user' }, 'md')}<a class="grow" href="#/kisi/${u.id}"><b>${esc(u.name)}</b><span>${s.mutual} ortak takipçi</span></a>${followBtn(u.id)}</div>`; }).join('')}</div></section>` : ''}
       <p class="rail-foot">Bağlantı © 2026</p>`;
   }
 
@@ -394,7 +403,7 @@
     });
     const events = state.events.filter((e) => hit(e.title, e.location, e.category, e.desc) && inDate(e.start, true) && (d.loc === 'all' || e.location.includes(d.loc)));
 
-    const commRow = (c) => `<div class="list-item">${avatar({ ...c, kind: 'community' }, 'md')}<a class="grow" href="#/topluluk/${c.id}"><b>${esc(c.name)}</b><span>${num(c.members)} üye · ${esc(c.type)} · ${esc(c.city)} · ${Math.max(1, (c.members % 17))} ortak bağlantı</span></a><div class="btn-row">${joinButton(c, true)}</div></div>`;
+    const commRow = (c) => `<div class="list-item">${avatar({ ...c, kind: 'community' }, 'md')}<a class="grow" href="#/topluluk/${c.id}"><b>${esc(c.name)}</b><span>${num(c.members)} üye · ${esc(c.type)} · ${esc(c.city)} · ${Math.max(1, (c.members % 17))} tanıdık üye</span></a><div class="btn-row">${joinButton(c, true)}</div></div>`;
     const pageRow = (p) => `<div class="list-item">${avatar({ ...p, kind: 'page' }, 'md')}<a class="grow" href="#/sayfa/${p.id}"><b>${esc(p.name)} ${verified(p.verified)}</b><span>${esc(p.category)} · ${num(p.followers)} takipçi</span></a><div class="btn-row"><button class="btn btn-sm ${p.following ? 'btn-success' : 'btn-soft'}" data-action="follow-page" data-id="${p.id}">${p.following ? 'Takip ediliyor' : 'Takip et'}</button></div></div>`;
     const eventRow = (e) => `<a class="event-row" href="#/etkinlik/${e.id}">${dateBlock(e.start)}<span class="grow"><b class="ellipsis" style="display:block">${esc(e.title)}</b><span class="small muted">${fmt.time(e.start)} · ${esc(e.location)} · ${num(e.going)} katılımcı</span></span>${icon('chevronRight')}</a>`;
     const section = (title, count, body, more) => `<section class="card"><div class="card-head"><h2>${title} <span class="muted small">(${count})</span></h2>${more ? `<a class="link small" href="#/kesfet?tab=${more}&q=${encodeURIComponent(raw)}">Tümü</a>` : ''}</div><div class="list" style="margin-top:6px">${body}</div></section>`;
@@ -546,7 +555,7 @@
       ${evs.length ? `<div class="stack">${evs.map((e) => `<article class="card event-card">
           ${evMedia(e)}
           <div class="event-card-body">
-            <div class="row" style="gap:6px;flex-wrap:wrap"><span class="badge blue">${esc(e.category)}</span>${e.communities.length > 1 ? '<span class="badge cyan">Ortak etkinlik</span>' : ''}${e.sponsors.length ? `<span class="badge pink">${icon('gift', 'ico-sm')}Sponsorlu</span>` : ''}</div>
+            <div class="row" style="gap:6px;flex-wrap:wrap"><span class="badge blue">${esc(e.category)}</span>${audienceBadge(e)}${e.communities.length > 1 ? '<span class="badge cyan">Ortak etkinlik</span>' : ''}${e.sponsors.length ? `<span class="badge pink">${icon('gift', 'ico-sm')}Sponsorlu</span>` : ''}</div>
             <h3><a href="#/etkinlik/${e.id}">${esc(e.title)}</a></h3>
             <div class="meta-line">${icon('calendar')}${fmt.full(e.start)} · ${fmt.time(e.start)}</div>
             <div class="meta-line">${icon('pin')}${esc(e.location)}</div>
@@ -610,11 +619,12 @@
       <section class="card edge profile-head">
         ${evMedia(e, 'profile-cover')}
         <div class="card-pad stack">
-          <div class="row" style="gap:6px;flex-wrap:wrap"><span class="badge blue">${esc(e.category)}</span>${e.communities.length > 1 ? '<span class="badge cyan">Ortak etkinlik</span>' : ''}</div>
+          <div class="row" style="gap:6px;flex-wrap:wrap"><span class="badge blue">${esc(e.category)}</span>${audienceBadge(e)}${e.communities.length > 1 ? '<span class="badge cyan">Ortak etkinlik</span>' : ''}</div>
           <h1 style="font-size:clamp(22px,3vw,28px)">${esc(e.title)}</h1>
           <div class="meta-line">${icon('calendar')}${fmt.full(e.start)} · ${fmt.time(e.start)}</div>
           <div class="meta-line">${icon('pin')}<span>${locLink(e)}</span></div>
           <div class="meta-line">${icon('users')}<span>Düzenleyen: ${eventOrganizers(e)}</span></div>
+          <div class="meta-line">${icon(K.membersOnly(e) ? 'lock' : 'globe')}<span>${K.membersOnly(e) ? `Yalnızca ${e.communities.map((id) => esc(C(id)?.name || '')).join(' ve ')} üyeleri katılabilir` : 'Herkes katılabilir'}</span></div>
           <div class="row" style="flex-wrap:wrap;gap:8px;margin-top:4px">${rsvpButtons(e, false)}<button class="btn" data-action="share-event" data-id="${e.id}">${icon('share', 'ico-sm')}Paylaş</button></div>
         </div>
       </section>
@@ -622,7 +632,7 @@
       ${eventFormCard(e)}
       ${eventResponses(e)}
       <section class="card card-pad stack">
-        <div class="row-between" style="flex-wrap:wrap;gap:8px"><h2 style="font-size:16px">Katılımcılar</h2>${K.canSeeResponses(e) ? `<div class="btn-row"><button class="btn btn-sm btn-ghost" data-action="cap-edit" data-id="${e.id}">${icon('edit', 'ico-sm')}Kontenjan</button><a class="btn btn-sm" href="#/yonetim?tab=formlar&ev=${e.id}">${icon('users', 'ico-sm')}Katılımcı listesi</a></div>` : ''}</div>
+        <div class="row-between" style="flex-wrap:wrap;gap:8px"><h2 style="font-size:16px">Katılımcılar</h2>${K.canSeeResponses(e) ? `<div class="btn-row"><button class="btn btn-sm btn-ghost" data-action="cap-edit" data-id="${e.id}">${icon('edit', 'ico-sm')}Katılım ayarları</button><a class="btn btn-sm" href="#/yonetim?tab=formlar&ev=${e.id}">${icon('users', 'ico-sm')}Katılımcı listesi</a></div>` : ''}</div>
         ${capBar(e)}
         <div class="row"><div class="av-stack">${attendees.map((u) => avatar({ ...u, kind: 'user' }, 'sm')).join('')}</div><span class="small muted">${esc(attendees[0].name)}, ${esc(attendees[1].name)} ve ${num(Math.max(0, e.going - 2))} kişi daha</span></div>
       </section>
@@ -713,29 +723,47 @@
     };
   };
 
-  /* ---------- üyeler ve bağlantılar ---------- */
+  /* ---------- kişiler: takip, takipçiler, üye listesi ---------- */
   V.uyeler = (r) => {
-    const tab = r.q.get('tab') || 'gelen';
-    const cn = state.connections;
-    const who = (x) => x.kind === 'community' ? { ...C(x.id), kind: 'community', href: '#/topluluk/' + x.id } : { ...U(x.id), kind: 'user', href: '#/kisi/' + x.id };
+    const cn = state.connections; cn.followers = cn.followers || [];
+    const sugg = state.role === 'uye';   // kişi önerileri yalnızca bireysel kullanıcılara
+    const invites = cn.incoming.map((x, i) => ({ x, i })).filter(({ x }) => x.kind === 'community' && C(x.id));
+    let tab = r.q.get('tab') || 'takipciler';
+    if (tab === 'gelen') tab = 'takipciler';
+    if (tab === 'gonderilen') tab = 'takip';
+    if ((tab === 'oneriler' && !sugg) || (tab === 'davetler' && !invites.length) || !['takipciler', 'takip', 'davetler', 'oneriler', 'liste'].includes(tab)) tab = 'takipciler';
+    const person = (id, extra = '') => { const u = U(id); if (!u) return ''; return `<div class="list-item">${avatar({ ...u, kind: 'user' }, 'md')}<a class="grow" href="#/kisi/${u.id}"><b>${esc(u.name)}</b><span>@${esc(u.handle)} · ${esc(u.city)}</span></a><div class="btn-row">${followBtn(u.id)}${extra}</div></div>`; };
     let body = '';
-    if (tab === 'gelen') {
-      body = cn.incoming.length ? `<section class="card"><div class="list">${cn.incoming.map((x, i) => { const w = who(x); return `<div class="list-item">${avatar(w, 'lg')}<a class="grow" href="${w.href}"><b>${esc(w.name)}</b><span>${esc(x.note || '')} · Ortak arkadaş: ${x.mutual}</span></a><div class="btn-row"><button class="btn btn-sm btn-primary" data-action="conn-accept" data-i="${i}">Onayla</button><button class="btn btn-sm" data-action="conn-decline" data-i="${i}">Sil</button></div></div>`; }).join('')}</div></section>` : `<div class="card">${empty('userPlus', 'Bekleyen istek yok', 'Yeni bağlantı istekleri burada görünür.')}</div>`;
-    } else if (tab === 'gonderilen') {
-      body = cn.sent.length ? `<section class="card"><div class="list">${cn.sent.map((x, i) => { const w = who(x); return `<div class="list-item">${avatar(w, 'lg')}<a class="grow" href="${w.href}"><b>${esc(w.name)}</b><span>İstek gönderildi · Ortak arkadaş: ${x.mutual}</span></a><div class="btn-row"><button class="btn btn-sm" data-action="conn-withdraw" data-i="${i}">İsteği geri çek</button></div></div>`; }).join('')}</div></section>` : `<div class="card">${empty('send', 'Gönderilmiş istek yok', 'Kişi önerilerinden bağlantı kurabilirsin.')}</div>`;
+    if (tab === 'takipciler') {
+      body = cn.followers.length ? `<section class="card"><div class="list">${cn.followers.map((id) => person(id, `<button class="btn btn-sm btn-ghost" data-action="follower-remove" data-id="${id}" aria-label="${esc(U(id)?.name || '')} takipçilerinden çıkar">Çıkar</button>`)).join('')}</div></section>` : `<div class="card">${empty('users', 'Henüz takipçin yok', 'Seni takip edenler burada görünür.')}</div>`;
+    } else if (tab === 'takip') {
+      body = cn.friends.length ? `<section class="card"><div class="list">${cn.friends.map((id) => person(id)).join('')}</div></section>` : `<div class="card">${empty('userPlus', 'Kimseyi takip etmiyorsun', 'Üye listesinden kişileri takip edebilirsin; istediğin zaman takibi bırakırsın.')}</div>`;
+    } else if (tab === 'davetler') {
+      body = `<section class="card"><div class="list">${invites.map(({ x, i }) => { const c = C(x.id); return `<div class="list-item">${avatar({ ...c, kind: 'community' }, 'md')}<a class="grow" href="#/topluluk/${c.id}"><b>${esc(c.name)}</b><span>${esc(x.note || 'Topluluk davetiyesi')}</span></a><div class="btn-row"><button class="btn btn-sm btn-primary" data-action="conn-accept" data-i="${i}">Katıl</button><button class="btn btn-sm" data-action="conn-decline" data-i="${i}">Sil</button></div></div>`; }).join('')}</div></section>`;
     } else if (tab === 'oneriler') {
-      body = cn.suggestions.length ? `<div class="grid-cards">${cn.suggestions.map((s) => { const u = U(s.id); return `<article class="card card-pad stack" style="justify-items:center;text-align:center">${avatar({ ...u, kind: 'user' }, 'xl')}<div><b>${esc(u.name)}</b><p class="small muted">${esc(u.city)} · ${s.mutual} ortak bağlantı</p></div><div class="btn-row" style="width:100%"><button class="btn btn-sm btn-primary" style="flex:1" data-action="conn-add" data-id="${u.id}">${icon('userPlus', 'ico-sm')}Bağlantı kur</button><button class="btn btn-sm" data-action="conn-dismiss" data-id="${u.id}" aria-label="Öneriyi kaldır">${icon('x', 'ico-sm')}</button></div></article>`; }).join('')}</div>` : `<div class="card">${empty('users', 'Şimdilik öneri yok', 'Yeni gruplara katıldıkça öneriler gelir.')}</div>`;
+      const list = cn.suggestions.filter((s) => !cn.friends.includes(s.id) && U(s.id));
+      body = list.length ? `<div class="grid-cards">${list.map((s) => { const u = U(s.id); return `<article class="card card-pad stack" style="justify-items:center;text-align:center">${avatar({ ...u, kind: 'user' }, 'xl')}<div><b>${esc(u.name)}</b><p class="small muted">${esc(u.city)} · ${s.mutual} ortak takipçi</p></div><div class="btn-row" style="width:100%;justify-content:center">${followBtn(u.id)}<button class="btn btn-sm" data-action="conn-dismiss" data-id="${u.id}" aria-label="Öneriyi kaldır">${icon('x', 'ico-sm')}</button></div></article>`; }).join('')}</div>` : `<div class="card">${empty('users', 'Şimdilik öneri yok', 'Yeni topluluklara katıldıkça öneriler gelir.')}</div>`;
     } else {
       const q = lower(UI.memberQ);
+      const admin = K.isAdmin();
+      if (admin && !K.MANAGED.includes(UI.adminComm)) UI.adminComm = K.MANAGED[0];
+      const comm = admin ? C(UI.adminComm) : null;
       const roleOf = (id) => { for (const c of Object.values(state.communities)) { if (c.admins.includes(id)) return ['Yönetici', 'amber', c.name]; } for (const c of Object.values(state.communities)) { if (c.moderators.includes(id)) return ['Moderatör', 'cyan', c.name]; } return ['Üye', '', '']; };
+      const roleCtl = (u) => {
+        if (!admin || u.id === state.me) { const [rl, cls] = roleOf(u.id); return `<span class="badge ${cls}">${rl}</span>`; }
+        if (comm.admins.includes(u.id)) return '<span class="badge amber">Yönetici</span>';
+        return `<label class="sr-only" for="mr-${u.id}">${esc(u.name)} · ${esc(comm.name)} yetkisi</label><select class="select role-sel" id="mr-${u.id}" data-change="member-role" data-id="${u.id}">${[['uye', 'Üye'], ['moderator', 'Moderatör']].map(([v, l]) => `<option value="${v}" ${(v === 'moderator') === comm.moderators.includes(u.id) ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
+      };
       const list = Object.values(state.users).filter((u) => !q || lower(u.name + ' ' + u.city).includes(q));
-      body = `<section class="card"><div class="card-pad" style="padding-bottom:8px"><form class="top-search" style="max-width:none;margin:0" data-form="noop" role="search">${icon('search')}<input type="search" id="member-q" value="${esc(UI.memberQ)}" placeholder="Üyelerde ara…" aria-label="Üyelerde ara" autocomplete="off"></form></div>
-        <div class="list" id="member-list">${list.map((u) => { const [rl, cls, where] = roleOf(u.id); const friend = cn.friends.includes(u.id); return `<div class="list-item">${avatar({ ...u, kind: 'user' }, 'md')}<a class="grow" href="${u.id === state.me ? '#/profil' : '#/kisi/' + u.id}"><b>${esc(u.name)}${u.id === state.me ? ' (sen)' : ''}</b><span>${esc(u.city)}${where ? ' · ' + esc(where) : ''}</span></a><div class="btn-row"><span class="badge ${cls}">${rl}</span>${friend ? '<span class="badge green">Bağlantı</span>' : ''}</div></div>`; }).join('') || '<div class="list-item muted">Sonuç yok.</div>'}</div></section>`;
+      body = `<section class="card"><div class="card-pad stack" style="padding-bottom:8px"><form class="top-search" style="max-width:none;margin:0" data-form="noop" role="search">${icon('search')}<input type="search" id="member-q" value="${esc(UI.memberQ)}" placeholder="Üyelerde ara…" aria-label="Üyelerde ara" autocomplete="off"></form>
+          ${admin ? `<div class="role-bar">${icon('shield', 'ico-sm')}<span>Yetki verdiğin topluluk</span><label class="sr-only" for="admin-comm">Topluluk</label><select class="select" id="admin-comm" data-change="admin-comm" style="width:auto">${K.MANAGED.map((id) => `<option value="${id}" ${UI.adminComm === id ? 'selected' : ''}>${esc(C(id).name)}</option>`).join('')}</select><span class="xs muted">Üyeyi moderatör yapınca gönderileri kaldırabilir, etkinlik oluşturabilir ve şikâyetleri inceler.</span></div>` : ''}</div>
+        <div class="list" id="member-list">${list.map((u) => { const where = roleOf(u.id)[2]; return `<div class="list-item">${avatar({ ...u, kind: 'user' }, 'md')}<a class="grow" href="${u.id === state.me ? '#/profil' : '#/kisi/' + u.id}"><b>${esc(u.name)}${u.id === state.me ? ' (sen)' : ''}</b><span>${esc(u.city)}${where ? ' · ' + esc(where) : ''}</span></a><div class="btn-row">${roleCtl(u)}${followBtn(u.id)}</div></div>`; }).join('') || '<div class="list-item muted">Sonuç yok.</div>'}</div></section>`;
     }
+    const T = [['takipciler', `Takipçiler (${cn.followers.length})`], ['takip', `Takip edilenler (${cn.friends.length})`], ...(invites.length ? [['davetler', `Topluluk davetleri (${invites.length})`]] : []), ...(sugg ? [['oneriler', 'Öneriler']] : []), ['liste', 'Üye listesi']];
     return {
-      title: 'Üyeler',
-      html: `<div class="page-head"><div><h1>Üyeler ve bağlantılar</h1><p>İstek, onay ve takip durumları ayrı ayrı yönetilir.</p></div></div>
-        <section class="card" style="overflow:hidden">${tabs([['gelen', `Gelen istekler${cn.incoming.length ? ' (' + cn.incoming.length + ')' : ''}`], ['gonderilen', 'Gönderilen istekler'], ['oneriler', 'Kişi önerileri'], ['liste', 'Üye listesi']], tab, '#/uyeler')}</section>
+      title: 'Kişiler',
+      html: `<div class="page-head"><div><h1>Kişiler</h1><p>Takipçilerin, takip ettiklerin ve platformdaki üyeler. Takibi istediğin zaman bırakabilirsin.</p></div></div>
+        <section class="card" style="overflow:hidden">${tabs(T, tab, '#/uyeler')}</section>
         ${body}`
     };
   };
@@ -855,8 +883,6 @@
     const tab = r.q.get('tab') || 'gonderiler';
     const base = self ? '#/profil' : '#/kisi/' + u.id;
     const cn = state.connections;
-    const friend = cn.friends.includes(u.id);
-    const pending = cn.sent.some((x) => x.kind === 'user' && x.id === u.id);
     const myComms = Object.values(state.communities).filter((c) => self ? c.joined : (c.moderators.includes(u.id) || c.admins.includes(u.id)));
     const posts = state.posts.filter((p) => p.author.kind === 'user' && p.author.id === u.id);
     let body = '';
@@ -871,8 +897,8 @@
         <div class="cover-wrap">${K.safePhoto(u.cover) ? media({ src: u.cover, alt: u.name + ' kapak fotoğrafı' }, 'profile-cover') : `<div class="scene profile-cover g${(u.hue || 0) % 6}"></div>`}${self && !K.isBrand() ? `<div class="cover-tools"><label class="btn btn-sm cover-btn">${icon('image', 'ico-sm')}${K.safePhoto(u.cover) ? 'Kapağı değiştir' : 'Kapak fotoğrafı ekle'}<input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" data-change="user-cover"></label>${K.safePhoto(u.cover) ? '<button class="btn btn-sm cover-btn" data-action="user-cover-del">Kaldır</button>' : ''}</div>` : ''}</div>
         <div class="profile-info">
           <div class="av-wrap">${avatar({ ...u, kind: 'user' }, 'xl')}${self ? `<label class="av-edit" title="Profil fotoğrafı">${icon('image', 'ico-sm')}<span class="sr-only">Profil fotoğrafını değiştir</span><input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" data-change="pp-file"></label>` : ''}</div>
-          <div class="grow"><h1>${esc(u.name)}${gradBadge(u, self)}</h1><p class="muted small">@${esc(u.handle)} · ${esc(u.city)} · ${posts.length} gönderi · ${self ? cn.friends.length : 12 + u.hue} bağlantı</p></div>
-          <div class="profile-actions">${self ? `<button class="btn" data-action="edit-profile">${icon('edit', 'ico-sm')}Profili düzenle</button><a class="btn" href="#/ayarlar" aria-label="Gizlilik ayarları">${icon('lock', 'ico-sm')}Gizlilik</a>` : `${friend ? `<span class="btn btn-success">${icon('check', 'ico-sm')}Bağlantı</span>` : pending ? `<button class="btn" disabled>İstek gönderildi</button>` : `<button class="btn btn-primary" data-action="conn-add" data-id="${u.id}">${icon('userPlus', 'ico-sm')}Bağlantı kur</button>`}${K.canMessage() ? `<button class="btn" data-action="dm" data-id="${u.id}">${icon('message', 'ico-sm')}Mesaj</button>` : ''}
+          <div class="grow"><h1>${esc(u.name)}${gradBadge(u, self)}</h1><p class="muted small">@${esc(u.handle)} · ${esc(u.city)} · ${posts.length} gönderi · ${self ? (cn.followers || []).length : 14 + (u.hue || 0) * 3} takipçi · ${self ? cn.friends.length : 9 + (u.hue || 0)} takip</p></div>
+          <div class="profile-actions">${self ? `<button class="btn" data-action="edit-profile">${icon('edit', 'ico-sm')}Profili düzenle</button><a class="btn" href="#/ayarlar" aria-label="Gizlilik ayarları">${icon('lock', 'ico-sm')}Gizlilik</a>` : `${followBtn(u.id, false)}${K.canMessage() ? `<button class="btn" data-action="dm" data-id="${u.id}">${icon('message', 'ico-sm')}Mesaj</button>` : ''}
             <div class="menu-wrap"><button class="btn" data-action="toggle-menu" data-menu="um" aria-label="Diğer" aria-haspopup="true" aria-expanded="false">${icon('more')}</button><div class="popover" data-popover="um" hidden><button data-action="report" data-kind="Profil" data-id="${u.id}">${icon('flag')}Profili bildir</button><button class="danger" data-action="block-user" data-name="${esc(u.name)}">${icon('ban')}Engelle</button></div></div>`}</div>
         </div>
         ${tabs([['gonderiler', 'Gönderiler'], ['hakkinda', 'Hakkında'], ['belgeler', 'Belgeler'], ['fotograflar', 'Fotoğraflar'], ['etkinlikler', 'Etkinlikler']], tab, base)}
@@ -1109,7 +1135,7 @@
       const evId = r.q.get('ev'); const ev = evId && /^[a-z0-9_-]{1,40}$/i.test(evId) ? E(evId) : null;
       if (ev && K.canSeeResponses(ev)) {
         body = `<div class="row pad-x" style="gap:8px;flex-wrap:wrap"><a class="btn btn-sm btn-ghost" href="#/yonetim?tab=formlar">${icon('chevronLeft', 'ico-sm')}Tüm etkinlikler</a><a class="btn btn-sm" href="#/etkinlik/${ev.id}">Etkinlik sayfası</a></div>
-          <section class="card card-pad stack"><div class="row" style="gap:12px;align-items:center">${dateBlock(ev.start)}<div class="grow" style="min-width:0"><h2 style="font-size:17px">${esc(ev.title)}</h2><span class="small muted">${fmt.time(ev.start)} · ${esc(ev.location)}</span></div><button class="btn btn-sm btn-ghost" data-action="cap-edit" data-id="${ev.id}">${icon('edit', 'ico-sm')}Kontenjan</button></div>${capBar(ev)}</section>
+          <section class="card card-pad stack"><div class="row" style="gap:12px;align-items:center">${dateBlock(ev.start)}<div class="grow" style="min-width:0"><h2 style="font-size:17px">${esc(ev.title)}</h2><span class="small muted">${fmt.time(ev.start)} · ${esc(ev.location)}</span></div><button class="btn btn-sm btn-ghost" data-action="cap-edit" data-id="${ev.id}">${icon('edit', 'ico-sm')}Katılım ayarları</button></div>${capBar(ev)}</section>
           ${eventResponses(ev) || `<div class="card">${empty('users', 'Bu etkinlikte onay gerekmiyor', 'Kontenjan ve kayıt formu yok; “Katılıyorum” diyenler doğrudan katılımcı sayılır. Kontenjan belirlersen istekler burada onayına düşer.', `<button class="btn btn-primary" data-action="cap-edit" data-id="${ev.id}">Kontenjan belirle</button>`)}</div>`}`;
       } else {
         const now = Date.now();
