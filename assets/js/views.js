@@ -243,7 +243,7 @@
   const authSideDefault = () => `
     <h2>Topluluğunun etkinlikleri, tek hesapta.</h2>
     <ul class="auth-points">
-      <li>${icon('calendar')}<span><b>Etkinliklere katıl</b>Katılımını bildir, hatırlatma al, takvimine ekle.</span></li>
+      <li>${icon('calendar')}<span><b>Etkinliklere katıl</b>Katılımını bildir, hatırlatma al.</span></li>
       <li>${icon('users')}<span><b>Gruplarınla senkron kal</b>Üye olduğun toplulukların duyuruları akışında.</span></li>
       <li>${icon('shield')}<span><b>Gizliliğin senin elinde</b>Kim neyi görür, sen seçersin.</span></li>
     </ul>
@@ -435,7 +435,7 @@
     if (tab === 'kesfet') list = list.filter((c) => !c.joined && c.type !== 'Gizli');
     if (tab === 'yonetilen') list = K.isManager() ? list.filter((c) => K.MANAGED.includes(c.id)) : [];
     const card = (c) => `<article class="card ccard">
-      ${media({ scene: c.scene })}
+      ${media(K.safePhoto(c.cover) ? { src: c.cover, alt: c.name + ' kapak fotoğrafı' } : { scene: c.scene })}
       <div class="ccard-body">${avatar({ ...c, kind: 'community' }, 'lg')}
         <h3><a href="#/topluluk/${c.id}">${esc(c.name)}</a></h3>
         <div class="row small muted" style="gap:6px;flex-wrap:wrap"><span class="badge ${c.type === 'Herkese açık' ? 'green' : c.type === 'Özel' ? 'amber' : 'pink'}">${icon(c.type === 'Herkese açık' ? 'globe' : 'lock', 'ico-sm')}${esc(c.type)}</span><span>${num(c.members)} üye</span><span>· ${c.kind === 'grup' ? 'Grup' : 'Topluluk'}</span></div>
@@ -498,9 +498,9 @@
       title: c.name,
       html: `
       <section class="card edge profile-head">
-        ${media({ scene: c.scene }, 'profile-cover')}
+        <div class="cover-wrap">${media(K.safePhoto(c.cover) ? { src: c.cover, alt: c.name + ' kapak fotoğrafı' } : { scene: c.scene }, 'profile-cover')}${manage ? `<div class="cover-tools"><label class="btn btn-sm cover-btn">${icon('image', 'ico-sm')}${c.cover ? 'Kapağı değiştir' : 'Kapak fotoğrafı ekle'}<input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" data-change="comm-photo" data-id="${c.id}" data-kind="cover"></label>${c.cover ? `<button class="btn btn-sm cover-btn" data-action="comm-photo-del" data-id="${c.id}" data-kind="cover">Kaldır</button>` : ''}</div>` : ''}</div>
         <div class="profile-info">
-          ${avatar({ ...c, kind: 'community' }, 'xl')}
+          <div class="av-wrap">${avatar({ ...c, kind: 'community' }, 'xl')}${manage ? `<label class="av-edit" title="Logoyu değiştir">${icon('image', 'ico-sm')}<span class="sr-only">Logoyu değiştir</span><input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" data-change="comm-photo" data-id="${c.id}" data-kind="photo"></label>` : ''}</div>
           <div class="grow"><h1>${esc(c.name)}</h1><p class="muted small">${esc(c.city)} · ${num(c.members)} üye · ${esc(c.type)} ${c.kind === 'grup' ? 'grup' : 'topluluk'}</p></div>
           <div class="profile-actions">${joinButton(c)}${K.canMessage() ? `<a class="btn" href="#/mesajlar">${icon('message', 'ico-sm')}Mesaj</a>` : ''}
             <div class="menu-wrap"><button class="btn" data-action="toggle-menu" data-menu="cm-${c.id}" aria-label="Diğer seçenekler" aria-haspopup="true" aria-expanded="false">${icon('more')}</button>
@@ -561,7 +561,7 @@
           <div class="meta-line">${icon('calendar')}${fmt.full(e.start)} · ${fmt.time(e.start)}</div>
           <div class="meta-line">${icon('pin')}${esc(e.location)}</div>
           <div class="meta-line">${icon('users')}<span>Düzenleyen: ${eventOrganizers(e)}</span></div>
-          <div class="row" style="flex-wrap:wrap;gap:8px;margin-top:4px">${rsvpButtons(e, false)}<button class="btn" data-action="ics" data-id="${e.id}">${icon('download', 'ico-sm')}Takvime ekle</button><button class="btn" data-action="share-event" data-id="${e.id}">${icon('share', 'ico-sm')}Paylaş</button></div>
+          <div class="row" style="flex-wrap:wrap;gap:8px;margin-top:4px">${rsvpButtons(e, false)}<button class="btn" data-action="share-event" data-id="${e.id}">${icon('share', 'ico-sm')}Paylaş</button></div>
         </div>
       </section>
       <section class="card card-pad stack"><h2 style="font-size:16px">Etkinlik hakkında</h2><p>${esc(e.desc)}</p></section>
@@ -816,7 +816,7 @@
       html: `<section class="card edge profile-head">
         <div class="scene profile-cover g${(u.hue || 0) % 6}"></div>
         <div class="profile-info">
-          ${avatar({ ...u, kind: 'user' }, 'xl')}
+          <div class="av-wrap">${avatar({ ...u, kind: 'user' }, 'xl')}${self ? `<label class="av-edit" title="Profil fotoğrafı">${icon('image', 'ico-sm')}<span class="sr-only">Profil fotoğrafını değiştir</span><input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" data-change="pp-file"></label>` : ''}</div>
           <div class="grow"><h1>${esc(u.name)}</h1><p class="muted small">@${esc(u.handle)} · ${esc(u.city)} · ${posts.length} gönderi · ${self ? cn.friends.length : 12 + u.hue} bağlantı</p></div>
           <div class="profile-actions">${self ? `<button class="btn" data-action="edit-profile">${icon('edit', 'ico-sm')}Profili düzenle</button><a class="btn" href="#/ayarlar" aria-label="Gizlilik ayarları">${icon('lock', 'ico-sm')}Gizlilik</a>` : `${friend ? `<span class="btn btn-success">${icon('check', 'ico-sm')}Bağlantı</span>` : pending ? `<button class="btn" disabled>İstek gönderildi</button>` : `<button class="btn btn-primary" data-action="conn-add" data-id="${u.id}">${icon('userPlus', 'ico-sm')}Bağlantı kur</button>`}${K.canMessage() ? `<button class="btn" data-action="dm" data-id="${u.id}">${icon('message', 'ico-sm')}Mesaj</button>` : ''}
             <div class="menu-wrap"><button class="btn" data-action="toggle-menu" data-menu="um" aria-label="Diğer" aria-haspopup="true" aria-expanded="false">${icon('more')}</button><div class="popover" data-popover="um" hidden><button data-action="report" data-kind="Profil" data-id="${u.id}">${icon('flag')}Profili bildir</button><button class="danger" data-action="block-user" data-name="${esc(u.name)}">${icon('ban')}Engelle</button></div></div>`}</div>

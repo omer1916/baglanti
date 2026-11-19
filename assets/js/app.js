@@ -470,13 +470,6 @@
     else { e.interested = !e.interested; toast(e.interested ? 'İlgilendiğin etkinliklere eklendi' : 'İlgi kaldırıldı'); }
     refresh();
   };
-  A.ics = (el) => {
-    const e = E(el.dataset.id);
-    const d = (ts) => new Date(ts).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-    const t = (s) => String(s || '').replace(/[\\;,]/g, (c) => '\\' + c).replace(/\r?\n/g, '\\n');
-    const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Baglanti//TR', 'BEGIN:VEVENT', `UID:${e.id}@baglanti`, `DTSTAMP:${d(Date.now())}`, `DTSTART:${d(e.start)}`, `DTEND:${d(e.start + 3 * 3600000)}`, `SUMMARY:${t(e.title)}`, `LOCATION:${t(e.location)}`, `DESCRIPTION:${t(e.desc)}`, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
-    if (downloadFile(`${e.title.replace(/[^\p{L}\p{N}]+/gu, '-')}.ics`, ics, 'text/calendar')) toast('Takvim dosyası indirildi');
-  };
   A['share-event'] = (el) => { copy(location.href.split('#')[0] + '#/etkinlik/' + el.dataset.id); toast('Etkinlik bağlantısı kopyalandı'); };
   A['share-need'] = (el) => { copy(location.href.split('#')[0] + '#/sponsorlar'); toast('İhtiyaç bağlantısı kopyalandı'); };
   A.support = (el) => {
@@ -535,7 +528,8 @@
     ? confirmModal({ title: 'Hesabını sil', text: `<b>${esc(window.Auth.account().email)}</b> hesabı, gönderilerin, mesajların ve ayarların kalıcı olarak silinecek. Bu işlem geri alınamaz.`, ok: 'Hesabı kalıcı olarak sil', danger: true, onOk: () => window.Auth.deleteAccount() })
     : openModal({ title: 'Hesabını kapat', body: `<p>Demo modunda kapatılacak bir hesap yok. Hesap kapatma akışını denemek için önce kayıt ol.</p>`, foot: '<button class="btn" data-action="close-modal">Vazgeç</button><a class="btn btn-primary" href="#/kayit">Kayıt ol</a>' }));
   A['change-password'] = () => openModal({ title: window.Auth.sampleOpen() ? 'Şifre belirle' : 'Şifre değiştir', form: 'password', body: `${window.Auth.sampleOpen() ? `<div class="callout">${icon('info')}<span>Örnek hesabın henüz şifresi yok. Şifre belirlersen tek tıkla giriş kapanır; sonraki girişlerde bu şifreyi kullanırsın.</span></div><input type="hidden" name="old" value="">` : `<div class="field"><label for="pw-old">Mevcut şifre</label><input class="input" type="password" id="pw-old" name="old" autocomplete="current-password" required maxlength="128"></div>`}<div class="field"><label for="pw-new">Yeni şifre</label><input class="input" type="password" id="pw-new" name="new" autocomplete="new-password" minlength="8" maxlength="128" required><span class="xs muted">En az 8 karakter; harf ve rakam içermeli.</span></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Güncelle</button>` });
-  A['edit-profile'] = () => { const m = me(); openModal({ title: 'Profili düzenle', form: 'profile', body: `<div class="field"><label for="pf-name">Ad soyad</label><input class="input" id="pf-name" name="name" value="${esc(m.name)}" required maxlength="40"></div><div class="field"><label for="pf-city">Şehir</label><input class="input" id="pf-city" name="city" value="${esc(m.city)}" maxlength="30"></div><div class="field"><label for="pf-bio">Kısa biyografi</label><textarea class="textarea" id="pf-bio" name="bio" maxlength="160" style="min-height:90px">${esc(m.bio)}</textarea></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Kaydet</button>` }); };
+  const ppRow = (m) => `<div class="field"><span class="label">Profil fotoğrafı <span class="muted">(isteğe bağlı)</span></span><div class="pp-row" id="pp-row">${avatar({ ...m, kind: 'user' }, 'lg')}<label class="btn btn-sm">${icon('image', 'ico-sm')}${K.safePhoto(m.photo) ? 'Değiştir' : 'Fotoğraf seç'}<input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" data-change="pp-file"></label>${K.safePhoto(m.photo) ? '<button type="button" class="btn btn-sm btn-ghost" data-action="pp-del">Kaldır</button>' : ''}</div><span class="xs muted">JPG, PNG ya da WebP · en fazla 10 MB. Kare olarak kırpılır.</span></div>`;
+  A['edit-profile'] = () => { const m = me(); openModal({ title: 'Profili düzenle', form: 'profile', body: `${K.isBrand() ? '' : ppRow(m)}<div class="field"><label for="pf-name">Ad soyad</label><input class="input" id="pf-name" name="name" value="${esc(m.name)}" required maxlength="40"></div><div class="field"><label for="pf-city">Şehir</label><input class="input" id="pf-city" name="city" value="${esc(m.city)}" maxlength="30"></div><div class="field"><label for="pf-bio">Kısa biyografi</label><textarea class="textarea" id="pf-bio" name="bio" maxlength="160" style="min-height:90px">${esc(m.bio)}</textarea></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Kaydet</button>` }); };
   A['new-group'] = () => openModal({ title: 'Yeni grup oluştur', form: 'new-group', body: `<div class="field"><label for="ng-name">Grup adı</label><input class="input" id="ng-name" name="name" required maxlength="50"></div><div class="form-grid"><div class="field"><label for="ng-type">Grup türü</label><select class="select" id="ng-type" name="type"><option>Herkese açık</option><option>Özel</option><option>Gizli</option></select></div><div class="field"><label for="ng-cat">Kategori</label><select class="select" id="ng-cat" name="cat"><option>Kamp</option><option>Teknoloji</option><option>Müzik</option><option>Spor</option><option>Sanat</option><option>Gönüllülük</option></select></div></div><div class="field"><label for="ng-desc">Açıklama</label><textarea class="textarea" id="ng-desc" name="desc" maxlength="300" style="min-height:90px"></textarea></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Oluştur</button>` });
   const noMsg = () => { if (K.canMessage()) return false; toast('Mesajlaşma üyeler için şimdilik kapalı', 'info'); return true; };
   /* ---------- profil belgeleri ---------- */
@@ -850,6 +844,48 @@
     } finally { URL.revokeObjectURL(url); }
   }
   const safeName = (n) => String(n || 'dosya').replace(/[\u0000-\u001f]/g, '').slice(0, 80);
+  // Profil / logo için ortadan kare kırpılmış küçük görsel; kapak için geniş görsel
+  async function squareImage(file, size = 320) {
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+      const side = Math.min(img.naturalWidth, img.naturalHeight);
+      const c = document.createElement('canvas'); c.width = c.height = Math.min(size, side);
+      c.getContext('2d').drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, c.width, c.height);
+      return c.toDataURL('image/jpeg', 0.88);
+    } finally { URL.revokeObjectURL(url); }
+  }
+  const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  const photoFile = (el) => {
+    const file = el.files && el.files[0]; el.value = '';
+    if (!file) return null;
+    if (!PHOTO_TYPES.includes(file.type)) { toast('Yalnızca JPG, PNG ya da WebP yüklenebilir', 'info'); return null; }
+    if (file.size > 10 * 1024 * 1024) { toast('Görsel 10 MB sınırını aşıyor', 'info'); return null; }
+    return file;
+  };
+  const canManage = (c) => c && K.isManager() && K.MANAGED.includes(c.id);
+  CH['pp-file'] = async (el) => {
+    const file = photoFile(el); if (!file) return;
+    const m = me(); if (K.isBrand()) return;
+    try { m.photo = await squareImage(file); } catch (e) { return toast('Görsel okunamadı', 'info'); }
+    save(); refresh();
+    const row = $('#pp-row'); if (row) replaceHTML(row.closest('.field'), ppRow(m));
+    toast('Profil fotoğrafı güncellendi');
+  };
+  A['pp-del'] = () => { const m = me(); delete m.photo; save(); refresh(); const row = $('#pp-row'); if (row) replaceHTML(row.closest('.field'), ppRow(m)); toast('Profil fotoğrafı kaldırıldı'); };
+  CH['comm-photo'] = async (el) => {
+    const c = C(el.dataset.id); if (!canManage(c)) return;
+    const file = photoFile(el); if (!file) return;
+    const cover = el.dataset.kind === 'cover';
+    try { c[cover ? 'cover' : 'photo'] = cover ? await cleanImage(file, 1600) : await squareImage(file); } catch (e) { return toast('Görsel okunamadı', 'info'); }
+    state.audit.push({ ts: Date.now(), who: state.me, text: `${c.name} ${cover ? 'kapak fotoğrafı' : 'logosu'} güncellendi` });
+    save(); refresh(); toast(cover ? 'Kapak fotoğrafı güncellendi' : 'Logo güncellendi');
+  };
+  A['comm-photo-del'] = (el) => {
+    const c = C(el.dataset.id); if (!canManage(c)) return;
+    delete c[el.dataset.kind === 'cover' ? 'cover' : 'photo'];
+    save(); refresh(); toast('Kapak fotoğrafı kaldırıldı');
+  };
   CH['compose-file'] = async (el) => {
     const files = Array.from(el.files || []).slice(0, 6);
     el.value = '';

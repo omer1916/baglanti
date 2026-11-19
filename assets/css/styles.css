@@ -1393,3 +1393,24 @@ body[data-route="yonetim"] { --sec: var(--purple); }
 /* Uzun, boşluksuz metinler (bağlantı, ad) sayfayı yana taşırmasın */
 body { overflow-wrap: anywhere; }
 .btn, .chip, .tag-chip, .badge, button, .nav-link, .tabs a, .bn-item, label, th { overflow-wrap: normal; }
+
+/* Profil fotoğrafı, topluluk logosu ve kapak fotoğrafı */
+.av.has-img { background: var(--surface-2); overflow: hidden; }
+.av.has-img img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; }
+.profile-info .av-wrap { position: relative; flex: none; margin-top: -48px; }
+.profile-info .av-wrap .av { margin-top: 0; }
+.av-edit { position: absolute; right: -4px; bottom: -4px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: var(--surface); color: var(--text); box-shadow: 0 0 0 1px var(--border-strong), 0 2px 6px rgba(0, 0, 0, .14); }
+.av-edit:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+.cover-wrap { position: relative; }
+.profile-cover:has(img)::after { display: none; }
+.cover-tools { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 8px; z-index: 1; }
+.cover-btn, [data-theme="light"] .cover-btn { background: rgba(14, 15, 19, .64); color: #fff; border-color: transparent; }
+.cover-btn:focus-within { outline: 2px solid #fff; outline-offset: 2px; }
+label.btn { cursor: pointer; }
+.pp-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+@media (hover: hover) {
+  .av-edit:hover { background: var(--surface-2); }
+  .cover-btn:hover { background: rgba(14, 15, 19, .8); }
+}
+@media (max-width: 720px) { .profile-info .av-wrap { margin-top: -40px; } .cover-tools { right: 8px; bottom: 8px; } }

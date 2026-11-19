@@ -177,9 +177,13 @@
     if (ref.kind === 'page') { const p = P(ref.id); return p && { ...p, kind: 'page', href: '#/sayfa/' + ref.id }; }
     return null;
   }
+  // Yalnızca tarayıcıda yeniden çizilmiş (canvas) görsel kabul edilir
+  const safePhoto = (p) => (typeof p === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(p) ? p : '');
   function avatar(ent, size = 'md', extra = '') {
     if (!ent) return '';
     const sq = ent.kind && ent.kind !== 'user' ? ' sq' : '';
+    const ph = safePhoto(ent.photo);
+    if (ph) return `<span class="av av-${size} has-img${sq} ${extra}" aria-hidden="true"><img src="${ph}" alt=""></span>`;
     return `<span class="av av-${size} g${(ent.hue || 0) % 6}${sq} ${extra}" aria-hidden="true">${esc(initials(ent.name))}</span>`;
   }
   const verified = (on) => on ? `<span class="verified" title="Doğrulanmış">${icon('badgeCheck', 'ico-sm')}<span class="sr-only">Doğrulanmış</span></span>` : '';
@@ -261,48 +265,48 @@
   let sid = 0;
   function sceneSVG(name) {
     const id = 'sc' + (++sid);
-    const lg = (n, a, b, vert = true) => `<linearGradient id="${id}${n}" x1="0" y1="0" x2="${vert ? 0 : 1}" y2="${vert ? 1 : 0}"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`;
+    const lg = (n, a, b, vert = true) => `<linearGradient id="${id}${n}" ${n === 'a' ? 'gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="300"' : `x1="0" y1="0" x2="${vert ? 0 : 1}" y2="${vert ? 1 : 0}"`}><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`;
     const u = (n) => `url(#${id}${n})`;
     let d = '', b = '';
     switch (name) {
       case 'mountain':
         d = lg('a', '#2c3f8f', '#f4a36c') + lg('b', '#24305c', '#121a33');
-        b = `<rect width="400" height="300" fill="${u('a')}"/><circle cx="292" cy="118" r="34" fill="#ffd9a0"/><path d="M0 230 90 120l50 55 70-95 110 130 80-60v150H0z" fill="#3b4a86" opacity=".85"/><path d="m210 80 24 32-13-5-11 12-8-14-13 7z" fill="#fff" opacity=".9"/><path d="M0 300V250l70-60 60 45 90-90 80 80 50-30 50 40v65z" fill="${u('b')}"/>`; break;
+        b = `<rect x="-1200" y="-1200" width="2800" height="2700" fill="${u('a')}"/><circle cx="292" cy="118" r="34" fill="#ffd9a0"/><path d="M-1200 262H-100L0 230 90 120l50 55 70-95 110 130 80-60 120 100H1600V300H-1200z" fill="#3b4a86" opacity=".85"/><path d="m210 80 24 32-13-5-11 12-8-14-13 7z" fill="#fff" opacity=".9"/><path d="M-1200 300V262H-80L0 250l70-60 60 45 90-90 80 80 50-30 50 40 100 27H1600V300z" fill="${u('b')}"/><rect x="-1200" y="299" width="2800" height="1300" fill="#121a33"/>`; break;
       case 'camp':
         d = lg('a', '#0b1230', '#2a2f6b') + lg('b', '#f5be4f', '#f46799');
-        b = `<rect width="400" height="300" fill="${u('a')}"/>${[[40, 40], [90, 70], [150, 30], [220, 60], [300, 35], [350, 80], [260, 100], [120, 110], [30, 120]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.6" fill="#fff" opacity=".8"/>`).join('')}<circle cx="330" cy="60" r="18" fill="#f4f7fc" opacity=".9"/><path d="M0 230 80 170l60 30 70-50 90 60 100-40v130H0z" fill="#182457"/><path d="M0 300V250h400v50z" fill="#0d1636"/><path d="M110 250 170 160l60 90z" fill="#40cddc"/><path d="m170 160 0 90-14 0z" fill="#2a9fb0"/><path d="M160 250 170 214l10 36z" fill="#0d1636"/><path d="M270 250c-8-18 2-26 10-38 4 12 18 20 8 38z" fill="${u('b')}"/><path d="M256 252h44" stroke="#7a4a2a" stroke-width="5" stroke-linecap="round"/><circle cx="279" cy="232" r="40" fill="#f5be4f" opacity=".12"/>`; break;
+        b = `<rect x="-1200" y="-1200" width="2800" height="2700" fill="${u('a')}"/>${[[40, 40], [90, 70], [150, 30], [220, 60], [300, 35], [350, 80], [260, 100], [120, 110], [30, 120], [-60, 50], [-130, 95], [-210, 40], [450, 45], [520, 100], [600, 60]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.6" fill="#fff" opacity=".8"/>`).join('')}<circle cx="330" cy="60" r="18" fill="#f4f7fc" opacity=".9"/><path d="M-1200 228H0L80 170l60 30 70-50 90 60 100-40 120 45H1600V300H-1200z" fill="#182457"/><rect x="-1200" y="250" width="2800" height="1300" fill="#0d1636"/><path d="M110 250 170 160l60 90z" fill="#40cddc"/><path d="m170 160 0 90-14 0z" fill="#2a9fb0"/><path d="M160 250 170 214l10 36z" fill="#0d1636"/><path d="M270 250c-8-18 2-26 10-38 4 12 18 20 8 38z" fill="${u('b')}"/><path d="M256 252h44" stroke="#7a4a2a" stroke-width="5" stroke-linecap="round"/><circle cx="279" cy="232" r="40" fill="#f5be4f" opacity=".12"/>`; break;
       case 'forest':
         d = lg('a', '#123d3a', '#47c391') + lg('b', '#0f2a2a', '#0b1d1f');
-        b = `<rect width="400" height="300" fill="${u('a')}"/><circle cx="90" cy="80" r="28" fill="#e8fff4" opacity=".7"/>${[30, 80, 130, 190, 240, 300, 350].map((x, i) => `<path d="M${x} ${300 - (i % 2 ? 40 : 10)} ${x + 30} ${110 + (i % 3) * 25} ${x + 60} ${300 - (i % 2 ? 40 : 10)}z" fill="#1f6b55" opacity=".9"/>`).join('')}<path d="M0 300V240c80-20 160 10 240-10s120 0 160 10v60z" fill="${u('b')}"/>${[10, 110, 210, 320].map((x) => `<path d="M${x} 300 ${x + 40} 150 ${x + 80} 300z" fill="#0d3b31"/>`).join('')}`; break;
+        b = `<rect x="-1200" y="-1200" width="2800" height="2700" fill="${u('a')}"/><circle cx="90" cy="80" r="28" fill="#e8fff4" opacity=".7"/>${[30, 80, 130, 190, 240, 300, 350].map((x, i) => `<path d="M${x} ${300 - (i % 2 ? 40 : 10)} ${x + 30} ${110 + (i % 3) * 25} ${x + 60} ${300 - (i % 2 ? 40 : 10)}z" fill="#1f6b55" opacity=".9"/>`).join('')}<path d="M0 300V240c80-20 160 10 240-10s120 0 160 10v60z" fill="${u('b')}"/><rect x="-1200" y="240" width="1200" height="1300" fill="#0e2727"/><rect x="400" y="240" width="1200" height="1300" fill="#0e2727"/><rect x="-1200" y="299" width="2800" height="1300" fill="#0b1d1f"/>${[10, 110, 210, 320].map((x) => `<path d="M${x} 300 ${x + 40} 150 ${x + 80} 300z" fill="#0d3b31"/>`).join('')}`; break;
       case 'sea':
         d = lg('a', '#f46799', '#f5be4f') + lg('b', '#2b4ea8', '#14204a');
-        b = `<rect width="400" height="300" fill="${u('a')}"/><circle cx="200" cy="170" r="54" fill="#ffe3b0"/><rect y="170" width="400" height="130" fill="${u('b')}"/>${[190, 210, 232, 256].map((y, i) => `<path d="M${120 - i * 20} ${y}h${160 + i * 40}" stroke="#ffd9a0" stroke-width="3" stroke-linecap="round" opacity="${0.7 - i * 0.15}"/>`).join('')}<path d="M300 168l20-30 4 30z" fill="#14204a"/><path d="M296 170h36l-6 8h-26z" fill="#14204a"/>`; break;
+        b = `<rect x="-1200" y="-1200" width="2800" height="2700" fill="${u('a')}"/><circle cx="200" cy="170" r="54" fill="#ffe3b0"/><rect x="-1200" y="170" width="2800" height="130" fill="${u('b')}"/><rect x="-1200" y="299" width="2800" height="1300" fill="#14204a"/>${[190, 210, 232, 256].map((y, i) => `<path d="M${120 - i * 20} ${y}h${160 + i * 40}" stroke="#ffd9a0" stroke-width="3" stroke-linecap="round" opacity="${0.7 - i * 0.15}"/>`).join('')}<path d="M300 168l20-30 4 30z" fill="#14204a"/><path d="M296 170h36l-6 8h-26z" fill="#14204a"/>`; break;
       case 'coffee':
         d = lg('a', '#3a2418', '#8a5a3c') + lg('b', '#f4f7fc', '#cfd8e6');
-        b = `<rect width="400" height="300" fill="${u('a')}"/><circle cx="320" cy="60" r="70" fill="#f5be4f" opacity=".15"/><ellipse cx="200" cy="248" rx="120" ry="18" fill="#000" opacity=".25"/><ellipse cx="200" cy="232" rx="100" ry="20" fill="${u('b')}"/><path d="M130 130h140l-12 92a20 20 0 0 1-20 18h-76a20 20 0 0 1-20-18z" fill="${u('b')}"/><path d="M270 150c40 0 40 50 0 50" fill="none" stroke="#e1e7f0" stroke-width="12"/><ellipse cx="200" cy="132" rx="70" ry="12" fill="#5a3522"/><path d="M175 110c-10-14 10-22 0-38M205 108c-10-14 10-22 0-38M235 110c-10-14 10-22 0-38" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".5"/>`; break;
+        b = `<rect x="-1200" y="-1200" width="2800" height="2700" fill="${u('a')}"/><circle cx="320" cy="60" r="70" fill="#f5be4f" opacity=".15"/><ellipse cx="200" cy="248" rx="120" ry="18" fill="#000" opacity=".25"/><ellipse cx="200" cy="232" rx="100" ry="20" fill="${u('b')}"/><path d="M130 130h140l-12 92a20 20 0 0 1-20 18h-76a20 20 0 0 1-20-18z" fill="${u('b')}"/><path d="M270 150c40 0 40 50 0 50" fill="none" stroke="#e1e7f0" stroke-width="12"/><ellipse cx="200" cy="132" rx="70" ry="12" fill="#5a3522"/><path d="M175 110c-10-14 10-22 0-38M205 108c-10-14 10-22 0-38M235 110c-10-14 10-22 0-38" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".5"/>`; break;
       case 'code':
         d = lg('a', '#111a33', '#1f2a52');
-        b = `<rect width="400" height="300" fill="${u('a')}"/><rect x="70" y="50" width="260" height="170" rx="12" fill="#0b1124" stroke="#2c3a66" stroke-width="3"/><circle cx="92" cy="70" r="5" fill="#f46799"/><circle cx="108" cy="70" r="5" fill="#f5be4f"/><circle cx="124" cy="70" r="5" fill="#47c391"/>${[[90, 96, 60, '#9970f5'], [158, 96, 90, '#40cddc'], [110, 118, 120, '#437ef5'], [110, 140, 70, '#47c391'], [188, 140, 80, '#f5be4f'], [110, 162, 140, '#40cddc'], [90, 184, 50, '#9970f5']].map(([x, y, w, c]) => `<rect x="${x}" y="${y}" width="${w}" height="9" rx="4.5" fill="${c}" opacity=".9"/>`).join('')}<path d="M40 232h320l-24 26H64z" fill="#2c3a66"/>`; break;
+        b = `<rect x="-1200" y="-1200" width="2800" height="2700" fill="${u('a')}"/><rect x="70" y="50" width="260" height="170" rx="12" fill="#0b1124" stroke="#2c3a66" stroke-width="3"/><circle cx="92" cy="70" r="5" fill="#f46799"/><circle cx="108" cy="70" r="5" fill="#f5be4f"/><circle cx="124" cy="70" r="5" fill="#47c391"/>${[[90, 96, 60, '#9970f5'], [158, 96, 90, '#40cddc'], [110, 118, 120, '#437ef5'], [110, 140, 70, '#47c391'], [188, 140, 80, '#f5be4f'], [110, 162, 140, '#40cddc'], [90, 184, 50, '#9970f5']].map(([x, y, w, c]) => `<rect x="${x}" y="${y}" width="${w}" height="9" rx="4.5" fill="${c}" opacity=".9"/>`).join('')}<path d="M40 232h320l-24 26H64z" fill="#2c3a66"/>`; break;
       case 'music':
         d = lg('a', '#1b0f3a', '#4b2a8a') + lg('b', '#f46799', '#9970f5');
-        b = `<rect width="400" height="300" fill="${u('a')}"/><path d="M80 0 140 260H20zM320 0 380 260H260z" fill="#fff" opacity=".07"/><path d="M200 0 250 260H150z" fill="#40cddc" opacity=".12"/>${Array.from({ length: 13 }, (_, i) => { const h = [40, 70, 110, 80, 140, 100, 160, 120, 90, 130, 70, 50, 30][i]; return `<rect x="${62 + i * 22}" y="${230 - h}" width="12" height="${h}" rx="6" fill="${u('b')}"/>`; }).join('')}<rect y="240" width="400" height="60" fill="#120a28"/>`; break;
+        b = `<rect x="-1200" y="-1200" width="2800" height="2700" fill="${u('a')}"/><path d="M80 0 140 260H20zM320 0 380 260H260z" fill="#fff" opacity=".07"/><path d="M200 0 250 260H150z" fill="#40cddc" opacity=".12"/>${Array.from({ length: 13 }, (_, i) => { const h = [40, 70, 110, 80, 140, 100, 160, 120, 90, 130, 70, 50, 30][i]; return `<rect x="${62 + i * 22}" y="${230 - h}" width="12" height="${h}" rx="6" fill="${u('b')}"/>`; }).join('')}<rect x="-1200" y="240" width="2800" height="1360" fill="#120a28"/>`; break;
       case 'bike':
         d = lg('a', '#40cddc', '#437ef5');
-        b = `<rect width="400" height="300" fill="${u('a')}"/><circle cx="320" cy="70" r="30" fill="#fff" opacity=".85"/><path d="M0 230c100-30 300-30 400 0v70H0z" fill="#1f2a52"/><path d="M0 262h400" stroke="#f5be4f" stroke-width="4" stroke-dasharray="18 14"/><g fill="none" stroke="#0d1220" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><circle cx="140" cy="190" r="40"/><circle cx="270" cy="190" r="40"/><path d="M140 190 185 125h65l20 65M185 125l35 65 50-65M178 110h22M250 125l-6-18h20"/></g>`; break;
+        b = `<rect x="-1200" y="-1200" width="2800" height="2700" fill="${u('a')}"/><circle cx="320" cy="70" r="30" fill="#fff" opacity=".85"/><path d="M0 230c100-30 300-30 400 0v70H0z" fill="#1f2a52"/><rect x="-1200" y="230" width="1200" height="1370" fill="#1f2a52"/><rect x="400" y="230" width="1200" height="1370" fill="#1f2a52"/><rect x="-1200" y="299" width="2800" height="1300" fill="#1f2a52"/><path d="M-1200 262h2800" stroke="#f5be4f" stroke-width="4" stroke-dasharray="18 14"/><g fill="none" stroke="#0d1220" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><circle cx="140" cy="190" r="40"/><circle cx="270" cy="190" r="40"/><path d="M140 190 185 125h65l20 65M185 125l35 65 50-65M178 110h22M250 125l-6-18h20"/></g>`; break;
       case 'photo':
         d = lg('a', '#9970f5', '#f46799');
-        b = `<rect width="400" height="300" fill="${u('a')}"/><rect x="100" y="90" width="200" height="140" rx="22" fill="#0d1220"/><rect x="150" y="72" width="70" height="30" rx="8" fill="#0d1220"/><circle cx="200" cy="160" r="46" fill="#1f2a52"/><circle cx="200" cy="160" r="30" fill="#40cddc"/><circle cx="188" cy="148" r="9" fill="#fff" opacity=".8"/><circle cx="270" cy="112" r="7" fill="#f5be4f"/>`; break;
+        b = `<rect x="-1200" y="-1200" width="2800" height="2700" fill="${u('a')}"/><rect x="100" y="90" width="200" height="140" rx="22" fill="#0d1220"/><rect x="150" y="72" width="70" height="30" rx="8" fill="#0d1220"/><circle cx="200" cy="160" r="46" fill="#1f2a52"/><circle cx="200" cy="160" r="30" fill="#40cddc"/><circle cx="188" cy="148" r="9" fill="#fff" opacity=".8"/><circle cx="270" cy="112" r="7" fill="#f5be4f"/>`; break;
       case 'city':
         d = lg('a', '#f5be4f', '#f46799');
-        b = `<rect width="400" height="300" fill="${u('a')}"/><circle cx="110" cy="110" r="40" fill="#fff4dd" opacity=".8"/>${[[20, 150, 50], [75, 120, 40], [120, 170, 60], [185, 100, 45], [235, 140, 55], [295, 90, 40], [340, 160, 60]].map(([x, y, w]) => `<rect x="${x}" y="${y}" width="${w}" height="${300 - y}" fill="#2a1f45"/>${Array.from({ length: Math.floor((300 - y) / 26) }, (_, r) => `<rect x="${x + 10}" y="${y + 14 + r * 26}" width="${w - 20}" height="8" fill="#f5be4f" opacity=".35"/>`).join('')}`).join('')}<path d="M185 100l22-30 23 30z" fill="#2a1f45"/>`; break;
+        b = `<rect x="-1200" y="-1200" width="2800" height="2700" fill="${u('a')}"/><circle cx="110" cy="110" r="40" fill="#fff4dd" opacity=".8"/>${[[20, 150, 50], [75, 120, 40], [120, 170, 60], [185, 100, 45], [235, 140, 55], [295, 90, 40], [340, 160, 60]].map(([x, y, w]) => `<rect x="${x}" y="${y}" width="${w}" height="${300 - y}" fill="#2a1f45"/>${Array.from({ length: Math.floor((300 - y) / 26) }, (_, r) => `<rect x="${x + 10}" y="${y + 14 + r * 26}" width="${w - 20}" height="8" fill="#f5be4f" opacity=".35"/>`).join('')}`).join('')}<path d="M185 100l22-30 23 30z" fill="#2a1f45"/><rect x="-1200" y="288" width="2800" height="1312" fill="#2a1f45"/>`; break;
       case 'volunteer':
         d = lg('a', '#47c391', '#40cddc');
-        b = `<rect width="400" height="300" fill="${u('a')}"/>${[[110, '#437ef5'], [170, '#9970f5'], [230, '#f46799'], [290, '#f5be4f']].map(([x, c]) => `<circle cx="${x}" cy="150" r="22" fill="#0d1220"/><path d="M${x - 34} 260a34 46 0 0 1 68 0z" fill="${c}"/>`).join('')}<path d="M200 70c-12-22-46-10-34 16l34 30 34-30c12-26-22-38-34-16z" fill="#f46799" stroke="#fff" stroke-width="4"/>`; break;
+        b = `<rect x="-1200" y="-1200" width="2800" height="2700" fill="${u('a')}"/>${[[110, '#437ef5'], [170, '#9970f5'], [230, '#f46799'], [290, '#f5be4f']].map(([x, c]) => `<circle cx="${x}" cy="150" r="22" fill="#0d1220"/><path d="M${x - 34} 260a34 46 0 0 1 68 0z" fill="${c}"/>`).join('')}<path d="M200 70c-12-22-46-10-34 16l34 30 34-30c12-26-22-38-34-16z" fill="#f46799" stroke="#fff" stroke-width="4"/>`; break;
       default:
         d = lg('a', '#437ef5', '#9970f5');
-        b = `<rect width="400" height="300" fill="${u('a')}"/>`;
+        b = `<rect x="-1200" y="-1200" width="2800" height="2700" fill="${u('a')}"/>`;
     }
-    return `<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><defs>${d}</defs>${b}</svg>`;
+    return `<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><defs>${d}</defs>${b}</svg>`;
   }
   const SCENE_ALT = { mountain: 'Dağ manzarası', camp: 'Gece kamp alanı', forest: 'Orman', sea: 'Gün batımında deniz', coffee: 'Kahve fincanı', code: 'Kod editörü', music: 'Konser sahnesi', bike: 'Bisiklet', photo: 'Fotoğraf makinesi', city: 'Şehir silueti', volunteer: 'Gönüllüler' };
   function media(m, cls = '') {
@@ -354,7 +358,7 @@
   window.Core = {
     state, save, reset, mode, KEYS, buildWorkspace, $, $$, esc, setHTML, replaceHTML, appendHTML, lower, num, uid, initials, timeAgo, fmt, daysLeft,
     ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand, canMessage,
-    U, C, P, E, N, me, entity, avatar, verified, icon, sceneSVG, media, readApps, writeApps
+    U, C, P, E, N, me, entity, avatar, safePhoto, verified, icon, sceneSVG, media, readApps, writeApps
   };
   syncApps();
 })();
