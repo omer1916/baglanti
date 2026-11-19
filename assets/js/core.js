@@ -55,7 +55,7 @@
   function save(quiet) {
     try { localStorage.setItem(KEY, JSON.stringify(state)); return true; }
     catch (e) {
-      if (!quiet && !warnedQuota) { warnedQuota = true; App.toast('Yüklenen medya büyük; yalnızca bu oturumda saklanacak.', 'info'); }
+      if (!quiet && !warnedQuota) { warnedQuota = true; App.toast('Tarayıcı depolama alanı doldu; son değişiklikler yalnızca bu oturumda saklanacak.', 'info'); }
       return false;
     }
   }

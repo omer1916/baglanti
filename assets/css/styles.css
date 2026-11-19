@@ -1389,3 +1389,7 @@ body[data-route="yonetim"] { --sec: var(--purple); }
   .main > .page-head h1 { font-size: 27px; }
   .main > .page-head .btn { flex: 1; }
 }
+
+/* Uzun, boşluksuz metinler (bağlantı, ad) sayfayı yana taşırmasın */
+body { overflow-wrap: anywhere; }
+.btn, .chip, .tag-chip, .badge, button, .nav-link, .tabs a, .bn-item, label, th { overflow-wrap: normal; }

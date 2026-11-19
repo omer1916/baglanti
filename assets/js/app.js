@@ -220,7 +220,7 @@
         <div class="field full"><label for="ev-title">Etkinlik adı *</label><input class="input" id="ev-title" data-cs="ev.title" value="${esc(cs.ev.title)}" required maxlength="80"></div>
         <div class="field"><label for="ev-date">Tarih *</label><input class="input" type="date" id="ev-date" data-cs="ev.date" value="${esc(cs.ev.date)}" required></div>
         <div class="field"><label for="ev-time">Saat</label><input class="input" type="time" id="ev-time" data-cs="ev.time" value="${esc(cs.ev.time)}"></div>
-        <div class="field"><label for="ev-loc">Konum *</label><input class="input" id="ev-loc" data-cs="ev.location" value="${esc(cs.ev.location)}" required placeholder="Mekân, ilçe"></div>
+        <div class="field"><label for="ev-loc">Konum *</label><input class="input" id="ev-loc" data-cs="ev.location" value="${esc(cs.ev.location)}" required maxlength="80" placeholder="Mekân, ilçe"></div>
         <div class="field"><label for="ev-cap">Kontenjan</label><input class="input" type="number" min="1" id="ev-cap" data-cs="ev.capacity" value="${esc(cs.ev.capacity)}"></div>
         <fieldset class="field full" style="border:0;padding:0;margin:0"><legend class="label" style="margin-bottom:6px">Ortak etkinlik (isteğe bağlı)</legend><div class="row" style="flex-wrap:wrap;gap:6px">${otherComms.map((c) => `<label class="chip" style="cursor:pointer"><input type="checkbox" data-cs-partner value="${c.id}" ${cs.ev.partners.includes(c.id) ? 'checked' : ''} style="accent-color:var(--brand-strong)">${esc(c.name)}</label>`).join('')}</div></fieldset>
       </div>` : ''}
@@ -234,7 +234,7 @@
         <textarea class="textarea compose-text" id="cs-text" data-cs="text" maxlength="${max}" placeholder="${ph}">${esc(cs.text)}</textarea>
         <div class="counter ${cs.text.length > max - 50 ? 'warn' : ''}" id="cs-count" aria-live="polite">${cs.text.length} / ${max}</div></div>
       ${cs.media.length ? `<div class="attach-grid">${cs.media.map((m, i) => `<div class="attach">${m.src ? (m.video ? `<video src="${esc(m.src)}" muted></video>` : `<img src="${esc(m.src)}" alt="Önizleme ${i + 1}">`) : media(m)}<button type="button" data-action="cs-remove-media" data-i="${i}" aria-label="Medyayı kaldır">${icon('x', 'ico-sm')}</button></div>`).join('')}</div>` : ''}
-      ${cs.showLoc ? `<div class="field"><label for="cs-loc">Konum</label><input class="input" id="cs-loc" data-cs="location" value="${esc(cs.location)}" placeholder="Örn. Uludağ, Bursa"></div>` : ''}
+      ${cs.showLoc ? `<div class="field"><label for="cs-loc">Konum</label><input class="input" id="cs-loc" data-cs="location" value="${esc(cs.location)}" maxlength="80" placeholder="Örn. Uludağ, Bursa"></div>` : ''}
       ${cs.showFeel ? `<div class="field"><span class="label">Duygu / aktivite</span><div class="feeling-list">${FEELINGS.map((f) => `<button type="button" class="chip" data-action="cs-feel" data-value="${esc(f)}" aria-pressed="${cs.feeling === f}">${f}</button>`).join('')}</div></div>` : ''}
       <div class="tool-row"><span class="label">Gönderine ekle</span>
         <label class="tool-btn c1" title="Fotoğraf / Video" style="cursor:pointer">${icon('image')}<span class="sr-only">Fotoğraf veya video ekle</span><input type="file" id="compose-file" data-change="compose-file" accept="image/*,video/*" multiple hidden></label>
@@ -534,7 +534,7 @@
   A['close-account'] = () => (K.mode === 'account' && window.Auth.account()
     ? confirmModal({ title: 'Hesabını sil', text: `<b>${esc(window.Auth.account().email)}</b> hesabı, gönderilerin, mesajların ve ayarların kalıcı olarak silinecek. Bu işlem geri alınamaz.`, ok: 'Hesabı kalıcı olarak sil', danger: true, onOk: () => window.Auth.deleteAccount() })
     : openModal({ title: 'Hesabını kapat', body: `<p>Demo modunda kapatılacak bir hesap yok. Hesap kapatma akışını denemek için önce kayıt ol.</p>`, foot: '<button class="btn" data-action="close-modal">Vazgeç</button><a class="btn btn-primary" href="#/kayit">Kayıt ol</a>' }));
-  A['change-password'] = () => openModal({ title: window.Auth.sampleOpen() ? 'Şifre belirle' : 'Şifre değiştir', form: 'password', body: `${window.Auth.sampleOpen() ? `<div class="callout">${icon('info')}<span>Örnek hesabın henüz şifresi yok. Şifre belirlersen tek tıkla giriş kapanır; sonraki girişlerde bu şifreyi kullanırsın.</span></div><input type="hidden" name="old" value="">` : `<div class="field"><label for="pw-old">Mevcut şifre</label><input class="input" type="password" id="pw-old" name="old" autocomplete="current-password" required></div>`}<div class="field"><label for="pw-new">Yeni şifre</label><input class="input" type="password" id="pw-new" name="new" autocomplete="new-password" minlength="8" required><span class="xs muted">En az 8 karakter; harf ve rakam içermeli.</span></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Güncelle</button>` });
+  A['change-password'] = () => openModal({ title: window.Auth.sampleOpen() ? 'Şifre belirle' : 'Şifre değiştir', form: 'password', body: `${window.Auth.sampleOpen() ? `<div class="callout">${icon('info')}<span>Örnek hesabın henüz şifresi yok. Şifre belirlersen tek tıkla giriş kapanır; sonraki girişlerde bu şifreyi kullanırsın.</span></div><input type="hidden" name="old" value="">` : `<div class="field"><label for="pw-old">Mevcut şifre</label><input class="input" type="password" id="pw-old" name="old" autocomplete="current-password" required maxlength="128"></div>`}<div class="field"><label for="pw-new">Yeni şifre</label><input class="input" type="password" id="pw-new" name="new" autocomplete="new-password" minlength="8" maxlength="128" required><span class="xs muted">En az 8 karakter; harf ve rakam içermeli.</span></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Güncelle</button>` });
   A['edit-profile'] = () => { const m = me(); openModal({ title: 'Profili düzenle', form: 'profile', body: `<div class="field"><label for="pf-name">Ad soyad</label><input class="input" id="pf-name" name="name" value="${esc(m.name)}" required maxlength="40"></div><div class="field"><label for="pf-city">Şehir</label><input class="input" id="pf-city" name="city" value="${esc(m.city)}" maxlength="30"></div><div class="field"><label for="pf-bio">Kısa biyografi</label><textarea class="textarea" id="pf-bio" name="bio" maxlength="160" style="min-height:90px">${esc(m.bio)}</textarea></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Kaydet</button>` }); };
   A['new-group'] = () => openModal({ title: 'Yeni grup oluştur', form: 'new-group', body: `<div class="field"><label for="ng-name">Grup adı</label><input class="input" id="ng-name" name="name" required maxlength="50"></div><div class="form-grid"><div class="field"><label for="ng-type">Grup türü</label><select class="select" id="ng-type" name="type"><option>Herkese açık</option><option>Özel</option><option>Gizli</option></select></div><div class="field"><label for="ng-cat">Kategori</label><select class="select" id="ng-cat" name="cat"><option>Kamp</option><option>Teknoloji</option><option>Müzik</option><option>Spor</option><option>Sanat</option><option>Gönüllülük</option></select></div></div><div class="field"><label for="ng-desc">Açıklama</label><textarea class="textarea" id="ng-desc" name="desc" maxlength="300" style="min-height:90px"></textarea></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Oluştur</button>` });
   const noMsg = () => { if (K.canMessage()) return false; toast('Mesajlaşma üyeler için şimdilik kapalı', 'info'); return true; };
@@ -894,10 +894,24 @@
   // popover içindeki bağlantılar menüyü kapatsın
   document.addEventListener('click', (e) => { if (e.target.closest('.popover a')) closePopovers(); });
 
+  // Yön değiştiren görünmez Unicode karakterleri (ör. U+202E) metni ters gösterip adları taklit etmeye yarar
+  const BIDI = /[\u202A-\u202E\u2066-\u2069\u200E\u200F]/g;
+  document.addEventListener('input', (e) => {
+    const t = e.target;
+    if ((t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') && t.type !== 'file' && BIDI.test(t.value)) { BIDI.lastIndex = 0; t.value = t.value.replace(BIDI, ''); }
+    BIDI.lastIndex = 0;
+  }, true);
   document.addEventListener('submit', (e) => {
     const f = e.target.closest('[data-form]');
     if (!f) return;
     e.preventDefault();
+    // Tarayıcı sınırı (maxlength) betikle aşılsa bile kaydedilen metin sınırlı kalsın
+    for (const el of f.elements) {
+      if ((el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA') || ['file', 'checkbox', 'radio', 'hidden'].includes(el.type)) continue;
+      let v = el.value.replace(BIDI, ''); const max = el.maxLength > 0 ? el.maxLength : 2000;
+      if (v.length > max) v = v.slice(0, max);
+      if (v !== el.value) el.value = v;
+    }
     const fn = Object.prototype.hasOwnProperty.call(F, f.dataset.form) && F[f.dataset.form];
     if (fn) fn(f, e);
   });
