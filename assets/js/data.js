@@ -21,7 +21,7 @@
         u0: { id: 'u0', name: 'Selin Koç', handle: 'selinkoc', city: 'Bursa', hue: 0, bio: 'Doğa yürüyüşü, fotoğraf ve iyi kahve. Hafta sonları rotadayım.', joined: '2024', dept: 'Uludağ Üni. · İşletme', tags: ['tg5', 'tg6'] },
         u1: { id: 'u1', name: 'Deniz Yılmaz', handle: 'denizy', city: 'Bursa', hue: 1, bio: 'Kod & Kahve topluluk yöneticisi.', dept: 'Bursa Teknik Üni. · Bilgisayar Müh.', tags: ['tg1', 'tg2'] },
         u2: { id: 'u2', name: 'Ece Demir', handle: 'ecedemir', city: 'Bursa', hue: 2, bio: 'Doğa fotoğrafçısı.', dept: 'Uludağ Üni. · Biyoloji' },
-        u3: { id: 'u3', name: 'Ayşe Kaya', handle: 'aysekaya', city: 'Bursa', hue: 3, bio: 'Doğa ve Kamp grubu moderatörü.', title: 'X Topluluğu Moderatörü', dept: 'Uludağ Üni. · Orman Müh.', tags: ['tg5'] },
+        u3: { id: 'u3', name: 'Ayşe Kaya', handle: 'aysekaya', city: 'Bursa', hue: 3, bio: 'Doğa ve Kamp topluluğu moderatörü.', title: 'X Topluluğu Moderatörü', dept: 'Uludağ Üni. · Orman Müh.', tags: ['tg5'] },
         u4: { id: 'u4', name: 'Mert Arslan', handle: 'mertarslan', city: 'İstanbul', hue: 4, bio: 'Bisiklet ve şehir rotaları.', dept: 'Uludağ Üni. · Bilgisayar Müh.', tags: ['tg1'] },
         u5: { id: 'u5', name: 'Can Öztürk', handle: 'canozturk', city: 'Bursa', hue: 5, bio: 'Müzik atölyesi gitaristi.', dept: 'Uludağ Üni. · Müzik Öğretmenliği' },
         u6: { id: 'u6', name: 'Zeynep Aydın', handle: 'zeynepaydin', city: 'İzmir', hue: 1, bio: 'Gönüllü Eller koordinatörü.', dept: 'Ege Üni. · Sosyal Hizmet', grad: true, gradYear: '2021', gradVerified: true },
@@ -32,7 +32,7 @@
 
       communities: {
         doga: {
-          id: 'doga', name: 'Doğa ve Kamp', kind: 'grup', type: 'Herkese açık', members: 18400, city: 'Bursa',
+          id: 'doga', name: 'Doğa ve Kamp', kind: 'topluluk', type: 'Herkese açık', members: 18400, city: 'Bursa',
           category: 'Kamp', scene: 'camp', hue: 2, joined: true, requested: false,
           desc: 'Haftalık rota önerileri, ekipman sohbetleri ve ortak kamp etkinlikleri.',
           rules: ['Rota paylaşırken güvenlik notlarını ekleyin.', 'Doğaya iz bırakmayın; çöpünüzü geri getirin.', 'Satış ve reklam yalnızca sponsor duyurularında.', 'Saygılı dil; nefret ve taciz yasaktır.'],
@@ -74,13 +74,13 @@
           id: 'bisiklet', name: 'Uludağ Bisiklet Topluluğu', kind: 'topluluk', type: 'Herkese açık', members: 3420, city: 'Bursa',
           category: 'Spor', scene: 'bike', hue: 4, joined: false, requested: false,
           desc: 'Şehir içi ve dağ bisikleti turları, bakım atölyeleri.',
-          rules: ['Kask zorunludur.', 'Tur sırasında grup liderini takip edin.'],
+          rules: ['Kask zorunludur.', 'Tur sırasında tur liderini takip edin.'],
           tags: ['bisiklet', 'tur', 'bakım'], pinned: 'Pazar sabahı Mudanya turu 08:00’de.',
           moderators: ['u4'], admins: ['u4'], departments: [{ id: 'd1', name: 'Turlar', topics: [{ t: 'Mudanya sahil turu', open: true }] }],
           sponsors: ['pedal'], created: '2018'
         },
         muzik: {
-          id: 'muzik', name: 'Müzik Atölyesi', kind: 'grup', type: 'Herkese açık', members: 940, city: 'Bursa',
+          id: 'muzik', name: 'Müzik Atölyesi', kind: 'topluluk', type: 'Herkese açık', members: 940, city: 'Bursa',
           category: 'Müzik', scene: 'music', hue: 5, joined: true, requested: false,
           desc: 'Jam session’lar, açık sahne geceleri ve enstrüman dersleri.',
           rules: ['Telifli içerik paylaşırken kaynak belirtin.'], tags: ['jam', 'açıksahne', 'gitar'],
@@ -157,15 +157,15 @@
 
       conversations: [
         { id: 'c1', kind: 'user', with: 'u3', title: 'Ayşe Kaya', subtitle: 'X Topluluğu Moderatörü', online: true, unread: 1, messages: [{ from: 'u3', text: 'Merhaba, nasılsın?', ts: ago(30) }, { from: 'me', text: 'İyiyim, teşekkür ederim!', ts: ago(28) }, { from: 'u3', text: 'Kış kampı için gönüllü listesine seni de ekleyebilir miyim?', ts: ago(5) }] },
-        { id: 'c2', kind: 'group', community: 'doga', title: 'Doğa ve Kamp', subtitle: '18.400 üye · grup sohbeti', online: false, unread: 3, messages: [{ from: 'u7', text: 'Ekipman listesini güncelledim.', ts: ago(90) }, { from: 'u2', text: 'Fotoğrafları galeriye yükledim 📷', ts: ago(70) }, { from: 'u3', text: 'Toplanma noktası Teleferik alt istasyonu.', ts: ago(20) }] },
-        { id: 'c3', kind: 'group', community: 'kodkahve', title: 'Kod & Kahve Topluluğu', subtitle: '248 üye · grup sohbeti', online: false, unread: 0, messages: [{ from: 'u1', text: 'Meetup sunumlarını klasöre ekledim.', ts: ago(400) }] },
-        { id: 'c4', kind: 'group', community: 'muzik', title: 'Kamp Grubu', subtitle: '12 üye', online: false, unread: 0, messages: [{ from: 'u5', text: 'Gitarı ben getiriyorum 🎸', ts: ago(1500) }] },
+        { id: 'c2', kind: 'group', community: 'doga', title: 'Doğa ve Kamp', subtitle: '18.400 üye · topluluk sohbeti', online: false, unread: 3, messages: [{ from: 'u7', text: 'Ekipman listesini güncelledim.', ts: ago(90) }, { from: 'u2', text: 'Fotoğrafları galeriye yükledim 📷', ts: ago(70) }, { from: 'u3', text: 'Toplanma noktası Teleferik alt istasyonu.', ts: ago(20) }] },
+        { id: 'c3', kind: 'group', community: 'kodkahve', title: 'Kod & Kahve Topluluğu', subtitle: '248 üye · topluluk sohbeti', online: false, unread: 0, messages: [{ from: 'u1', text: 'Meetup sunumlarını klasöre ekledim.', ts: ago(400) }] },
+        { id: 'c4', kind: 'group', community: 'muzik', title: 'Kamp Ekibi', subtitle: '12 üye', online: false, unread: 0, messages: [{ from: 'u5', text: 'Gitarı ben getiriyorum 🎸', ts: ago(1500) }] },
         { id: 'c5', kind: 'user', with: 'u1', title: 'Deniz Yılmaz', subtitle: 'Kod & Kahve yöneticisi', online: false, unread: 0, messages: [{ from: 'u1', text: 'Tasarım desteğin için teşekkürler!', ts: ago(2400) }] }
       ],
 
       notifications: [
         { id: 'nt1', type: 'like', text: '<b>Ayşe Kaya</b> gönderini beğendi', ts: ago(2), read: false, link: '#/profil', who: 'u3' },
-        { id: 'nt2', type: 'community', text: '<b>Doğa ve Kamp</b> grubuna yeni gönderi eklendi', ts: ago(15), read: false, link: '#/topluluk/doga', community: 'doga' },
+        { id: 'nt2', type: 'community', text: '<b>Doğa ve Kamp</b> topluluğuna yeni gönderi eklendi', ts: ago(15), read: false, link: '#/topluluk/doga', community: 'doga' },
         { id: 'nt3', type: 'request', text: '<b>Mert Arslan</b> üyelik isteği gönderdi', ts: ago(60), read: false, link: '#/uyeler', who: 'u4' },
         { id: 'nt4', type: 'event', text: 'Etkinlik hatırlatması: <b>Açık Sahne Gecesi</b> yaklaşıyor', ts: ago(1440), read: true, link: '#/etkinlik/e3' },
         { id: 'nt5', type: 'sponsor', text: '<b>Zirve Outdoor</b> “40 adet uyku tulumu” ihtiyacına destek oldu', ts: ago(2000), read: true, link: '#/sponsorlar' },
@@ -229,12 +229,12 @@
       gallery: [
         { scene: 'camp', community: 'doga', caption: 'Ekim kampı · çadır alanı', kind: 'Fotoğraf' },
         { scene: 'mountain', community: 'doga', caption: 'Uludağ zirve yolu', kind: 'Fotoğraf' },
-        { scene: 'forest', community: 'doga', caption: 'Saitabat gece yürüyüşü', kind: 'Video' },
+        { scene: 'forest', community: 'doga', caption: 'Saitabat gece yürüyüşü', kind: 'Fotoğraf' },
         { scene: 'code', community: 'kodkahve', caption: 'Kasım meetup sahnesi', kind: 'Fotoğraf' },
-        { scene: 'music', community: 'muzik', caption: 'Açık sahne · ilk performans', kind: 'Video' },
+        { scene: 'music', community: 'muzik', caption: 'Açık sahne · ilk performans', kind: 'Fotoğraf' },
         { scene: 'coffee', community: 'kodkahve', caption: 'Kuzey Kahve buluşması', kind: 'Fotoğraf' },
         { scene: 'bike', community: 'bisiklet', caption: 'Mudanya turu molası', kind: 'Fotoğraf' },
-        { scene: 'sea', community: 'bisiklet', caption: 'Sahil yolu', kind: 'Video' },
+        { scene: 'sea', community: 'bisiklet', caption: 'Sahil yolu', kind: 'Fotoğraf' },
         { scene: 'photo', community: 'foto', caption: 'Sergi hazırlığı', kind: 'Fotoğraf' },
         { scene: 'city', community: 'foto', caption: 'Koza Han detayları', kind: 'Fotoğraf' },
         { scene: 'volunteer', community: 'gonullu', caption: 'Mont toplama standı', kind: 'Fotoğraf' },

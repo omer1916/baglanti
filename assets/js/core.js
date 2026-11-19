@@ -82,6 +82,17 @@
   // Profil görünürlüğü: "Sadece ben" yerine yalnızca yetkililer (moderatör, topluluk yöneticisi, sponsor)
   if (state.privacy && state.privacy.visibility === 'Sadece ben') state.privacy.visibility = 'Yetkililer';
   if (state.role === 'site') state.role = 'uye';
+  if (state.noGroupV !== 1) {   // grup kavramı ve video kaldırıldı: hepsi topluluk, medya yalnızca fotoğraf
+    const se = window.SEED();
+    Object.values(state.communities || {}).forEach((c) => { if (c.kind === 'grup') c.kind = 'topluluk'; const x = se.communities[c.id]; if (x) c.rules = x.rules.slice(); });
+    if (state.privacy && state.privacy.visibility === 'Gruplar') state.privacy.visibility = 'Topluluklar';
+    (state.posts || []).forEach((p) => { if (Array.isArray(p.media)) p.media = p.media.filter((m) => !m.video); });
+    (state.gallery || []).forEach((g) => { if (g.kind === 'Video') g.kind = 'Fotoğraf'; });
+    (state.conversations || []).forEach((cv) => { const x = se.conversations.find((y) => y.id === cv.id); if (x) { cv.title = x.title; cv.subtitle = x.subtitle; } });
+    (state.notifications || []).forEach((n) => { if (typeof n.text === 'string') n.text = n.text.replace(' grubuna ', ' topluluğuna '); });
+    const u3 = state.users && state.users.u3; if (u3 && /grubu/.test(u3.bio || '')) u3.bio = se.users.u3.bio;
+    state.noGroupV = 1;
+  }
   if (state.tagLimitV !== 2) {   // etiket sınırı 8 oldu
     state.tagLimit = 8;
     if (state.tagAlerts) state.tagAlerts = state.tagAlerts.filter((a) => a.status !== 'open' || a.count > 8);
@@ -139,7 +150,7 @@
   })();
   const BAD_TAGS = new Set(['script', 'iframe', 'frame', 'frameset', 'object', 'embed', 'applet', 'base', 'meta', 'link', 'style', 'noscript', 'foreignobject', 'template']);
   const URL_ATTRS = new Set(['href', 'src', 'xlink:href', 'action', 'formaction', 'poster', 'background', 'cite', 'srcset']);
-  const SAFE_DATA = /^data:(image\/(png|jpe?g|gif|webp|avif)|video\/(mp4|webm|quicktime));base64,/;
+  const SAFE_DATA = /^data:image\/(png|jpe?g|gif|webp|avif);base64,/;
   function sanitize(root) {
     const kill = [];
     const walker = (root.ownerDocument || document).createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
@@ -203,7 +214,7 @@
 
   /* ---------------- roller ---------------- */
   const ROLES = {
-    uye: { label: 'Bireysel kullanıcı', short: 'Üye', desc: 'İçeriklere erişir, etkinliklere katılır, üye olduğu gruplarla senkron kalır.' },
+    uye: { label: 'Bireysel kullanıcı', short: 'Üye', desc: 'İçeriklere erişir, etkinliklere katılır, üye olduğu topluluklarla senkron kalır.' },
     moderator: { label: 'Topluluk moderatörü', short: 'Moderatör', desc: 'İçerik performansını ve etkileşimi takip eder, şikâyetleri inceler.' },
     yonetici: { label: 'Topluluk yöneticisi', short: 'Yönetici', desc: 'Kuralları uygular; üyeleri, etkinlikleri, etiketleri ve moderatörleri yönetir.' },
     marka: { label: 'Sponsor', short: 'Sponsor', desc: 'Topluluk sponsorluğunu üstlenir, toplulukların ihtiyaçlarını karşılar.' },

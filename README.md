@@ -32,7 +32,7 @@ Arka uç olmadığı için sistem tek hesaplıdır ve tüm veriler yalnızca tar
 - DOM'a giren tüm HTML tek bir yardımcıdan (`core.js › setHTML`) geçer: betik çalıştırmayan ayrı bir belgede (`DOMParser`) ayrıştırılıp sayfaya taşınmadan önce temizlenir: `script`/`iframe` gibi etiketler, `on*` öznitelikleri ve `javascript:` adresleri silinir; kodda hiç `innerHTML` kullanılmaz. **Trusted Types** zorunludur; bu yardımcı dışındaki her HTML yazımı tarayıcı tarafından engellenir.
 - İçerik Güvenliği Politikası (CSP) yalnızca sitenin kendi betiklerine izin verir; satır içi betik, `eval`, dış ağ isteği, çerçeve, eklenti ve form gönderimi kapalıdır. `'unsafe-inline'` yalnızca `style=""` özniteliklerine açıktır.
 - Örnek hesabın kaynak kodda şifresi yoktur (her tarayıcıda rastgele, eşleşmeyen bir özetle oluşturulur).
-- Yüklenen fotoğraflar yeniden çizilerek **EXIF/GPS konum bilgisi silinir**; yalnızca izinli görsel ve video türleri kabul edilir.
+- Yüklenen fotoğraflar yeniden çizilerek **EXIF/GPS konum bilgisi silinir**; yalnızca izinli görsel türleri kabul edilir.
 
 GitHub Pages özel HTTP başlığı ayarlamaya izin vermez. `frame-ancestors`, `X-Content-Type-Options`, `Permissions-Policy`, HSTS gibi başlıklar `_headers` dosyasında hazırdır; site Netlify veya Cloudflare Pages'e taşınırsa otomatik uygulanır.
 
@@ -57,10 +57,10 @@ GitHub Pages özel HTTP başlığı ayarlamaya izin vermez. `frame-ancestors`, `
 | — | Etiketler | `#/yonetim?tab=etiketler`: topluluk yöneticisi etiket oluşturur, yazı rengini hazır renklerden ya da renk seçiciden belirler, rengi sonradan değiştirir veya siler |
 | — | İş & staj ilanları | `#/ilanlar`: sponsorlar etiket seçerek iş, staj, yarı zamanlı ve gönüllü ilanı verir; üyeler tür, etiket, çalışma şekli ve aramayla filtreler, etiket takip eder, kaydeder ve başvurur. İlanlar akışa karışmaz |
 | — | Profil belgeleri | `#/profil?tab=belgeler`: sertifika, proje ve CV için PDF yükleme (yalnızca PDF, içerik `%PDF-` ile doğrulanır, en fazla 1,5 MB), açma ve silme |
-| 11 | Gruplar | Herkese açık, özel ve gizli grup; üyelik isteği; kurallar |
+| 11 | Topluluk türleri | Herkese açık, özel ve gizli topluluk; üyelik isteği; kurallar |
 | 12 | Sponsor sayfaları | `#/sayfa/kuzey`: sponsor rolünde istatistik, yayın takvimi ve sayfa rolleri |
-| 13 | Hikâyeler / dikey video | Akışın üstündeki topluluk hikâyeleri (24 saat, sessize al, gizle) |
-| 14 | Mesajlaşma | `#/mesajlar`: bire bir ve grup sohbetleri, dosya veya görsel gönderme. Üye (bireysel kullanıcı) rolünde şimdilik kapalı |
+| 13 | Hikâyeler | Akışın üstündeki topluluk hikâyeleri (24 saat, sessize al, gizle) |
+| 14 | Mesajlaşma | `#/mesajlar`: bire bir ve topluluk sohbetleri, dosya veya görsel gönderme. Üye (bireysel kullanıcı) rolünde şimdilik kapalı |
 | 15 | Bildirim merkezi | Okundu/okunmadı, tür filtresi, sıklık ve sessiz saat ayarları |
 | 16 | Arama ve keşfet | Sekmeli sonuçlar; tarih, konum, içerik türü ve gizlilik filtreleri |
 | 17 | Gizlilik ve hesap | `#/ayarlar`: görünürlük, etiketleme, engelleme, veri indirme, 2FA, cihazlar |

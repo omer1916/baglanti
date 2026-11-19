@@ -263,11 +263,11 @@
       <div class="field"><label class="sr-only" for="cs-text">Gönderi metni</label>
         <textarea class="textarea compose-text" id="cs-text" data-cs="text" maxlength="${max}" placeholder="${ph}">${esc(cs.text)}</textarea>
         <div class="counter ${cs.text.length > max - 50 ? 'warn' : ''}" id="cs-count" aria-live="polite">${cs.text.length} / ${max}</div></div>
-      ${cs.media.length ? `<div class="attach-grid">${cs.media.map((m, i) => `<div class="attach">${m.src ? (m.video ? `<video src="${esc(m.src)}" muted></video>` : `<img src="${esc(m.src)}" alt="Önizleme ${i + 1}">`) : media(m)}<button type="button" data-action="cs-remove-media" data-i="${i}" aria-label="Medyayı kaldır">${icon('x', 'ico-sm')}</button></div>`).join('')}</div>` : ''}
+      ${cs.media.length ? `<div class="attach-grid">${cs.media.map((m, i) => `<div class="attach">${m.src ? `<img src="${esc(m.src)}" alt="Önizleme ${i + 1}">` : media(m)}<button type="button" data-action="cs-remove-media" data-i="${i}" aria-label="Medyayı kaldır">${icon('x', 'ico-sm')}</button></div>`).join('')}</div>` : ''}
       ${cs.showLoc ? `<div class="field"><label for="cs-loc">Konum</label><input class="input" id="cs-loc" data-cs="location" value="${esc(cs.location)}" maxlength="80" placeholder="Örn. Uludağ, Bursa"></div>` : ''}
       ${cs.showFeel ? `<div class="field"><span class="label">Duygu / aktivite</span><div class="feeling-list">${FEELINGS.map((f) => `<button type="button" class="chip" data-action="cs-feel" data-value="${esc(f)}" aria-pressed="${cs.feeling === f}">${f}</button>`).join('')}</div></div>` : ''}
       <div class="tool-row"><span class="label">Gönderine ekle</span>
-        <label class="tool-btn c1" title="Fotoğraf / Video" style="cursor:pointer">${icon('image')}<span class="sr-only">Fotoğraf veya video ekle</span><input type="file" id="compose-file" data-change="compose-file" accept="image/*,video/*" multiple hidden></label>
+        <label class="tool-btn c1" title="Fotoğraf" style="cursor:pointer">${icon('image')}<span class="sr-only">Fotoğraf ekle</span><input type="file" id="compose-file" data-change="compose-file" accept="image/*" multiple hidden></label>
         <button type="button" class="tool-btn c2" data-action="cs-toggle" data-key="showLoc" aria-pressed="${cs.showLoc}" title="Konum">${icon('pin')}<span class="sr-only">Konum ekle</span></button>
         <button type="button" class="tool-btn c3" data-action="cs-toggle" data-key="showFeel" aria-pressed="${cs.showFeel}" title="Duygu / Aktivite">${icon('smile')}<span class="sr-only">Duygu veya aktivite ekle</span></button>
         <button type="button" class="tool-btn c4" data-action="cs-sample" title="Örnek görsel">${icon('sparkle')}<span class="sr-only">Örnek görsel ekle</span></button>
@@ -403,7 +403,7 @@
       </div>
       <div class="story-cap">
         <p>${esc(it.caption)}</p>
-        <div class="row"><span class="row" style="gap:6px">${manage ? `${icon('eye', 'ico-sm')} ${num(it.views)} görüntülenme` : 'Dikey video · altyazılı'}</span>
+        <div class="row"><span class="row" style="gap:6px">${manage ? `${icon('eye', 'ico-sm')} ${num(it.views)} görüntülenme` : 'Topluluk hikâyesi'}</span>
           <span class="btn-row"><button class="btn btn-sm" data-action="story-mute" data-id="${s.id}">${icon(s.muted ? 'volume' : 'volumeOff', 'ico-sm')}${s.muted ? 'Sesi aç' : 'Sessize al'}</button><button class="btn btn-sm" data-action="story-hide" data-id="${s.id}">${icon('eyeOff', 'ico-sm')}Gizle</button></span></div>
       </div>
     </div>`);
@@ -449,7 +449,7 @@
     openModal({
       title: `${esc(it.caption || 'Medya')}${many ? ` <span class="muted small">${lb.i + 1} / ${lb.items.length}</span>` : ''}`,
       cls: 'lightbox',
-      body: it.src && it.video ? `<div class="scene"><video src="${it.src}" controls playsinline style="width:100%;max-height:70dvh"></video></div>` : media(it),
+      body: media(it),
       foot: many ? `<button class="btn" data-action="lb-prev">${icon('chevronLeft', 'ico-sm')}Önceki</button><button class="btn" data-action="lb-next">Sonraki${icon('chevronRight', 'ico-sm')}</button>` : ''
     });
     els.modal.querySelector('.modal-body').style.padding = '0';
@@ -549,9 +549,9 @@
   A['story-mute'] = (el) => { const s = state.stories.find((x) => x.id === el.dataset.id); s.muted = !s.muted; save(); toast(s.muted ? 'Hikâye sessize alındı; listenin sonunda gösterilecek' : 'Sessiz kaldırıldı'); renderStory(); };
   A['story-hide'] = (el) => { const s = state.stories.find((x) => x.id === el.dataset.id); s.hidden = true; save(); closeStory(); toast('Bu topluluğun hikâyeleri gizlendi'); };
 
-  A.join = (el) => { const c = C(el.dataset.id); if (c.type === 'Herkese açık') { c.joined = true; c.members++; toast(`${c.name} grubuna katıldın`); } else { c.requested = true; toast('Katılma isteğin yöneticiye iletildi'); } refresh(); };
+  A.join = (el) => { const c = C(el.dataset.id); if (c.type === 'Herkese açık') { c.joined = true; c.members++; toast(`${c.name} topluluğuna katıldın`); } else { c.requested = true; toast('Katılma isteğin yöneticiye iletildi'); } refresh(); };
   A['cancel-request'] = (el) => { C(el.dataset.id).requested = false; refresh(); toast('İstek geri çekildi'); };
-  A.leave = (el) => { const c = C(el.dataset.id); confirmModal({ title: 'Gruptan ayrıl', text: `<b>${esc(c.name)}</b> grubundan ayrılmak istediğine emin misin? Gönderileri artık akışında görmeyeceksin.`, ok: 'Ayrıl', danger: true, onOk: () => { c.joined = false; c.members--; refresh(); toast('Gruptan ayrıldın'); } }); };
+  A.leave = (el) => { const c = C(el.dataset.id); confirmModal({ title: 'Topluluktan ayrıl', text: `<b>${esc(c.name)}</b> topluluğundan ayrılmak istediğine emin misin? Gönderileri artık akışında görmeyeceksin.`, ok: 'Ayrıl', danger: true, onOk: () => { c.joined = false; c.members--; refresh(); toast('Gruptan ayrıldın'); } }); };
   A['follow-page'] = (el) => { const p = P(el.dataset.id); p.following = !p.following; p.followers += p.following ? 1 : -1; refresh(); toast(p.following ? `${p.name} takip ediliyor` : 'Takipten çıkıldı'); };
   A.rsvp = (el) => {
     const e = E(el.dataset.id); if (!e) return;
@@ -822,7 +822,6 @@
   A['change-password'] = () => openModal({ title: window.Auth.sampleOpen() ? 'Şifre belirle' : 'Şifre değiştir', form: 'password', body: `${window.Auth.sampleOpen() ? `<div class="callout">${icon('info')}<span>Örnek hesabın henüz şifresi yok. Şifre belirlersen tek tıkla giriş kapanır; sonraki girişlerde bu şifreyi kullanırsın.</span></div><input type="hidden" name="old" value="">` : `<div class="field"><label for="pw-old">Mevcut şifre</label><input class="input" type="password" id="pw-old" name="old" autocomplete="current-password" required maxlength="128"></div>`}<div class="field"><label for="pw-new">Yeni şifre</label><input class="input" type="password" id="pw-new" name="new" autocomplete="new-password" minlength="8" maxlength="128" required><span class="xs muted">En az 8 karakter; harf ve rakam içermeli.</span></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Güncelle</button>` });
   const ppRow = (m) => `<div class="field"><span class="label">Profil fotoğrafı <span class="muted">(isteğe bağlı)</span></span><div class="pp-row" id="pp-row">${avatar({ ...m, kind: 'user' }, 'lg')}<label class="btn btn-sm">${icon('image', 'ico-sm')}${K.safePhoto(m.photo) ? 'Değiştir' : 'Fotoğraf seç'}<input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" data-change="pp-file"></label>${K.safePhoto(m.photo) ? '<button type="button" class="btn btn-sm btn-ghost" data-action="pp-del">Kaldır</button>' : ''}</div><span class="xs muted">JPG, PNG ya da WebP · en fazla 10 MB. Kare olarak kırpılır.</span></div>`;
   A['edit-profile'] = () => { const m = me(); openModal({ title: 'Profili düzenle', form: 'profile', body: `${K.isBrand() ? '' : ppRow(m)}<div class="field"><label for="pf-name">Ad soyad</label><input class="input" id="pf-name" name="name" value="${esc(m.name)}" required maxlength="40"></div><div class="field"><label for="pf-city">Şehir</label><input class="input" id="pf-city" name="city" value="${esc(m.city)}" maxlength="30"></div>${K.isBrand() ? '' : `<div class="field"><label for="pf-dept">Okul / bölüm</label><input class="input" id="pf-dept" name="dept" value="${esc(m.dept || '')}" maxlength="60" placeholder="Uludağ Üni. · Bilgisayar Müh."></div>`}<div class="field"><label for="pf-bio">Kısa biyografi</label><textarea class="textarea" id="pf-bio" name="bio" maxlength="160" style="min-height:90px">${esc(m.bio)}</textarea></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Kaydet</button>` }); };
-  A['new-group'] = () => openModal({ title: 'Yeni grup oluştur', form: 'new-group', body: `<div class="field"><label for="ng-name">Grup adı</label><input class="input" id="ng-name" name="name" required maxlength="50"></div><div class="form-grid"><div class="field"><label for="ng-type">Grup türü</label><select class="select" id="ng-type" name="type"><option>Herkese açık</option><option>Özel</option><option>Gizli</option></select></div><div class="field"><label for="ng-cat">Kategori</label><select class="select" id="ng-cat" name="cat"><option>Kamp</option><option>Teknoloji</option><option>Müzik</option><option>Spor</option><option>Sanat</option><option>Gönüllülük</option></select></div></div><div class="field"><label for="ng-desc">Açıklama</label><textarea class="textarea" id="ng-desc" name="desc" maxlength="300" style="min-height:90px"></textarea></div>`, foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">Oluştur</button>` });
   const noMsg = () => { if (K.canMessage()) return false; toast('Mesajlaşma üyeler için şimdilik kapalı', 'info'); return true; };
   /* ---------- profil belgeleri ---------- */
   const DOC_MAX = 1.5 * 1024 * 1024;   // tarayıcı depolaması küçük olduğu için; sunucuda daha büyük olabilir
@@ -929,7 +928,6 @@
 (el) => { UI.sponsorCat = el.dataset.value; render({ keepScroll: true }); };
   A['notif-filter'] = (el) => { UI.notifFilter = el.dataset.value; render({ keepScroll: true }); };
   A['mod-filter'] = (el) => { UI.modFilter = el.dataset.value; render({ keepScroll: true }); };
-  A['media-kind'] = (el) => { UI.mediaKind = el.dataset.value; render({ keepScroll: true }); };
 
   /* =============== form gönderimleri =============== */
   const F = {};
@@ -1082,13 +1080,6 @@
     if (existing) confirmModal({ title: 'Mevcut hesabın yerine geçsin mi?', text: `Bu tarayıcıda <b>${esc(existing.email)}</b> hesabı kayıtlı. Yeni hesap oluşturursan eski hesap ve tüm verileri silinir.`, ok: 'Yeni hesabı oluştur', danger: true, onOk: doRegister });
     else doRegister();
   };
-  F['new-group'] = (f) => {
-    const name = f.name.value.trim(); if (!name) return toast('Grup adı gerekli.', 'info');
-    const id = uid('g');
-    const scene = { Kamp: 'camp', Teknoloji: 'code', Müzik: 'music', Spor: 'bike', Sanat: 'photo', Gönüllülük: 'volunteer' }[f.cat.value];
-    state.communities[id] = { id, name, kind: 'grup', type: f.type.value, members: 1, city: me().city, category: f.cat.value, scene, hue: 1, joined: true, requested: false, desc: f.desc.value.trim() || 'Yeni grup.', rules: ['Saygılı dil kullanın.'], tags: [lower(f.cat.value)], pinned: '', moderators: [state.me], admins: [state.me], departments: [], sponsors: [], created: String(new Date().getFullYear()) };
-    closeModal(); save(); location.hash = '#/topluluk/' + id; toast('Grup oluşturuldu');
-  };
   F['block-add'] = (f) => { const n = f.name.value.trim(); if (!n) return; state.privacy.blocked.push(n); refresh(); toast('Kullanıcı engellendi'); };
   F['assign-mod'] = (f) => { const c = C(UI.adminComm); const id = f.user.value; if (!c.moderators.includes(id)) c.moderators.push(id); state.audit.push({ ts: Date.now(), who: state.me, text: `${U(id).name} moderatör olarak atandı (${c.name})` }); refresh(); toast(`${U(id).name} moderatör olarak atandı`); };
   F.chat = (f) => {
@@ -1109,7 +1100,7 @@
     const li = $(`#chat-items a[href="#/mesajlar/${conv.id}"] .grow span`);
     if (li) li.textContent = (m.from === 'me' ? 'Sen: ' : '') + (m.img ? '📷 Fotoğraf' : m.file ? '📎 ' + m.file : m.text);
   }
-  const REPLIES = ['Harika, teşekkürler! 🙌', 'Tamamdır, etkinlikte görüşürüz.', 'Bunu gruba da iletiyorum.', 'Süper fikir 👍', 'Detayları akşam paylaşırım.'];
+  const REPLIES = ['Harika, teşekkürler! 🙌', 'Tamamdır, etkinlikte görüşürüz.', 'Bunu topluluğa da iletiyorum.', 'Süper fikir 👍', 'Detayları akşam paylaşırım.'];
   function fakeReply(conv) {
     const body = $('#chat-body');
     if (!body) return;
@@ -1206,7 +1197,6 @@
   /* Yükleme güvenliği: yalnızca izinli türler; fotoğraflar tuvalde yeniden çizilir.
      Böylece EXIF/GPS konumu, kamera bilgisi gibi gizli üst veriler silinir ve boyut küçülür. */
   const IMG_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
-  const VID_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
   const readURL = (file) => new Promise((res, rej) => { const rd = new FileReader(); rd.onload = () => res(rd.result); rd.onerror = rej; rd.readAsDataURL(file); });
   async function cleanImage(file, max = 1600, jpeg = false) {
     const url = URL.createObjectURL(file);
@@ -1273,12 +1263,11 @@
     const files = Array.from(el.files || []).slice(0, 6);
     el.value = '';
     for (const file of files) {
-      const isImg = IMG_TYPES.includes(file.type), isVid = VID_TYPES.includes(file.type);
-      if (!isImg && !isVid) { toast(`${safeName(file.name)}: desteklenmeyen dosya türü`, 'info'); continue; }
+      if (!IMG_TYPES.includes(file.type)) { toast(`${safeName(file.name)}: yalnızca fotoğraf yüklenebilir`, 'info'); continue; }
       if (file.size > 15 * 1024 * 1024) { toast(`${safeName(file.name)} 15 MB sınırını aşıyor`, 'info'); continue; }
       try {
-        const src = isImg && file.type !== 'image/gif' ? await cleanImage(file) : await readURL(file);
-        cs?.media.push({ src, video: isVid, alt: safeName(file.name).replace(/\.[a-z0-9]+$/i, '') });
+        const src = file.type !== 'image/gif' ? await cleanImage(file) : await readURL(file);
+        cs?.media.push({ src, alt: safeName(file.name).replace(/\.[a-z0-9]+$/i, '') });
       } catch (e) { toast(`${safeName(file.name)} okunamadı`, 'info'); }
     }
     if (cs) renderComposer();
