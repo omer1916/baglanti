@@ -548,6 +548,38 @@
     };
   };
 
+  // Konum bağlantısı: verilen link (harita / çevrimiçi toplantı) ya da adresten harita araması
+  function locLink(e) {
+    const u = K.safeUrl(e.locLink);
+    if (u) {
+      const h = new URL(u).hostname;
+      const label = /maps|goo\.gl|yandex|apple\.com/.test(h) || /\/maps/.test(u) ? 'Haritada aç' : /meet|zoom|teams|webex|discord/.test(h) ? 'Toplantıya katıl' : 'Bağlantıyı aç';
+      const text = e.location ? esc(e.location) : label === 'Haritada aç' ? 'Konum' : 'Çevrimiçi etkinlik';
+      return `${text} · <a class="link" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    }
+    return e.location ? `${esc(e.location)} · <a class="link" href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(e.location)}" target="_blank" rel="noopener noreferrer">Haritada aç</a>` : 'Konum belirtilmedi';
+  }
+  const myResponse = (e) => (e.responses || []).find((x) => x.user === state.me);
+  function eventFormCard(e) {
+    const ext = K.safeUrl(e.formLink);
+    if (ext) return `<section class="card card-pad stack"><div class="row-between" style="flex-wrap:wrap;gap:10px"><div><h2 style="font-size:16px">Kayıt formu</h2><p class="small muted" style="margin:0">Düzenleyiciler bu etkinlik için hazır bir form kullanıyor (ör. Google Forms).</p></div><a class="btn btn-primary" href="${esc(ext)}" target="_blank" rel="noopener noreferrer">${icon('file', 'ico-sm')}Formu doldur</a></div>${K.canSeeResponses(e) ? `<div class="callout">${icon('info')}<span>Bu formun yanıtları formun kendi sitesinde toplanır; buraya aktarılmaz. Google Forms’ta listeyi <b>Yanıtlar</b> sekmesinden görüp Excel’e indirebilirsin.</span></div>` : ''}</section>`;
+    if (!e.form) return '';
+    const mine = myResponse(e);
+    const past = e.start < Date.now();
+    return `<section class="card card-pad stack"><div class="row-between" style="flex-wrap:wrap;gap:10px"><div><h2 style="font-size:16px">Kayıt formu</h2><p class="small muted" style="margin:0">${mine ? `Formu doldurdun · ${timeAgo(mine.ts)}` : past ? 'Etkinlik tamamlandı; kayıtlar kapandı.' : 'Katılmak için kısa bir form doldurman gerekiyor.'}</p></div>${past ? '' : `<button class="btn ${mine ? '' : 'btn-primary'}" data-action="form-open" data-id="${e.id}">${icon(mine ? 'edit' : 'file', 'ico-sm')}${mine ? 'Yanıtını güncelle' : 'Formu doldur'}</button>`}</div></section>`;
+  }
+  function formColumns(e) {
+    return [['name', 'Ad soyad'], ['email', 'E-posta'], ...e.form.fields.filter((k) => K.FORM_FIELDS[k]).map((k) => [k, K.FORM_FIELDS[k]]), ...e.form.questions.map((q) => [q.id, q.label])];
+  }
+  function eventResponses(e) {
+    if (!e.form || !K.canSeeResponses(e)) return '';
+    const rs = (e.responses || []).slice().sort((a, b) => b.ts - a.ts);
+    const cols = formColumns(e);
+    return `<section class="card"><div class="card-head" style="flex-wrap:wrap;gap:10px"><div><h2>Kayıt yanıtları <span class="muted">(${rs.length})</span></h2><span class="small muted">Yalnızca düzenleyen topluluğun moderatör ve yöneticileri görür</span></div>${rs.length ? `<button class="btn btn-sm" data-action="form-export" data-id="${e.id}">${icon('download', 'ico-sm')}Excel’e indir</button>` : ''}</div>
+      ${rs.length ? `<div class="table-wrap"><table class="resp-table"><thead><tr>${cols.map(([, l]) => `<th>${esc(l)}</th>`).join('')}<th>Gönderim</th></tr></thead><tbody>${rs.map((r) => `<tr>${cols.map(([k]) => `<td>${esc(r.a[k] || '—')}</td>`).join('')}<td class="muted">${timeAgo(r.ts)}</td></tr>`).join('')}</tbody></table></div>` : `<div class="card-pad muted small">Henüz yanıt yok. Form doldurulunca burada listelenir.</div>`}</section>`;
+  }
+  V.formColumns = formColumns;
+
   V.etkinlik = (r) => {
     const e = E(r.id);
     if (!e) return V.notfound();
@@ -562,12 +594,14 @@
           <div class="row" style="gap:6px;flex-wrap:wrap"><span class="badge blue">${esc(e.category)}</span>${e.communities.length > 1 ? '<span class="badge cyan">Ortak etkinlik</span>' : ''}</div>
           <h1 style="font-size:clamp(22px,3vw,28px)">${esc(e.title)}</h1>
           <div class="meta-line">${icon('calendar')}${fmt.full(e.start)} · ${fmt.time(e.start)}</div>
-          <div class="meta-line">${icon('pin')}${esc(e.location)}</div>
+          <div class="meta-line">${icon('pin')}<span>${locLink(e)}</span></div>
           <div class="meta-line">${icon('users')}<span>Düzenleyen: ${eventOrganizers(e)}</span></div>
           <div class="row" style="flex-wrap:wrap;gap:8px;margin-top:4px">${rsvpButtons(e, false)}<button class="btn" data-action="share-event" data-id="${e.id}">${icon('share', 'ico-sm')}Paylaş</button></div>
         </div>
       </section>
       <section class="card card-pad stack"><h2 style="font-size:16px">Etkinlik hakkında</h2><p>${esc(e.desc)}</p></section>
+      ${eventFormCard(e)}
+      ${eventResponses(e)}
       <section class="card card-pad stack">
         <div class="row-between"><h2 style="font-size:16px">Katılımcılar</h2><span class="small muted">${num(e.going)} / ${num(e.capacity)}</span></div>
         <div class="progress"><span style="width:${Math.min(100, e.going / e.capacity * 100)}%"></span></div>

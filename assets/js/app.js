@@ -189,7 +189,7 @@
       const type = allowed.includes(o.type) ? o.type : 'post';
       let target = o.community || '';
       if (type !== 'post' && !K.MANAGED.includes(target)) target = K.MANAGED[0];
-      cs = { type, text: '', media: [], location: '', feeling: '', visibility: type === 'announcement' ? 'Topluluk üyeleri' : 'Herkese açık', target, showLoc: false, showFeel: !!o.feeling, ev: { title: '', date: '', time: '19:00', location: '', capacity: 50, partners: [] }, need: { title: '', category: 'Ürün', goal: 10, deadline: '' } };
+      cs = { type, text: '', media: [], location: '', feeling: '', visibility: type === 'announcement' ? 'Topluluk üyeleri' : 'Herkese açık', target, showLoc: false, showFeel: !!o.feeling, ev: { title: '', date: '', time: '19:00', location: '', link: '', capacity: 50, partners: [], formMode: 'none', formLink: '', form: { fields: ['phone'], questions: [] } }, need: { title: '', category: 'Ürün', goal: 10, deadline: '' } };
     }
     renderComposer();
     if (o.pick) setTimeout(() => $('#compose-file')?.click(), 50);
@@ -221,8 +221,10 @@
         <div class="field full"><label for="ev-title">Etkinlik adı *</label><input class="input" id="ev-title" data-cs="ev.title" value="${esc(cs.ev.title)}" required maxlength="80"></div>
         <div class="field"><label for="ev-date">Tarih *</label><input class="input" type="date" id="ev-date" data-cs="ev.date" value="${esc(cs.ev.date)}" required></div>
         <div class="field"><label for="ev-time">Saat</label><input class="input" type="time" id="ev-time" data-cs="ev.time" value="${esc(cs.ev.time)}"></div>
-        <div class="field"><label for="ev-loc">Konum *</label><input class="input" id="ev-loc" data-cs="ev.location" value="${esc(cs.ev.location)}" required maxlength="80" placeholder="Mekân, ilçe"></div>
+        <div class="field"><label for="ev-loc">Konum</label><input class="input" id="ev-loc" data-cs="ev.location" value="${esc(cs.ev.location)}" maxlength="80" placeholder="Mekân, ilçe"></div>
         <div class="field"><label for="ev-cap">Kontenjan</label><input class="input" type="number" min="1" id="ev-cap" data-cs="ev.capacity" value="${esc(cs.ev.capacity)}"></div>
+        <div class="field full"><label for="ev-link">Konum ya da toplantı bağlantısı <span class="muted">(isteğe bağlı)</span></label><input class="input" type="url" id="ev-link" data-cs="ev.link" value="${esc(cs.ev.link)}" maxlength="300" inputmode="url" placeholder="https://maps.app.goo.gl/… ya da https://meet.google.com/…"><span class="xs muted">Konum ya da bağlantıdan en az birini yaz. Çevrimiçi etkinlikte konumu boş bırakabilirsin.</span></div>
+        ${formBuilder()}
         <fieldset class="field full" style="border:0;padding:0;margin:0"><legend class="label" style="margin-bottom:6px">Ortak etkinlik (isteğe bağlı)</legend><div class="row" style="flex-wrap:wrap;gap:6px">${otherComms.map((c) => `<label class="chip" style="cursor:pointer"><input type="checkbox" data-cs-partner value="${c.id}" ${cs.ev.partners.includes(c.id) ? 'checked' : ''} style="accent-color:var(--brand-strong)">${esc(c.name)}</label>`).join('')}</div></fieldset>
       </div>` : ''}
       ${cs.type === 'sponsor' && !cs.editId ? `<div class="form-grid">
@@ -250,6 +252,37 @@
     const ta = $('#cs-text');
     if (ta && !(cs.type === 'event' || cs.type === 'sponsor')) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
   }
+  // Etkinlik kayıt formu: sitede oluşturulan form ya da dışarıdaki hazır formun bağlantısı
+  const FORM_TPL = {
+    kamp: { name: 'Kamp / gezi kaydı', fields: ['phone', 'dept'], questions: [{ label: 'Kamp deneyimin', type: 'choice', options: 'İlk kez, Birkaç kez, Deneyimliyim', required: true }, { label: 'Acil durumda aranacak kişi ve telefonu', type: 'text', required: true }, { label: 'Beslenme tercihi / alerji', type: 'text', required: false }] },
+    atolye: { name: 'Atölye / meetup kaydı', fields: ['studentNo', 'dept'], questions: [{ label: 'Seviyen', type: 'choice', options: 'Başlangıç, Orta, İleri', required: true }, { label: 'Etkinlikten beklentin', type: 'long', required: false }] },
+    gonullu: { name: 'Gönüllü kaydı', fields: ['phone'], questions: [{ label: 'Hangi saatlerde yardım edebilirsin?', type: 'choice', options: 'Sabah, Öğleden sonra, Tüm gün', required: true }, { label: 'Daha önce gönüllü oldun mu?', type: 'choice', options: 'Evet, Hayır', required: false }] }
+  };
+  const Q_TYPES = [['text', 'Kısa yanıt'], ['long', 'Uzun yanıt'], ['choice', 'Seçenekli']];
+  function formBuilder() {
+    const ev = cs.ev; const f = ev.form;
+    const modes = [['none', 'Form yok'], ['site', 'Sitede oluştur'], ['link', 'Hazır form linki']];
+    let inner = '';
+    if (ev.formMode === 'site') {
+      inner = `<div class="row" style="gap:8px;flex-wrap:wrap"><label class="small" for="ev-tpl">Şablondan başlat</label><select class="select" id="ev-tpl" data-change="cs-form-tpl" style="width:auto"><option value="">Şablon seç…</option>${Object.entries(FORM_TPL).map(([k, t]) => `<option value="${k}">${t.name}</option>`).join('')}</select></div>
+        <div class="stack" style="gap:6px"><span class="xs muted">Her formda: Ad soyad ve e-posta. Ekle:</span><div class="row" style="flex-wrap:wrap;gap:6px">${Object.entries(K.FORM_FIELDS).map(([k, l]) => `<label class="chip" style="cursor:pointer"><input type="checkbox" data-csf="${k}" ${f.fields.includes(k) ? 'checked' : ''} style="accent-color:var(--brand-strong)">${l}</label>`).join('')}</div></div>
+        <div class="stack q-list">${f.questions.map((q, i) => `<div class="q-row"><input class="input" data-csq="${i}:label" value="${esc(q.label)}" maxlength="120" placeholder="Soru ${i + 1}" aria-label="Soru ${i + 1}"><select class="select" data-csq="${i}:type" aria-label="Soru ${i + 1} türü">${Q_TYPES.map(([v, l]) => `<option value="${v}" ${q.type === v ? 'selected' : ''}>${l}</option>`).join('')}</select>${q.type === 'choice' ? `<input class="input q-opts" data-csq="${i}:options" value="${esc(q.options)}" maxlength="300" placeholder="Seçenekler, virgülle ayır" aria-label="Soru ${i + 1} seçenekleri">` : ''}<label class="check small"><input type="checkbox" data-csq="${i}:required" ${q.required ? 'checked' : ''}>Zorunlu</label><button type="button" class="icon-btn" data-action="cs-q-del" data-i="${i}" aria-label="Soru ${i + 1} sil">${icon('trash', 'ico-sm')}</button></div>`).join('')}</div>
+        ${f.questions.length < 15 ? `<button type="button" class="btn btn-sm" data-action="cs-q-add" style="align-self:flex-start">${icon('plus', 'ico-sm')}Soru ekle</button>` : ''}
+        <span class="xs muted">Yanıtlar etkinlik sayfasında listelenir ve Excel dosyası olarak indirilebilir. Yalnızca topluluğun moderatör ve yöneticileri görür.</span>`;
+    } else if (ev.formMode === 'link') {
+      inner = `<div class="field"><label for="ev-formlink">Form bağlantısı</label><input class="input" type="url" id="ev-formlink" data-cs="ev.formLink" value="${esc(ev.formLink)}" maxlength="300" inputmode="url" placeholder="https://forms.gle/…"></div>
+        <div class="callout">${icon('info')}<span>Katılımcılar formu Google Forms’ta doldurur; yanıtlar Google Forms’ta kalır, siteye otomatik gelmez. Yanıtların doğrudan buraya düşmesini istersen aynı soruları <b>Sitede oluştur</b> ile ekle.</span></div>`;
+    }
+    return `<fieldset class="field full ev-form"><legend class="label" style="margin-bottom:6px">Kayıt formu</legend><div class="seg" role="group" aria-label="Kayıt formu">${modes.map(([v, l]) => `<button type="button" data-action="cs-form" data-value="${v}" aria-pressed="${ev.formMode === v}">${l}</button>`).join('')}</div>${inner ? `<div class="stack" style="gap:10px;margin-top:10px">${inner}</div>` : ''}</fieldset>`;
+  }
+  function csFormInput(t, rerender) {
+    if (!cs || !cs.ev || !cs.ev.form) return;
+    if (t.matches('[data-csf]')) { const k = t.dataset.csf; const fl = cs.ev.form.fields; cs.ev.form.fields = t.checked ? [...new Set([...fl, k])] : fl.filter((x) => x !== k); return; }
+    const [i, k] = t.dataset.csq.split(':'); const q = cs.ev.form.questions[+i]; if (!q) return;
+    if (k === 'required') q.required = t.checked;
+    else if (['label', 'type', 'options'].includes(k)) q[k] = t.value;
+    if (k === 'type' && rerender) renderComposer();
+  }
   function setCs(path, val) {
     const [a, b] = path.split('.');
     if (b) cs[a][b] = val; else cs[a] = val;
@@ -267,8 +300,19 @@
     if (cs.type === 'event') {
       const ev = cs.ev;
       const start = dateTs(ev.date, ev.time);
-      if (!ev.title.trim() || !start || !ev.location.trim()) return toast('Etkinlik adı, tarih ve konum gerekli.', 'info');
-      const e = { id: uid('e'), title: ev.title.trim(), communities: [cs.target, ...ev.partners], start, location: ev.location.trim(), category: C(cs.target).category, going: 1, capacity: Math.max(1, +ev.capacity || 50), attending: true, interested: false, sponsors: [], scene: C(cs.target).scene, desc: text || 'Ayrıntılar yakında.' };
+      const link = ev.link.trim() ? K.safeUrl(ev.link) : '';
+      if (!ev.title.trim() || !start) return toast('Etkinlik adı ve tarih gerekli.', 'info');
+      if (ev.link.trim() && !link) return toast('Bağlantı https:// ile başlayan geçerli bir adres olmalı.', 'info');
+      if (!ev.location.trim() && !link) return toast('Konum ya da bağlantıdan en az birini yaz.', 'info');
+      let form = null, formLink = '';
+      if (ev.formMode === 'link') { formLink = K.safeUrl(ev.formLink); if (!formLink) return toast('Geçerli bir form bağlantısı yapıştır (https://…).', 'info'); }
+      if (ev.formMode === 'site') {
+        const qs = ev.form.questions.filter((q) => q.label.trim()).map((q, i) => ({ id: 'q' + (i + 1), label: q.label.trim().slice(0, 120), type: Q_TYPES.some(([v]) => v === q.type) ? q.type : 'text', required: !!q.required, ...(q.type === 'choice' ? { options: [...new Set(String(q.options).split(',').map((o) => o.trim().slice(0, 60)).filter(Boolean))].slice(0, 12) } : {}) }));
+        const bad = qs.find((q) => q.type === 'choice' && q.options.length < 2);
+        if (bad) return toast(`“${bad.label}” sorusuna en az iki seçenek yaz.`, 'info');
+        form = { fields: ev.form.fields.filter((k) => K.FORM_FIELDS[k]), questions: qs };
+      }
+      const e = { id: uid('e'), title: ev.title.trim(), communities: [cs.target, ...ev.partners], start, location: ev.location.trim() || (/maps|goo\.gl|yandex/.test(link) ? 'Haritadaki konum' : 'Çevrimiçi'), locLink: link, form, formLink, responses: [], category: C(cs.target).category, going: 1, capacity: Math.max(1, +ev.capacity || 50), attending: true, interested: false, sponsors: [], scene: C(cs.target).scene, desc: text || 'Ayrıntılar yakında.' };
       state.events.push(e);
       post.event = e.id;
       if (!post.text) post.text = `Yeni etkinlik: ${e.title}`;
@@ -412,6 +456,9 @@
 
   A.compose = (el) => openComposer({ type: el.dataset.type, community: el.dataset.community, pick: !!el.dataset.pick, feeling: !!el.dataset.feeling });
   A['cs-type'] = (el) => { cs.type = el.dataset.value; if (cs.type !== 'post' && !K.MANAGED.includes(cs.target)) cs.target = K.MANAGED[0]; if (cs.type === 'post') cs.target = ''; cs.visibility = cs.type === 'announcement' ? 'Topluluk üyeleri' : 'Herkese açık'; renderComposer(); };
+  A['cs-form'] = (el) => { cs.ev.formMode = el.dataset.value; renderComposer(); };
+  A['cs-q-add'] = () => { if (cs.ev.form.questions.length >= 15) return; cs.ev.form.questions.push({ label: '', type: 'text', options: '', required: false }); renderComposer(); setTimeout(() => { const ins = $$('.q-row input[data-csq$=":label"]'); ins[ins.length - 1]?.focus(); }, 30); };
+  A['cs-q-del'] = (el) => { cs.ev.form.questions.splice(+el.dataset.i, 1); renderComposer(); };
   A['cs-toggle'] = (el) => { cs[el.dataset.key] = !cs[el.dataset.key]; renderComposer(); };
   A['cs-feel'] = (el) => { cs.feeling = cs.feeling === el.dataset.value ? '' : el.dataset.value; renderComposer(); };
   A['cs-remove-media'] = (el) => { cs.media.splice(+el.dataset.i, 1); renderComposer(); };
@@ -467,9 +514,40 @@
   A['follow-page'] = (el) => { const p = P(el.dataset.id); p.following = !p.following; p.followers += p.following ? 1 : -1; refresh(); toast(p.following ? `${p.name} takip ediliyor` : 'Takipten çıkıldı'); };
   A.rsvp = (el) => {
     const e = E(el.dataset.id);
+    if (el.dataset.kind === 'going' && !e.attending && e.form && !(e.responses || []).some((x) => x.user === state.me)) return A['form-open'](el);
     if (el.dataset.kind === 'going') { e.attending = !e.attending; e.going += e.attending ? 1 : -1; if (e.attending) e.interested = false; toast(e.attending ? 'Katılımın kaydedildi · 1 gün önce hatırlatılacak' : 'Katılım iptal edildi'); }
     else { e.interested = !e.interested; toast(e.interested ? 'İlgilendiğin etkinliklere eklendi' : 'İlgi kaldırıldı'); }
     refresh();
+  };
+  // Kayıt formunu doldurma
+  A['form-open'] = (el) => {
+    const e = E(el.dataset.id); if (!e || !e.form) return;
+    const m = me(); const prev = (e.responses || []).find((x) => x.user === state.me);
+    const v = (k, d = '') => esc(prev ? (prev.a[k] || '') : d);
+    const email = K.mode === 'account' ? (window.Auth.account()?.email || '') : '';
+    const std = { phone: `<div class="field"><label for="ef-phone">Telefon *</label><input class="input" type="tel" id="ef-phone" name="phone" value="${v('phone')}" maxlength="20" autocomplete="tel" inputmode="tel"></div>`, studentNo: `<div class="field"><label for="ef-studentNo">Öğrenci numarası *</label><input class="input" id="ef-studentNo" name="studentNo" value="${v('studentNo')}" maxlength="15" autocomplete="off" inputmode="numeric"></div>`, dept: `<div class="field"><label for="ef-dept">Okul / bölüm *</label><input class="input" id="ef-dept" name="dept" value="${v('dept', m.dept || '')}" maxlength="60"></div>` };
+    const qs = e.form.questions.map((q) => {
+      const req = q.required ? ' *' : '';
+      if (q.type === 'choice') return `<fieldset class="field" style="border:0;padding:0;margin:0"><legend class="label" style="margin-bottom:6px">${esc(q.label)}${req}</legend><div class="radio-list">${q.options.map((o) => `<label class="radio-item"><input type="radio" name="${q.id}" value="${esc(o)}" ${prev && prev.a[q.id] === o ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}</div></fieldset>`;
+      if (q.type === 'long') return `<div class="field"><label for="ef-${q.id}">${esc(q.label)}${req}</label><textarea class="textarea" id="ef-${q.id}" name="${q.id}" maxlength="600" rows="3">${v(q.id)}</textarea></div>`;
+      return `<div class="field"><label for="ef-${q.id}">${esc(q.label)}${req}</label><input class="input" id="ef-${q.id}" name="${q.id}" value="${v(q.id)}" maxlength="200"></div>`;
+    }).join('');
+    openModal({ title: 'Kayıt formu', form: 'event-form', formAttrs: `data-id="${e.id}"`, body: `<p class="small muted"><b>${esc(e.title)}</b> · ${K.fmt.full(e.start)}</p>
+      <div class="field"><label for="ef-name">Ad soyad *</label><input class="input" id="ef-name" name="name" value="${v('name', m.name)}" maxlength="40" autocomplete="name"></div>
+      <div class="field"><label for="ef-email">E-posta *</label><input class="input" type="email" id="ef-email" name="email" value="${v('email', email)}" maxlength="254" autocomplete="email" inputmode="email"></div>
+      ${e.form.fields.filter((k) => std[k]).map((k) => std[k]).join('')}${qs}
+      <p class="xs muted" style="margin:0">${icon('lock', 'ico-sm')} Yanıtların yalnızca etkinliği düzenleyen topluluğun moderatör ve yöneticileriyle paylaşılır.</p>`,
+      foot: `<button type="button" class="btn" data-action="close-modal">Vazgeç</button><button class="btn btn-primary">${prev ? 'Güncelle' : 'Gönder ve katıl'}</button>` });
+  };
+  // Yanıtları Excel'in açtığı CSV olarak indir (Türkçe Excel: noktalı virgül, UTF-8 BOM)
+  A['form-export'] = (el) => {
+    const e = E(el.dataset.id); if (!e || !e.form || !K.canSeeResponses(e)) return;
+    const cols = V.formColumns(e);
+    const cell = (v) => { let s = String(v ?? ''); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[";\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+    const rows = [[...cols.map(([, l]) => l), 'Gönderim zamanı'], ...(e.responses || []).slice().sort((a, b) => a.ts - b.ts).map((r) => [...cols.map(([k]) => r.a[k] || ''), new Date(r.ts).toLocaleString('tr-TR')])];
+    const csv = '\uFEFF' + rows.map((r) => r.map(cell).join(';')).join('\r\n');
+    const slug = lower(e.title).replace(/[ğüşöçı]/g, (c) => ({ ğ: 'g', ü: 'u', ş: 's', ö: 'o', ç: 'c', ı: 'i' })[c]).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'etkinlik';
+    if (downloadFile(`${slug}-kayitlar.csv`, csv, 'text/csv;charset=utf-8')) toast(`${e.responses.length} kayıt indirildi`);
   };
   A['share-event'] = (el) => { copy(location.href.split('#')[0] + '#/etkinlik/' + el.dataset.id); toast('Etkinlik bağlantısı kopyalandı'); };
   A['share-need'] = (el) => { copy(location.href.split('#')[0] + '#/sponsorlar'); toast('İhtiyaç bağlantısı kopyalandı'); };
@@ -690,6 +768,29 @@
 
   /* =============== form gönderimleri =============== */
   const F = {};
+  F['event-form'] = (f) => {
+    const e = E(f.dataset.id); if (!e || !e.form) return closeModal();
+    const val = (n) => { const el = f.elements[n]; if (!el) return ''; return String(el.value ?? '').trim(); };
+    const a = { name: val('name'), email: val('email').toLowerCase() };
+    if (a.name.length < 3) return toast('Adını ve soyadını yaz.', 'info');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(a.email)) return toast('Geçerli bir e-posta adresi yaz.', 'info');
+    for (const k of e.form.fields) {
+      a[k] = val(k);
+      if (k === 'phone' && a[k].replace(/\D/g, '').length < 10) return toast('Telefon numaranı yaz (en az 10 rakam).', 'info');
+      if (k === 'studentNo' && !/^[0-9A-Za-z]{4,15}$/.test(a[k])) return toast('Öğrenci numaranı yaz (4–15 harf ya da rakam).', 'info');
+      if (k === 'dept' && a[k].length < 3) return toast('Okulunu ve bölümünü yaz.', 'info');
+    }
+    for (const q of e.form.questions) {
+      a[q.id] = q.type === 'choice' ? (q.options.includes(val(q.id)) ? val(q.id) : '') : val(q.id);
+      if (q.required && !a[q.id]) return toast(`“${q.label}” sorusunu yanıtla.`, 'info');
+    }
+    e.responses = e.responses || [];
+    const prev = e.responses.find((x) => x.user === state.me);
+    if (prev) Object.assign(prev, { a, ts: Date.now() });
+    else e.responses.push({ id: uid('r'), user: state.me, ts: Date.now(), a });
+    if (!e.attending) { e.attending = true; e.going++; e.interested = false; }
+    closeModal(); refresh(); toast(prev ? 'Yanıtın güncellendi' : 'Kaydın alındı · etkinlikten 1 gün önce hatırlatılacak');
+  };
   F['top-search'] = (f) => { const q = f.q.value.trim(); f.q.value = ''; f.q.blur(); UI.discover.q = q; location.hash = '#/kesfet' + (q ? '?q=' + encodeURIComponent(q) : ''); };
   F.discover = (f) => { f.querySelector('input').blur(); };
   F.noop = () => {};
@@ -883,6 +984,7 @@
     } });
   };
   CH['rg-role'] = (el) => { const box = $('#rg-club-box'); if (box) box.hidden = el.value !== 'uye'; };
+  CH['cs-form-tpl'] = (el) => { const t = FORM_TPL[el.value]; if (!t) return; cs.ev.form = { fields: t.fields.slice(), questions: t.questions.map((q) => ({ ...q })) }; renderComposer(); toast(`“${t.name}” şablonu eklendi; soruları düzenleyebilirsin`); };
   CH['rg-grad'] = (el) => { const g = !!el.value; const s = $('#rg-studentNo'); if (s) s.closest('.field').hidden = g; const y = $('#rg-gradYear-box'); if (y) y.hidden = !g; const n = $('#rg-grad-note'); if (n) n.hidden = !g; };
   CH['tag-limit'] = (el) => { if (!K.isSite()) return; const n = +el.value; if (![3, 4, 5, 6, 8, 10].includes(n)) return; state.tagLimit = n; Object.values(state.users).forEach((u) => K.checkTagLoad(u.id)); K.sync(); refresh(); toast(`Etiket sınırı: ${n}`); };
   CH['notif-setting'] = (el) => { state.notifSettings[el.dataset.key] = el.checked; save(); toast(el.checked ? 'Bildirim türü açıldı' : 'Bildirim türü sessize alındı'); };
@@ -1026,6 +1128,7 @@
   document.addEventListener('change', (e) => {
     const el = e.target.closest('[data-change]');
     if (el && Object.prototype.hasOwnProperty.call(CH, el.dataset.change)) CH[el.dataset.change](el, e);
+    if (e.target.matches('[data-csq], [data-csf]')) csFormInput(e.target, true);
     if (e.target.matches('[data-cs-partner]') && cs) {
       const v = e.target.value;
       cs.ev.partners = e.target.checked ? [...cs.ev.partners, v] : cs.ev.partners.filter((x) => x !== v);
@@ -1038,6 +1141,7 @@
 
   document.addEventListener('input', (e) => {
     const t = e.target;
+    if (t.matches('[data-csq]') && t.type !== 'checkbox' && t.tagName !== 'SELECT') csFormInput(t, false);
     if (t.matches('[data-cs]') && cs) {
       setCs(t.dataset.cs, t.value);
       if (t.dataset.cs === 'text') { const c = $('#cs-count'); if (c) { c.textContent = `${t.value.length} / 1000`; c.classList.toggle('warn', t.value.length > 950); } }

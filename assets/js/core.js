@@ -51,6 +51,11 @@
   if (!state.memberRequests) state.memberRequests = [{ user: 'u4', community: 'kodkahve', ts: Date.now() - 50 * 60000 }, { user: 'u8', community: 'doga', ts: Date.now() - 300 * 60000 }];
   const RQ = { u4: ['Uludağ Üni. · Bilgisayar Müh.', '032190045'], u8: ['Bursa Teknik Üni. · Peyzaj Mimarlığı', '22051017'] };
   state.memberRequests.forEach((x) => { if (!x.dept && RQ[x.user]) [x.dept, x.studentNo] = RQ[x.user]; });
+  if (state.formV !== 1) {   // örnek etkinliklere kayıt formu
+    const se = window.SEED().events;
+    state.events.forEach((e) => { const x = se.find((y) => y.id === e.id); if (x && x.form && !e.form) { e.form = x.form; e.responses = x.responses; } });
+    state.formV = 1;
+  }
   // Profil görünürlüğü: "Sadece ben" yerine yalnızca yetkililer (moderatör, topluluk yöneticisi, sponsor)
   if (state.privacy && state.privacy.visibility === 'Sadece ben') state.privacy.visibility = 'Yetkililer';
   if (state.tagsV !== 1) {
@@ -183,6 +188,13 @@
   const canMessage = () => state.role !== 'uye';
   const isBrand = () => state.role === 'marka';
   const isSite = () => state.role === 'site';
+
+  /* ---------------- etkinlik kayıt formu ---------------- */
+  // Yalnızca https bağlantılar (javascript:, data: vb. engellenir)
+  const safeUrl = (u) => { try { const x = new URL(String(u || '').trim()); return x.protocol === 'https:' && x.hostname.includes('.') ? x.href : ''; } catch (e) { return ''; } };
+  const FORM_FIELDS = { phone: 'Telefon', studentNo: 'Öğrenci numarası', dept: 'Okul / bölüm' };
+  // Etkinliği düzenleyen toplulukların moderatör ve yöneticileri yanıtları görür
+  const canSeeResponses = (e) => !!e && (state.role === 'moderator' || state.role === 'yonetici') && e.communities.some((id) => MANAGED.includes(id));
 
   /* ---------------- etiketler ----------------
      Topluluk lideri onayda etiket atar (kullanıcının "tags" alanı); üye ayrıca İş & staj sayfasında
@@ -414,7 +426,7 @@
   /* ---------------- dışa aktar ---------------- */
   window.Core = {
     state, save, reset, mode, KEYS, buildWorkspace, $, $$, esc, setHTML, replaceHTML, appendHTML, lower, num, uid, initials, timeAgo, fmt, daysLeft,
-    ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand, isSite, canMessage, tagLimit, userTags, myTags, checkTagLoad, sync,
+    ROLES, MANAGED, BRAND_PAGE, role, isManager, isAdmin, isBrand, isSite, canMessage, safeUrl, FORM_FIELDS, canSeeResponses, tagLimit, userTags, myTags, checkTagLoad, sync,
     U, C, P, E, N, me, entity, avatar, safePhoto, verified, icon, sceneSVG, media, readApps, writeApps
   };
   syncApps();
