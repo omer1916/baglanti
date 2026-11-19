@@ -48,6 +48,8 @@
   if (!state.tags) { const s0 = window.SEED(); state.tags = s0.tags; state.listings = s0.listings; state.followedTags = s0.followedTags; }
   if (state.themeV !== 2) { state.theme = 'light'; state.themeV = 2; } // açık tema varsayılan oldu
   if (!state.memberRequests) state.memberRequests = [{ user: 'u4', community: 'kodkahve', ts: Date.now() - 50 * 60000 }, { user: 'u8', community: 'doga', ts: Date.now() - 300 * 60000 }];
+  const RQ = { u4: ['Uludağ Üni. · Bilgisayar Müh.', '032190045'], u8: ['Bursa Teknik Üni. · Peyzaj Mimarlığı', '22051017'] };
+  state.memberRequests.forEach((x) => { if (!x.dept && RQ[x.user]) [x.dept, x.studentNo] = RQ[x.user]; });
 
   let warnedQuota = false;
   function save(quiet) {

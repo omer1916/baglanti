@@ -714,7 +714,7 @@
     $$('[aria-invalid]', f).forEach((el) => el.removeAttribute('aria-invalid'));
     let first = null;
     Object.entries(errors).forEach(([k, msg]) => {
-      const inp = f.elements[k]; const box = inp && document.getElementById(inp.getAttribute('aria-describedby'));
+      const inp = f.elements[k]; const box = inp && document.getElementById((inp.getAttribute('aria-describedby') || '').split(' ').find((x) => x.endsWith('-err')) || '');
       if (box) box.textContent = msg;
       if (inp) { inp.setAttribute('aria-invalid', 'true'); first = first || inp; }
     });
@@ -735,7 +735,7 @@
     if (!res.ok) { alert.textContent = res.error; alert.hidden = false; f.password.value = ''; f.password.focus(); }
   };
   F.register = (f) => {
-    const d = { name: f.name.value, username: f.username.value, email: f.email.value, city: f.city.value, role: f.role.value, club: f.role.value === 'uye' ? f.club.value : '', dept: f.dept.value, note: f.note.value, password: f.password.value, confirm: f.confirm.value, consent: f.consent.checked };
+    const d = { name: f.name.value, username: f.username.value, email: f.email.value, city: f.city.value, role: f.role.value, club: f.role.value === 'uye' ? f.club.value : '', dept: f.dept.value, studentNo: f.studentNo.value, note: f.note.value, password: f.password.value, confirm: f.confirm.value, consent: f.consent.checked };
     const errs = window.Auth.validateRegister(d);
     showFieldErrors(f, errs);
     if (Object.keys(errs).length) return;
