@@ -9,6 +9,10 @@
   'use strict';
 
   // Yeni yönetici eklemek için: #/admin?kurulum sayfasında oluşan satırı buraya ekleyin.
+  //   owner: true   -> sahip (owner) hesabı; Yöneticiler ekranını görür, yönetici kaldırabilir.
+  //   hidden: true  -> gizli/yedek kurtarma hesabı; Yöneticiler listesinde HİÇ görünmez ve
+  //                    kaldırılamaz (başka bir sahip bile göremez/atamaz). Girişte tam yetkiyle
+  //                    çalışır. owner: true ile birlikte kullanılır: { ..., owner: true, hidden: true }
   const ADMINS = [
   ];
 
@@ -88,9 +92,9 @@
     session, login, logout, makeEntry,
     count: () => ADMINS.length,
     isOwner: () => { const s = session(); return !!(s && s.owner); },
-    // Yalnızca sahip (owner) oturumunda: tüm yönetici listesi
-    admins: () => { const s = session(); return s && s.owner ? ADMINS.map((a) => ({ user: a.user, name: a.name, owner: !!a.owner, revoked: isRevoked(a.user) })) : []; },
-    // Sahip, bir yöneticiyi kaldırmak için REVOKED'a eklenecek satırı üretir (sahip kaldırılamaz)
-    revokeLine: (u) => { const s = session(); const x = String(u || '').trim().toLowerCase(); return s && s.owner && ADMINS.some((a) => a.user === x && !a.owner) ? `    '${x.replace(/['\\]/g, '')}',` : null; }
+    // Yalnızca sahip (owner) oturumunda: tüm yönetici listesi — gizli/yedek hesaplar listelenmez
+    admins: () => { const s = session(); return s && s.owner ? ADMINS.filter((a) => !a.hidden).map((a) => ({ user: a.user, name: a.name, owner: !!a.owner, revoked: isRevoked(a.user) })) : []; },
+    // Sahip, bir yöneticiyi kaldırmak için REVOKED'a eklenecek satırı üretir (sahip ve gizli hesap kaldırılamaz)
+    revokeLine: (u) => { const s = session(); const x = String(u || '').trim().toLowerCase(); return s && s.owner && ADMINS.some((a) => a.user === x && !a.owner && !a.hidden) ? `    '${x.replace(/['\\]/g, '')}',` : null; }
   };
 })();
