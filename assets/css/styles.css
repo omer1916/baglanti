@@ -929,7 +929,8 @@ button.scene { border: 0; padding: 0; width: 100%; display: block; color: inheri
 }
 
 /* sadeleştirme: aynı işi yapan tekrar eden kontroller */
-body[data-route="akis"] .top-create { display: none !important; }
+/* Oluştur: ana sayfada görünür, mesajlarda gerekmez */
+body[data-route="mesajlar"] .top-create { display: none !important; }
 @media (min-width: 1081px) { .sidebar .side-footer { display: none; } }
 @media (max-width: 720px) { body[data-route="akis"] .composer { display: none; } }
 @media (max-width: 720px) { .feed-filter .chips { -webkit-mask-image: linear-gradient(90deg, #000 82%, transparent); mask-image: linear-gradient(90deg, #000 82%, transparent); padding-right: 24px; } }
@@ -1448,3 +1449,6 @@ label.btn { cursor: pointer; }
 .review-list > div { display: grid; grid-template-columns: minmax(120px, 38%) 1fr; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .review-list > div:last-child { border-bottom: 0; }
 .review-list dd { overflow-wrap: anywhere; font-weight: 600; }
+
+/* Uzun içerikli pencerede satırlar sıkışmasın (ör. gönderi türü sekmeleri) */
+.modal:not(.lightbox) .modal-body { grid-auto-rows: max-content; align-content: start; }

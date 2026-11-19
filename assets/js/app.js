@@ -513,7 +513,8 @@
   A['follow-page'] = (el) => { const p = P(el.dataset.id); p.following = !p.following; p.followers += p.following ? 1 : -1; refresh(); toast(p.following ? `${p.name} takip ediliyor` : 'Takipten çıkıldı'); };
   A.rsvp = (el) => {
     const e = E(el.dataset.id);
-    if (el.dataset.kind === 'going' && !e.attending && e.form && !(e.responses || []).some((x) => x.user === state.me)) return A['form-open'](el);
+    if (e.form && (e.responses || []).some((x) => x.user === state.me)) return toast('Kayıt formunu gönderdin; katılımın kayıtlı', 'info');
+    if (el.dataset.kind === 'going' && !e.attending && e.form) return A['form-open'](el);
     if (el.dataset.kind === 'going') { e.attending = !e.attending; e.going += e.attending ? 1 : -1; if (e.attending) e.interested = false; toast(e.attending ? 'Katılımın kaydedildi · 1 gün önce hatırlatılacak' : 'Katılım iptal edildi'); }
     else { e.interested = !e.interested; toast(e.interested ? 'İlgilendiğin etkinliklere eklendi' : 'İlgi kaldırıldı'); }
     refresh();

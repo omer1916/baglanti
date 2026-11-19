@@ -47,6 +47,8 @@
     const past = ev.start < Date.now();
     if (past) return `<span class="badge">Tamamlandı</span>`;
     const full = ev.going >= ev.capacity && !ev.attending;
+    // Kayıt formunu gönderen kişi katılımı bu butonla değiştiremez (yanıtını formdan günceller)
+    if (ev.form && (ev.responses || []).some((x) => x.user === state.me)) return `<div class="btn-row"><button class="btn${sz} btn-success" disabled title="Kayıt formunu gönderdin">${icon('check', 'ico-sm')}Kaydın alındı</button></div>`;
     return `<div class="btn-row">
       <button class="btn${sz} ${ev.attending ? 'btn-success' : 'btn-primary'}" data-action="rsvp" data-id="${ev.id}" data-kind="going" aria-pressed="${ev.attending}" ${full ? 'disabled' : ''}>${ev.attending ? icon('check', 'ico-sm') + 'Katılıyorsun' : full ? 'Kontenjan dolu' : 'Katılıyorum'}</button>
       <button class="btn${sz} ${ev.interested ? 'btn-soft' : ''}" data-action="rsvp" data-id="${ev.id}" data-kind="interested" aria-pressed="${ev.interested}">${icon('star', 'ico-sm')}${ev.interested ? 'İlgileniyorsun' : 'İlgileniyorum'}</button>
