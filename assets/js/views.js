@@ -1219,6 +1219,7 @@
           <div class="form-grid"><div class="field"><label for="am-user">Kullanıcı adı</label><input class="input" id="am-user" name="user" maxlength="20" autocapitalize="none" spellcheck="false" placeholder="omer"></div><div class="field"><label for="am-name">Görünecek ad</label><input class="input" id="am-name" name="name" maxlength="40" placeholder="Ömer"></div></div>
           ${pwField('am-pass', 'password', 'Şifre (en az 12 karakter)', 'new-password', ' minlength="12"')}
           ${pwField('am-confirm', 'confirm', 'Şifre (tekrar)', 'new-password')}
+          <label class="row" style="gap:8px;align-items:flex-start;font-size:13.5px;line-height:1.4"><input type="checkbox" name="owner" style="width:auto;margin-top:2px"><span>Bu hesap <b>sahip (owner)</b> olsun — diğer yöneticileri Site yönetimi ekranından kaldırabilir. Yalnızca sende olsun.</span></label>
           <div class="form-alert" id="am-alert" role="alert" hidden></div>
           <button class="btn btn-primary btn-lg btn-block">Satırı oluştur</button>
         </form>
@@ -1263,10 +1264,15 @@
     const reqs = state.memberRequests.map((x, i) => [x, i]).filter(([x]) => x.stage === 'site' && U(x.user) && C(x.community));
     const open = state.tagAlerts.filter((a) => a.status === 'open' && U(a.user));
     const fbOpen = (state.feedback || []).filter((f) => f.status !== 'resolved').length;
-    const TB = [['mezun', `Mezun başvuruları${apps.length + reqs.length ? ` (${apps.length + reqs.length})` : ''}`], ['etiket', `Etiket uyarıları${open.length ? ` (${open.length})` : ''}`], ['geri', `Geri bildirimler${fbOpen ? ` (${fbOpen})` : ''}`]];
+    const owner = window.Admin.isOwner();
+    const TB = [['mezun', `Mezun başvuruları${apps.length + reqs.length ? ` (${apps.length + reqs.length})` : ''}`], ['etiket', `Etiket uyarıları${open.length ? ` (${open.length})` : ''}`], ['geri', `Geri bildirimler${fbOpen ? ` (${fbOpen})` : ''}`], ...(owner ? [['yoneticiler', 'Yöneticiler']] : [])];
     const info = (rows) => `<dl class="app-info">${rows.filter(([, v]) => v).map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`;
     let body = '';
-    if (tab === 'geri') {
+    if (tab === 'yoneticiler' && owner) {
+      const list = window.Admin.admins();
+      body = `<p class="callout pad-x">${icon('lock')}<span>Yalnızca <b>sahip (owner)</b> hesabının gördüğü alan. Bir yöneticiyi kaldırmak için satırını üret, <b>admin.js</b> içindeki <code>REVOKED</code> listesine ekle (ya da geliştiriciye gönder) ve yayına al; o hesap bir daha giremez.</span></p>
+        <section class="card"><div class="card-head"><h2>Yöneticiler <span class="muted small">(${list.length})</span></h2></div><div class="list" style="margin-top:6px">${list.map((a) => `<div class="list-item">${avatar({ name: a.name, hue: 5, kind: 'user' }, 'md')}<span class="grow"><b>${esc(a.name)}</b><span>@${esc(a.user)}</span></span><div class="btn-row">${a.owner ? `<span class="badge amber">${icon('shield', 'ico-sm')}Sahip</span>` : a.revoked ? '<span class="badge">Kaldırıldı</span>' : `<button class="btn btn-sm btn-danger" data-action="admin-revoke" data-user="${esc(a.user)}">Kaldır</button>`}</div></div>`).join('') || '<div class="list-item muted">Kayıt yok.</div>'}</div></section>`;
+    } else if (tab === 'geri') {
       const ord = { open: 0, reviewing: 1, resolved: 2 };
       const list = (state.feedback || []).slice().sort((a, b) => ord[a.status] - ord[b.status] || b.ts - a.ts);
       body = `<p class="callout pad-x">${icon('message')}<span>Moderatörlerin ve topluluk yöneticilerinin gönderdiği geri bildirimler. Durumu güncelle ya da yanıt yaz; gönderen bildirim alır.</span></p>

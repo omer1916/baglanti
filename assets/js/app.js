@@ -788,7 +788,14 @@
   };
   // Site yöneticisi: mezun başvurusunu doğrular, başvuru topluluk liderine geçer
   A['admin-logout'] = () => { window.Admin.logout(); location.hash = '#/admin'; refresh(); toast('Yönetici oturumu kapatıldı'); };
-  A['admin-copy'] = () => { const t = $('#am-line'); if (t && t.value) { copy(t.value); toast('Satır kopyalandı'); } };
+  A['admin-copy'] = (el) => { const t = $('#' + ((el && el.dataset.target) || 'am-line')); if (t && t.value) { copy(t.value); toast('Satır kopyalandı'); } };
+  // Sahip (owner) hesabı: bir yöneticiyi kaldırmak için koda eklenecek satırı üretir
+  A['admin-revoke'] = (el) => {
+    if (!window.Admin.isOwner()) return;
+    const line = window.Admin.revokeLine(el.dataset.user);
+    if (!line) return toast('Bu hesap kaldırılamaz.', 'info');
+    openModal({ title: 'Yöneticiyi kaldır', body: `<p class="small">Aşağıdaki satırı <b>assets/js/admin.js</b> içindeki <code>REVOKED</code> listesine ekle (ya da geliştiriciye gönder) ve yayına al. Sonra bu hesap bir daha giriş yapamaz; açık oturumu da geçersiz olur.</p><textarea class="textarea" id="rev-line" readonly rows="2" style="font-family:ui-monospace,monospace;font-size:12px">${esc(line)}</textarea>`, foot: `<button type="button" class="btn" data-action="close-modal">Kapat</button><button type="button" class="btn btn-primary" data-action="admin-copy" data-target="rev-line">Kopyala</button>` });
+  };
   const siteBy = () => 'Site yöneticisi · ' + ((window.Admin.session() || {}).name || '');
   A['grad-review'] = (el) => {
     if (!K.isSite()) return;
@@ -959,7 +966,7 @@
   F['admin-make'] = async (f) => {
     const box = $('#am-alert'); const show = (t) => { if (box) { box.textContent = t; box.hidden = !t; } };
     if (f.password.value !== f.confirm.value) return show('Şifreler eşleşmiyor.');
-    const res = await window.Admin.makeEntry(f.user.value, f.name.value, f.password.value);
+    const res = await window.Admin.makeEntry(f.user.value, f.name.value, f.password.value, f.owner && f.owner.checked);
     if (!res.ok) return show(res.error);
     show(''); f.password.value = ''; f.confirm.value = '';
     const out = $('#am-out'); $('#am-line').value = res.line; out.hidden = false;
